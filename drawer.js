@@ -30,7 +30,7 @@
   button.title = "Filtry";
   button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/>'
     + '<circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>';
-  document.querySelector(".ds-bar .ds-left").appendChild(button);
+  document.querySelector(".ds-bar .ds-left").prepend(button);  // before the search
 
   let open = false;
   const toggle = (on) => { open = on; document.body.classList.toggle("drawer-open", on); };

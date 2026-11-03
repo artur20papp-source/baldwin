@@ -310,7 +310,7 @@ STYLE = f"""
               margin-right: -.42em; }}  /* the last letter's spacing would push the name off centre */
   .ds-brand b {{ font-weight: 600; color: {TEXT}; }}
   .ds-brand span {{ font-weight: 400; color: {MUTED}; }}
-  .ds-left {{ justify-self: start; display: flex; }}
+  .ds-left {{ display: flex; align-items: center; gap: 8px; min-width: 0; max-width: calc(50% - 170px); }}  /* ends where the name begins */
   .ds-lighthouse, .ds-lighthouse:visited, .ds-lighthouse:hover, .ds-lighthouse:focus, .ds-lighthouse:active {{ color: {TEXT} !important; }}
   .ds-lighthouse, .ds-lighthouse:visited {{ flex-shrink: 0; display: flex; align-items: center; height: 34px; border-radius: 6px;
                    background: rgba(255,255,255,.07); color: {TEXT}; text-decoration: none; overflow: hidden;
@@ -337,10 +337,9 @@ STYLE = f"""
   .deal .acre:hover, .leaflet-bar a:hover {{ transform: scale(1.03); }}
   .ds-drawer .leaflet-control-layers label {{ transform-origin: left center; }}
   .ds-drawer .leaflet-control-layers label:hover {{ transform: scale(1.03); }}
-  .ds-right {{ margin-left: auto; display: flex; justify-content: flex-end; align-items: center; gap: 8px;
-              min-width: 0; max-width: calc(50% - 170px); }}  /* ends where the name begins: the search gives way as the lighthouse opens */
+  .ds-right {{ margin-left: auto; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }}
   .ds-search {{ position: relative; flex: 0 1 300px; min-width: 120px; }}
-  @media (max-width: 1000px) {{ .ds-brand {{ font-size: 13px; letter-spacing: .3em; }} .ds-right {{ max-width: calc(50% - 140px); }} }}
+  @media (max-width: 1000px) {{ .ds-brand {{ font-size: 13px; letter-spacing: .3em; }} .ds-left {{ max-width: calc(50% - 140px); }} }}
   @media (max-width: 900px) {{ .ds-brand {{ display: none; }} }}  /* too narrow for the name between the two sides */
   .ds-search svg {{ position: absolute; left: 12px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%);
                    stroke: {MUTED}; fill: none; stroke-width: 2; pointer-events: none; }}
@@ -351,7 +350,7 @@ STYLE = f"""
   .ds-search input:focus {{ border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.1); }}
   .ds-search kbd {{ position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 1px 6px;
                    border-radius: 4px; border: 1px solid rgba(255,255,255,.14); color: {MUTED}; font: 500 10px Inter, Arial; }}
-  .ds-results {{ display: none; position: absolute; top: calc(100% + 12px); right: 0; width: 380px; max-height: 60vh;
+  .ds-results {{ display: none; position: absolute; top: calc(100% + 12px); left: 0; width: 380px; max-height: 60vh;
                 padding: 6px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; {GLASS} background: rgba(16,16,16,.72);
                 scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .ds-results.open {{ display: block; }}
@@ -586,9 +585,9 @@ STYLE = f"""
      the map stays visible and tappable; pinch replaces the zoom buttons */
   @media (max-width: 700px) {{
     .ds-bar {{ padding: 0 6px; gap: 6px; }}
-    .ds-right {{ gap: 6px; }}
+    .ds-left {{ gap: 6px; }}
     .ds-brand {{ display: none; }}
-    .ds-right {{ flex: 1; max-width: none; }}
+    .ds-left {{ flex: 1; max-width: none; }}
     .ds-search {{ flex: 1; width: auto; }}
     .ds-search kbd {{ display: none; }}
     .ds-results {{ position: fixed; top: 72px; left: 8px; right: 8px; width: auto; }}
@@ -700,15 +699,16 @@ STYLE = f"""
   </div><div class="orb-shadow"></div></div>
 </div>
 <div class="ds-title ds-bar">
-  <div class="ds-left"></div>
-  <div class="ds-brand"><b>BALDWIN</b><span>PALANTIR</span></div>
-  <div class="ds-right">
+  <div class="ds-left">
     <div class="ds-search">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input type="text" placeholder="Plocha, lokalita, metro, adresa…" autocomplete="off" spellcheck="false">
       <kbd>/</kbd>
       <div class="ds-results"></div>
     </div>
+  </div>
+  <div class="ds-brand"><b>BALDWIN</b><span>PALANTIR</span></div>
+  <div class="ds-right">
     <a class="ds-lighthouse" href="alexandria/" target="_blank" rel="noopener" aria-label="Baldwin Alexandria">
       <span class="lh-icon"><svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>
         <path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg></span>
