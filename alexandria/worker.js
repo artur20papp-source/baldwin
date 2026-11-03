@@ -27,7 +27,7 @@ moves). Rules:
 - Be precise: give values with units, the model cell where it helps (e.g. Inputs C16), and say clearly
   when an input is an assumption or should be verified.
 - Answer in the language of the question (Czech or English). Keep it short: a few sentences or a short
-  list. You may use **bold**, bullet lists and links from the library.
+  list. You may use **bold**, bullet lists and links from the library. Never use LaTeX or $ maths notation: write formulas as plain text.
 
 === LIBRARY ===
 `;
