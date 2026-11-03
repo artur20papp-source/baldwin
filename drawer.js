@@ -16,6 +16,11 @@
   const overlays = drawer.querySelector(".leaflet-control-layers-overlays");
   const parks = overlays && [...overlays.children].find((l) => /Parky/.test(l.textContent));
   if (parks) overlays.appendChild(parks);
+  // the data credits the licences (CC BY) ask for, here instead of a line across the bottom of the map
+  const credits = document.createElement("div");
+  credits.className = "ds-credits";
+  credits.textContent = "Data © IPR Praha · © ČÚZK (katastr, ZABAGED) · zastávky © PID, vše CC BY · Leaflet";
+  drawer.appendChild(credits);
   document.body.appendChild(drawer);
   L.DomEvent.disableClickPropagation(drawer);
   L.DomEvent.disableScrollPropagation(drawer);

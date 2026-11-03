@@ -579,6 +579,7 @@ STYLE = f"""
                                   background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
                                   border: none !important;
                                   border-radius: 0 !important; }}
+  .ds-drawer .ds-credits {{ padding: 12px 0 0; font-size: 10px; line-height: 1.5; color: #5a5a5a; }}
   .ds-drawer .ds-select .sbody {{ max-height: none; overflow: visible; }}
 
   /* phones: search across the top, the drawer and the deal sheet slide up from the bottom so the top of
@@ -612,7 +613,6 @@ STYLE = f"""
   .popup-open .leaflet-tooltip {{ display: none; }}
 
   .leaflet-control-scale {{ margin: 0 0 14px 16px !important; }}
-  .leaflet-top.leaflet-left {{ top: 64px; }}  /* the zoom buttons under the top bar, not behind it */
   .leaflet-control-scale-line {{ background: none; color: {MUTED}; border: 1px solid rgba(255,255,255,.35); border-top: none;
                                 padding: 0 6px 2px; font: 500 10px Inter, Arial, sans-serif; letter-spacing: .08em; text-shadow: none; }}
   .leaflet-control-attribution {{ background: transparent !important; color: #5a5a5a; margin: 0 16px 12px 0 !important;
@@ -827,7 +827,7 @@ def build_map():
     trams, buses = _optional(load_trams, "trams"), _optional(load_bus_stops, "bus stops")
     bus_routes = _optional(load_bus_routes, "bus routes")
 
-    m = folium.Map(location=[50.075, 14.46], zoom_start=11, tiles=None, control_scale=True)
+    m = folium.Map(location=[50.075, 14.46], zoom_start=11, tiles=None, zoom_control=False)
 
     # Prague itself: dark neighbourhoods with faint borders (not a toggleable layer).
     city = folium.GeoJson(
@@ -968,11 +968,8 @@ def build_map():
         Object.assign({name}.options, {{ zoomSnap: 0.25, wheelPxPerZoomLevel: 110 }});
         {name}.setMaxZoom(20);
         {name}.setView([50.075, 14.46], 11);
-        // a metric ruler only, and the credits without Leaflet's flag
-        document.querySelector('.leaflet-control-scale')?.remove();
-        L.control.scale({{ imperial: false, maxWidth: 90 }}).addTo({name});
-        {name}.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
-        {name}.attributionControl.addAttribution('datový podklad © IPR Praha (CC BY) · zastávky © PID (CC BY) · Vltava © ČÚZK ZABAGED (CC BY)');
+        // no line of credits on the map: the CC BY credits sit at the foot of the filter window (drawer.js)
+        {name}.attributionControl.remove();
         // tram stops, bus stops and bus routes only once zoomed in
         const byZoom = () => {{
             const z = {name}.getZoom();
