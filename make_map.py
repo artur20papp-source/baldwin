@@ -19,6 +19,7 @@ FILTER_JS = Path(__file__).with_name("price_filter.js")
 SEARCH_JS = Path(__file__).with_name("search.js")
 SKY_JS = Path(__file__).with_name("sky.js")
 SELECT_JS = Path(__file__).with_name("selection.js")
+DRAWER_JS = Path(__file__).with_name("drawer.js")
 CUZK_WMS = "https://services.cuzk.cz/wms/wms.asp"
 
 BACKGROUND = "#0b0c0e"
@@ -68,8 +69,13 @@ STYLE = f"""
 
   /* start screen: a black palantír in the middle; click it to enter the map */
   .ds-menu {{ position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center;
-             background: radial-gradient(ellipse at 50% 46%, #141518 0%, #060607 72%);
-             transition: opacity .9s ease .25s, visibility .9s ease .25s; }}
+             background: #020202; transition: opacity .9s ease .25s, visibility .9s ease .25s; }}
+  /* the orb's light spilling into the dark room: a wide warm glow that slowly breathes */
+  .ds-menu::before {{ content: ""; position: absolute; inset: 0; pointer-events: none;
+                     background: radial-gradient(circle at 50% 50%, rgba(220,70,25,.5) 0%, rgba(170,45,18,.3) 12%,
+                                 rgba(110,25,10,.15) 24%, rgba(50,12,5,.06) 38%, rgba(0,0,0,0) 56%);
+                     animation: orb-breathe 6s ease-in-out infinite; }}
+  @keyframes orb-breathe {{ 0%, 100% {{ opacity: .75; transform: scale(.96); }} 50% {{ opacity: 1; transform: scale(1.04); }} }}
   .ds-menu.gone {{ opacity: 0; visibility: hidden; }}
   .orb-wrap {{ position: relative; }}
   /* dark glass: deep body, rim light (fresnel) and a cool bounce light at the bottom */
@@ -87,6 +93,11 @@ STYLE = f"""
   .orb-fire {{ mix-blend-mode: screen; animation: orb-swirl 38s linear infinite reverse; }}
   .orb-core {{ mix-blend-mode: screen; filter: blur(1px); animation: orb-swirl 24s linear infinite; }}
   @keyframes orb-swirl {{ to {{ transform: rotate(360deg); }} }}
+  /* live light: a big blurred copy of the fire behind the glass, turning with it, so the glow on the
+     room moves wherever the flames inside are */
+  .orb-halo {{ position: absolute; left: 0; top: 0; width: 240px; height: 240px; pointer-events: none;
+              transform: scale(2.3); filter: blur(34px) saturate(1.3); opacity: .8; transition: opacity .6s ease; }}
+  .ds-menu.gone .orb-halo {{ opacity: 0; }}
   /* curved reflection across the top, like light on a glass dome */
   .orb-gloss {{ position: absolute; left: 13%; top: 5%; width: 74%; height: 46%; border-radius: 50%;
                background: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 45%, rgba(255,255,255,0) 72%); }}
@@ -301,6 +312,26 @@ STYLE = f"""
   .ds-select.busy {{ cursor: progress; }}
   .selecting, .selecting .leaflet-interactive {{ cursor: crosshair !important; }}
 
+  /* filter drawer on the right (layers, price filter, selection), opened by the icon at the top right */
+  .ds-toggle {{ position: fixed; top: 16px; right: 16px; z-index: 10001; width: 44px; height: 44px; padding: 0;
+               display: grid; place-items: center; border-radius: 14px; cursor: pointer; color: {TEXT}; {GLASS}
+               transition: color .2s, background .2s; }}
+  .ds-toggle svg {{ width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }}
+  .ds-toggle:hover, .drawer-open .ds-toggle {{ color: {ACCENT}; }}
+  .ds-drawer {{ position: fixed; top: 0; right: 0; bottom: 0; width: 360px; z-index: 10000; box-sizing: border-box;
+               padding: 16px 20px 20px; overflow-y: auto; {GLASS} background: rgba(14,15,18,.94);
+               border: none; border-left: 1px solid rgba(255,255,255,.06); border-radius: 0;
+               transform: translateX(100%); transition: transform .45s cubic-bezier(.2,.8,.2,1);
+               font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
+  .drawer-open .ds-drawer {{ transform: none; }}
+  .ds-drawer .dt {{ height: 44px; display: flex; align-items: center; font-size: 11px; font-weight: 600;
+                   letter-spacing: .22em; text-transform: uppercase; color: {TEXT}; margin-bottom: 6px; }}
+  .ds-drawer > .leaflet-control {{ float: none; clear: none; margin: 0; width: auto; padding: 16px 0;
+                                  background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+                                  border: none !important; border-top: 1px solid rgba(255,255,255,.06) !important;
+                                  border-radius: 0 !important; }}
+  .ds-drawer .ds-select .sbody {{ max-height: none; overflow: visible; }}
+
   .leaflet-tooltip {{ background: rgba(18,20,24,.94); color: {TEXT}; border: 1px solid rgba(255,255,255,.08);
                      border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.4); font-size: 10px; font-weight: 600;
                      letter-spacing: .12em; text-transform: uppercase; }}
@@ -312,7 +343,10 @@ STYLE = f"""
   .leaflet-control-attribution a {{ color: #4d5158; }}
 </style>
 <div class="ds-menu" title="Vstoupit">
-  <div class="orb-wrap"><div class="orb"><svg class="orb-layer orb-smoke" viewBox="0 0 200 200"><defs>
+  <div class="orb-wrap"><div class="orb-halo">
+    <svg class="orb-layer orb-fire" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-fire-f)" mask="url(#orb-mask-all)"/></svg>
+    <svg class="orb-layer orb-core" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-core-f)" mask="url(#orb-mask-core)"/></svg></div>
+  <div class="orb"><svg class="orb-layer orb-smoke" viewBox="0 0 200 200"><defs>
     <filter id="orb-smoke-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.014 0.022" numOctaves="4" seed="5"/>
       <feColorMatrix type="matrix" values="0 0 0 0 .2  0 0 0 0 .25  0 0 0 0 .4  2.2 0 0 0 -.95"/></filter>
     <filter id="orb-fire-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="4" seed="11"/>
@@ -531,6 +565,7 @@ def build_map():
                .replace("__ACCENT__", json.dumps(ACCENT)).replace("__ORANGE__", json.dumps(ORANGE)))
     filter_js = FILTER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     select_js = SELECT_JS.read_text(encoding="utf-8").replace("__MAP__", name).replace("__PURPLE__", json.dumps(PURPLE))
+    drawer_js = DRAWER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     stations = [{k: s[k] for k in ("name", "lines", "lat", "lon")} for s in (metro or {}).get("stations", [])]
     search_js = (SEARCH_JS.read_text(encoding="utf-8").replace("__MAP__", name)
                  .replace("__STATIONS__", json.dumps(stations, ensure_ascii=False)))
@@ -567,6 +602,7 @@ def build_map():
         {filter_js}
         {search_js}
         {select_js}
+        {drawer_js}
         {sky_js}
     }});"""))
     m.save(OUT)
