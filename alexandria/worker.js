@@ -43,23 +43,31 @@ async function knowledge() {
   return cached.text;
 }
 
-// the newest text "flash" model this key may use, from Google's model list
-let picked = null;
-async function newestFlash(key) {
+// The text "flash" models this key may use, from Google's model list: newest first, the lighter
+// "flash-lite" ones after the full ones of the same version. Fetched once per worker start.
+let picked = null, listed = null;
+async function flashModels(key) {
+  if (listed) return listed;
   const res = await fetch(`${API}/models?pageSize=200`, { headers: { "x-goog-api-key": key } });
   const data = await res.json().catch(() => ({}));
-  const version = (name) => (name.match(/gemini-(\d+(?:\.\d+)?)/) || [0, 0])[1] * 1;
-  const usable = (data.models || []).map((m) => ({ id: m.name.replace("models/", ""), methods: m.supportedGenerationMethods || [] }))
-    .filter((m) => m.methods.includes("generateContent") && /^gemini-[\d.]+-flash$|^gemini-[\d.]+-flash-latest$/.test(m.id))
-    .sort((a, b) => version(b.id) - version(a.id));
-  return usable.length ? usable[0].id : null;
+  const version = (id) => (id.match(/gemini-(\d+(?:\.\d+)?)/) || [0, 0])[1] * 1;
+  listed = (data.models || []).map((m) => ({ id: m.name.replace("models/", ""), methods: m.supportedGenerationMethods || [] }))
+    .filter((m) => m.methods.includes("generateContent") && /^gemini-[\d.]+-flash(-lite)?(-latest)?$/.test(m.id))
+    .sort((a, b) => version(b.id) - version(a.id) || a.id.length - b.id.length)
+    .map((m) => m.id);
+  return listed;
 }
 
 async function generate(key, model, body) {
-  const res = await fetch(`${API}/models/${model}:generateContent`, {
-    method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(body),
-  });
-  return { res, data: await res.json().catch(() => ({})) };
+  try {
+    const res = await fetch(`${API}/models/${model}:generateContent`, {
+      method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),  // a model that hangs counts as busy
+    });
+    return { res, data: await res.json().catch(() => ({})) };
+  } catch {
+    return { res: { ok: false, status: 504 }, data: { error: { message: "The model took too long." } } };
+  }
 }
 
 const json = (body, status, origin) => new Response(JSON.stringify(body), {
@@ -100,20 +108,22 @@ export default {
       contents,
       generationConfig: { temperature: 0.2, maxOutputTokens: 900 },
     };
+    // The model that answered last time first; if it is retired, overloaded, rate-limited or slow, the
+    // next ones from Google's list (up to four tries), remembering whichever answers.
     let model = env.GEMINI_MODEL || picked || MODEL;
     let { res, data } = await generate(env.GEMINI_API_KEY, model, body);
-    // the model was retired or is not offered to this key: take the newest flash model and try once more
-    if (!res.ok && res.status !== 429 && !env.GEMINI_MODEL) {
-      const fresh = await newestFlash(env.GEMINI_API_KEY);
-      if (fresh && fresh !== model) {
-        model = picked = fresh;
-        ({ res, data } = await generate(env.GEMINI_API_KEY, model, body));
+    if (!res.ok && !env.GEMINI_MODEL) {
+      const others = (await flashModels(env.GEMINI_API_KEY)).filter((id) => id !== model).slice(0, 3);
+      for (const next of others) {
+        ({ res, data } = await generate(env.GEMINI_API_KEY, next, body));
+        if (res.ok) { model = next; break; }
       }
     }
-    if (!res.ok) {
-      const busy = res.status === 429;
-      return json({ error: busy ? "Alexandria is busy (free-tier limit). Try again in a minute."
-                                : (data.error && data.error.message) || `Gemini error ${res.status}` }, busy ? 429 : 502, allowed);
+    if (res.ok) picked = model;
+    else {
+      const busy = [429, 503, 504].includes(res.status) || /demand|overloaded|too long/i.test(data.error?.message || "");
+      return json({ error: busy ? "Alexandria je teď přetížená (bezplatný limit Gemini). Zkuste to za chvíli znovu."
+                                : (data.error && data.error.message) || `Gemini error ${res.status}` }, busy ? 503 : 502, allowed);
     }
     const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").trim();
     return json({ text: text || "I have no answer to that in the library." }, 200, allowed);
