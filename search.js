@@ -1,4 +1,4 @@
-// Search box in the title panel: development areas, localities, parks, metro stations (all local)
+﻿// Search box in the title panel: development areas, localities, parks, metro stations (all local)
 // and addresses (ČÚZK RÚIAN, live). Inlined into map.html by make_map.py; __MAP__ and
 // __STATIONS__ are filled in there.
 (function () {
@@ -23,16 +23,16 @@
                      keys: [p.area_code, String(p.id), p.locality_name].map(norm), go: () => window.baldwinOpenArea(l) });
       } else if (p.lokalita && p.nazev) {
         index.push({ type: "Lokalita", text: p.nazev, sub: `lokalita ${p.lokalita}`, keys: [norm(p.nazev), p.lokalita],
-                     go: () => map.fitBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 16 }) });
+                     go: () => map.flyToBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 16, duration: 0.9 }) });
       } else if (p.nazev && !p.parametr) {
         index.push({ type: "Park", text: p.nazev, sub: "městský park", keys: [norm(p.nazev)],
-                     go: () => map.fitBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 17 }) });
+                     go: () => map.flyToBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 17, duration: 0.9 }) });
       }
     });
   }
   for (const s of STATIONS) {
     index.push({ type: "Metro", text: s.name, sub: `linka ${s.lines.join(" · ")}`, keys: [norm(s.name)],
-                 go: () => map.setView([s.lat, s.lon], 16) });
+                 go: () => map.flyTo([s.lat, s.lon], 16, { duration: 0.9 }) });
   }
 
   function localHits(q) {
@@ -66,7 +66,7 @@
           const c = ((await (await fetch(u)).json()).candidates || [])[0];
           if (!c) return;
           const ll = [c.location.y, c.location.x];
-          map.setView(ll, s.type === "Ulice" ? 16 : 18);
+          map.flyTo(ll, s.type === "Ulice" ? 16 : 18, { duration: 0.9 });
           if (marker) map.removeLayer(marker);
           marker = L.circleMarker(ll, { radius: 7, color: "#ffffff", weight: 2, fillColor: "#ffffff", fillOpacity: 0.25 })
             .bindTooltip(s.text).addTo(map);

@@ -175,7 +175,10 @@
   const panel = document.createElement("aside");
   panel.className = "ds-panel";
   document.body.appendChild(panel);
-  const FIT = { paddingTopLeft: [430, 60], paddingBottomRight: [40, 40], maxZoom: 18 };
+  // keep the area clear of the panel: beside it on a desktop, above the bottom sheet on a phone
+  const FIT = window.matchMedia("(max-width: 700px)").matches
+    ? { paddingTopLeft: [20, 130], paddingBottomRight: [20, Math.round(window.innerHeight * 0.62) + 20], maxZoom: 18 }
+    : { paddingTopLeft: [430, 60], paddingBottomRight: [40, 40], maxZoom: 18 };
   let current = null;  // { layer, parcels } of the open area
 
   function close() {
@@ -199,7 +202,7 @@
     render(p, '<div class="muted">Načítám z katastru…</div>');
     panel.classList.add("open");
     panel.scrollTop = 0;
-    map.fitBounds(layer.getBounds(), FIT);
+    map.flyToBounds(layer.getBounds(), { ...FIT, duration: 0.9 });
     let result;
     try {
       result = await fetchParcels(layer);

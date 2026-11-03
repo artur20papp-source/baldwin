@@ -4,7 +4,7 @@
 (function () {
   const map = __MAP__;
   const W = 360;  // drawer width, px (same as .ds-drawer in the CSS)
-  const GLIDE = { duration: 0.45, easeLinearity: 0.5 };
+  const GLIDE = { duration: 0.6, easeLinearity: 0.2 };  // a soft ease-out, like the drawer's CSS curve
 
   const drawer = document.createElement("aside");
   drawer.className = "ds-drawer";
@@ -26,12 +26,15 @@
 
   // Opening: glide the map left by half the drawer while it slides over the right edge, then narrow the
   // map to the free space (left-anchored, so nothing jumps). Closing does the same in reverse.
+  // On phones the drawer is a bottom sheet (see the CSS), so the map stays as it is.
+  const phone = () => window.matchMedia("(max-width: 700px)").matches;
   const box = map.getContainer();
   let open = false;
   function toggle(on) {
     if (on === open) return;
     open = on;
     document.body.classList.toggle("drawer-open", on);
+    if (phone() && box.style.width !== `calc(100% - ${W}px)`) return;
     if (on) {
       map.panBy([W / 2, 0], GLIDE);
       map.once("moveend", () => {

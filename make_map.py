@@ -10,7 +10,7 @@ from pathlib import Path
 import folium
 
 from mpp import (load_areas, load_bus_routes, load_bus_stops, load_localities, load_metro, load_parks,
-                 load_trams, load_water)
+                 load_rivers, load_trams, load_water)
 from screening import add_screening
 
 OUT = Path(__file__).with_name("index.html")  # index.html so GitHub Pages serves it at the site root
@@ -254,7 +254,7 @@ STYLE = f"""
   /* deal sheet in a side panel */
   .ds-panel {{ position: fixed; top: 140px; left: 16px; bottom: 16px; width: 390px; z-index: 9998;
               overflow-y: auto; padding: 22px 22px 18px; border-radius: 16px; {GLASS}
-              transform: translateX(-120%); transition: transform .35s cubic-bezier(.2,.8,.2,1);
+              transform: translateX(-120%); transition: transform .55s cubic-bezier(.22,1,.36,1); will-change: transform;
               font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
   .ds-panel.open {{ transform: none; }}
   .ds-panel::-webkit-scrollbar {{ width: 6px; }}
@@ -333,7 +333,7 @@ STYLE = f"""
   .ds-drawer {{ position: fixed; top: 0; right: 0; bottom: 0; width: 360px; z-index: 10000; box-sizing: border-box;
                padding: 16px 20px 20px; overflow-y: auto; {GLASS} background: rgba(14,15,18,.94);
                border: none; border-left: 1px solid rgba(255,255,255,.06); border-radius: 0;
-               transform: translateX(100%); transition: transform .45s cubic-bezier(.2,.8,.2,1);
+               transform: translateX(100%); transition: transform .6s cubic-bezier(.22,1,.36,1); will-change: transform;
                font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
   .drawer-open .ds-drawer {{ transform: none; }}
   .ds-drawer .dt {{ height: 44px; display: flex; align-items: center; font-size: 11px; font-weight: 600;
@@ -343,6 +343,24 @@ STYLE = f"""
                                   border: none !important; border-top: 1px solid rgba(255,255,255,.06) !important;
                                   border-radius: 0 !important; }}
   .ds-drawer .ds-select .sbody {{ max-height: none; overflow: visible; }}
+
+  /* phones: search across the top, the drawer and the deal sheet slide up from the bottom so the top of
+     the map stays visible and tappable; pinch replaces the zoom buttons */
+  @media (max-width: 700px) {{
+    .ds-title {{ top: 12px; left: 12px; right: 68px; width: auto; padding: 12px; }}
+    .ds-brand {{ font-size: 12px; padding-bottom: 10px; }}
+    .ds-search input {{ font-size: 16px; }}  /* 16px stops iOS from zooming into the field */
+    .ds-results {{ max-height: 50vh; }}
+    .leaflet-control-zoom {{ display: none; }}
+    .ds-toggle {{ top: 12px; right: 12px; }}
+    .ds-drawer {{ top: auto; height: 62vh; width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,.08);
+                 border-radius: 18px 18px 0 0; padding-top: 6px; transform: translateY(100%); }}
+    .ds-panel {{ top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 62vh; padding: 18px 16px 24px;
+                border-radius: 18px 18px 0 0; transform: translateY(110%); }}
+    .deal .prow {{ grid-template-columns: 54px 72px 1fr auto; gap: 6px; }}
+    .orb-wrap {{ transform: scale(.72); }}
+    .hq-card {{ display: none; }}
+  }}
 
   .leaflet-tooltip {{ background: rgba(18,20,24,.94); color: {TEXT}; border: 1px solid rgba(255,255,255,.08);
                      border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.4); font-size: 10px; font-weight: 600;
@@ -502,33 +520,45 @@ def build_map():
     areas, localities = add_screening(load_areas()), load_localities()
     parks, metro = _optional(load_parks, "parks"), _optional(load_metro, "metro")
     water = _optional(load_water, "water")
+    # IPR's Vltava has patches; ČÚZK's river surfaces, clipped to Prague, fill them from underneath
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+    prague = unary_union([shape(f["geometry"]).buffer(0) for f in localities["features"]])
+    rivers = _optional(lambda: load_rivers(prague), "river (ZABAGED)")
     trams, buses = _optional(load_trams, "trams"), _optional(load_bus_stops, "bus stops")
     bus_routes = _optional(load_bus_routes, "bus routes")
 
     m = folium.Map(location=[50.075, 14.46], zoom_start=11, tiles=None, control_scale=True)
 
     # Prague itself: dark neighbourhoods with faint borders (not a toggleable layer).
-    folium.GeoJson(
+    city = folium.GeoJson(
         localities, name="Praha", control=False,
         style_function=lambda _: {"color": CITY_BORDER, "weight": 0.8, "fillColor": CITY, "fillOpacity": 1},
         tooltip=folium.GeoJsonTooltip(fields=["nazev"], labels=False),
     ).add_to(m)
 
-    # Water in blue so the Vltava stands out; not interactive, so hovering shows the locality under it.
-    if water:
-        folium.GeoJson(
-            water, name="Voda", control=False, interactive=False,
-            style_function=lambda _: {"color": WATER_EDGE, "weight": 0.8, "fillColor": WATER_FILL, "fillOpacity": 1},
-        ).add_to(m)
-
+    # Parks before the water: some park outlines reach over the Vltava and would cover it.
+    park_geo = None
     if parks:
         park_layer = folium.FeatureGroup(name=_label("Parky", "#33363d", len(parks["features"])), show=True)
-        folium.GeoJson(
+        park_geo = folium.GeoJson(
             parks,
             style_function=lambda _: {"color": PARK, "weight": 0, "fillColor": PARK, "fillOpacity": 1},
             tooltip=folium.GeoJsonTooltip(fields=["nazev"], labels=False),
         ).add_to(park_layer)
         park_layer.add_to(m)
+
+    # Water in blue so the Vltava stands out; not interactive, so hovering shows the locality under it.
+    if water:
+        if rivers:  # under IPR's water, no outline: only shows where IPR's river has a gap
+            folium.GeoJson(
+                rivers, name="Řeky", control=False, interactive=False,
+                style_function=lambda _: {"weight": 0, "fillColor": WATER_FILL, "fillOpacity": 1},
+            ).add_to(m)
+        folium.GeoJson(
+            water, name="Voda", control=False, interactive=False,
+            style_function=lambda _: {"color": WATER_EDGE, "weight": 0.8, "fillColor": WATER_FILL, "fillOpacity": 1},
+        ).add_to(m)
 
     for name, color, fill, show, belongs in GROUPS:
         features = [f for f in areas["features"] if belongs(f["properties"])]
@@ -601,15 +631,18 @@ def build_map():
     sky_js = (SKY_JS.read_text(encoding="utf-8").replace("__MAP__", name)
               .replace("__AIRPORT__", json.dumps(AIRPORT)).replace("__PLANE__", json.dumps(PLANE))
               .replace("__FLIGHTS__", json.dumps(FLIGHTS)).replace("__SKY_ZOOM__", str(SKY_ZOOM)))
+    park_js = f"{park_geo.get_name()}.bringToBack();" if park_geo else ""
     zoom_js = "\n".join(
         f"if (z >= {z}) {g.get_name()}.addLayer({s.get_name()}); else {g.get_name()}.removeLayer({s.get_name()});"
         for g, s, z in zoom_layers)
     m.get_root().script.add_child(folium.Element(f"""
     window.addEventListener('load', () => {{
         {name}.setMinZoom({SKY_ZOOM});
+        // smoother wheel zoom: smaller steps that may land between whole zoom levels
+        Object.assign({name}.options, {{ zoomSnap: 0.25, wheelPxPerZoomLevel: 110 }});
         {name}.setMaxZoom(20);
         {name}.setView([50.075, 14.46], 11);
-        {name}.attributionControl.addAttribution('datový podklad © IPR Praha (CC BY) · zastávky © PID (CC BY)');
+        {name}.attributionControl.addAttribution('datový podklad © IPR Praha (CC BY) · zastávky © PID (CC BY) · Vltava © ČÚZK ZABAGED (CC BY)');
         // tram stops, bus stops and bus routes only once zoomed in
         const byZoom = () => {{
             const z = {name}.getZoom();
@@ -617,6 +650,8 @@ def build_map():
         }};
         {name}.on('zoomend', byZoom);
         byZoom();
+        // a layer switched back on is drawn on top; keep parks and the city under the water and the rest
+        {name}.on('overlayadd', () => {{ {park_js} {city.get_name()}.bringToBack(); }});
         // RSJ card opens to the left when it would run into the panels on the right
         const rightPanels = document.querySelector('.leaflet-top.leaflet-right');
         document.querySelectorAll('.hq').forEach((el) => el.addEventListener('mouseenter', () => {{

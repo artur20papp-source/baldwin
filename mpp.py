@@ -15,7 +15,7 @@ BASE = "https://mp.iprpraha.cz/arcgis/rest/services/Hosted"
 AREAS_URL = f"{BASE}/MPP_CUR_MPP_400_POTENCIAL_P/FeatureServer/0"  # transformační a rozvojové plochy
 LOCALITIES_URL = f"{BASE}/MPP_CUR_MPP_300_LOKALITY_P/FeatureServer/0"  # lokality (neighbourhood names)
 PARKS_URL = f"{BASE}/MPP_CUR_MPP_100_PARKY_P/FeatureServer/0"  # městské parky
-WATER_URL = f"{BASE}/URK_CUR_URK_SS_VODASPOJITA_P/FeatureServer/0"  # voda spojitá: river, ponds, lakes
+WATER_URL = f"{BASE}/AGD_CUR_AGD_OCH_VODNIPLOCHYTOKY_P/FeatureServer/0"  # vodní plochy a toky: the whole Vltava, ponds
 TRANSPORT_LINES_URL = f"{BASE}/MPP_CUR_MPP_STAV_600_DI_TRASY_L/FeatureServer/0"  # existing transport lines
 TRANSPORT_POINTS_URL = f"{BASE}/MPP_CUR_MPP_STAV_600_DI_ZARIZENI_B/FeatureServer/0"  # existing transport points
 PLANNED_LINES_URL = f"{BASE}/MPP_CUR_MPP_600_DI_TRASY_L/FeatureServer/0"  # planned transport lines
@@ -32,7 +32,9 @@ def _get(url, **params):
     key = hashlib.sha1(json.dumps([url, sorted(params.items())], default=str).encode()).hexdigest()
     cached = CACHE / f"{key}.json"
     try:
-        response = requests.get(url, params=params, timeout=60)
+        # Overpass (OpenStreetMap) refuses requests that don't say who is asking
+        response = requests.get(url, params=params, timeout=150,
+                                headers={"User-Agent": "BaldwinPalantir/1.0 (Prague land deal screener)"})
         response.raise_for_status()
         data = response.json()
         if "error" in data:
@@ -104,8 +106,57 @@ def load_localities():
 
 
 def load_water():
-    """All water surfaces as GeoJSON (the Vltava is one continuous shape)."""
-    return _query(WATER_URL, where="1=1", outFields="objectid", outSR=WGS84, geometryPrecision=5, maxAllowableOffset=0.00001, f="geojson")
+    """All water surfaces and watercourses as GeoJSON. The layer has more shapes than one answer holds
+    (2000), so it is read in pages."""
+    from shapely.geometry import mapping, shape
+    from shapely.ops import unary_union
+    from shapely.validation import make_valid
+
+    features, offset = [], 0
+    while True:
+        page = _query(WATER_URL, where="1=1", outFields="objectid", orderByFields="objectid", resultOffset=offset,
+                      outSR=WGS84, geometryPrecision=5, maxAllowableOffset=0.00001, f="geojson")
+        features += page["features"]
+        if not page.get("exceededTransferLimit") and not page.get("properties", {}).get("exceededTransferLimit"):
+            break
+        offset += len(page["features"])
+    # The simplified outlines of some shapes cross themselves; a browser fills those even-odd and draws
+    # the overlaps as holes (the "patches" in the river), so every shape is repaired first.
+    for f in features:
+        g = shape(f["geometry"])
+        if not g.is_valid:
+            fixed = make_valid(g)  # may come back mixed with stray lines; keep the polygon parts
+            f["geometry"] = mapping(unary_union([p for p in getattr(fixed, "geoms", [fixed])
+                                                 if p.geom_type in ("Polygon", "MultiPolygon")]))
+    return {"type": "FeatureCollection", "features": features}
+
+
+# ČÚZK ZABAGED water surfaces (open data, CC BY 4.0); stojvoda 'N' = flowing water, i.e. the rivers
+ZABAGED_WATER_URL = "https://ags.cuzk.cz/arcgis/rest/services/ZABAGED_POLOHOPIS/MapServer/132"
+RIVER_BBOX = PRAGUE_BBOX
+
+
+def load_rivers(inside):
+    """The river surfaces (the Vltava) from ČÚZK ZABAGED, clipped to `inside` (Prague), as GeoJSON: drawn
+    under IPR's water they fill the patches where IPR's river is broken."""
+    from shapely.geometry import mapping, shape
+    from shapely.ops import unary_union
+
+    shapes, offset = [], 0
+    while True:
+        page = _query(ZABAGED_WATER_URL, where="stojvoda='N'", geometry=",".join(map(str, RIVER_BBOX)),
+                      geometryType="esriGeometryEnvelope", inSR=WGS84, spatialRel="esriSpatialRelIntersects",
+                      outFields="OBJECTID", orderByFields="OBJECTID", resultOffset=offset, outSR=WGS84,
+                      geometryPrecision=5, f="geojson")
+        shapes += [shape(f["geometry"]).buffer(0) for f in page["features"] if f.get("geometry")]
+        if not page.get("exceededTransferLimit") and not page.get("properties", {}).get("exceededTransferLimit"):
+            break
+        offset += len(page["features"])
+    clipped = unary_union(shapes).intersection(inside)
+    # clipping at the border leaves stray lines and points; keep only the surfaces
+    rivers = unary_union([p for p in getattr(clipped, "geoms", [clipped])
+                          if p.geom_type in ("Polygon", "MultiPolygon")]).simplify(0.00002)
+    return {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": mapping(rivers)}]}
 
 
 def load_parks():
