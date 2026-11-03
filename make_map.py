@@ -152,8 +152,10 @@ GROUPS = [
     ("Transformační obytné", BROWN, 0.75, True, lambda p: p["stabilita"] != 3 and p["vyuziti"] == 1),
 ]
 
-GLASS = ("background: rgba(18,20,24,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);"
-         "border: 1px solid rgba(255,255,255,.06); box-shadow: 0 10px 40px rgba(0,0,0,.45);")
+# Panels: dark frosted glass in the manner of Rockaway Capital's site: smoky and half see-through, the
+# map strongly blurred behind it, no border and no shadow
+GLASS = ("background: rgba(8,9,11,.5); backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3);"
+         "border: none; box-shadow: none;")
 
 STYLE = f"""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -295,7 +297,7 @@ STYLE = f"""
 
   /* title panel: wordmark + search */
   .ds-title {{ position: fixed; top: 16px; left: 64px; z-index: 9999; width: 330px; padding: 16px 16px 14px;
-              border-radius: 16px; box-sizing: border-box; font-family: Inter, Arial, sans-serif; {GLASS} }}
+              border-radius: 10px; box-sizing: border-box; font-family: Inter, Arial, sans-serif; {GLASS} }}
   .ds-brand {{ display: flex; align-items: baseline; gap: 10px; padding: 0 4px 12px; font-size: 14px;
               letter-spacing: .34em; }}
   .ds-brand b {{ font-weight: 600; color: {TEXT}; }}
@@ -303,7 +305,7 @@ STYLE = f"""
   .ds-search {{ position: relative; }}
   .ds-search svg {{ position: absolute; left: 11px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%);
                    stroke: {MUTED}; fill: none; stroke-width: 2; pointer-events: none; }}
-  .ds-search input {{ width: 100%; box-sizing: border-box; padding: 9px 34px 9px 32px; border-radius: 10px;
+  .ds-search input {{ width: 100%; box-sizing: border-box; padding: 9px 34px 9px 32px; border-radius: 6px;
                      border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.04); color: {TEXT};
                      font: 400 12px Inter, Arial, sans-serif; outline: none; transition: border-color .2s, background .2s; }}
   .ds-search input::placeholder {{ color: #5c6068; }}
@@ -323,8 +325,7 @@ STYLE = f"""
   .ds-sub {{ font-size: 10px; color: #5c6068; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 
   /* layer panel with toggle switches */
-  .leaflet-control-layers {{ border-radius: 14px !important; padding: 12px 16px; {GLASS}
-                            border: 1px solid rgba(255,255,255,.06) !important; }}
+  .leaflet-control-layers {{ border-radius: 10px !important; padding: 12px 16px; {GLASS} border: none !important; }}
   .leaflet-control-layers label {{ font-size: 10px; font-weight: 500; letter-spacing: .14em;
                                   text-transform: uppercase; color: {TEXT}; margin: 8px 0; cursor: pointer; }}
   .leaflet-control-layers label > span {{ display: flex; align-items: center; }}
@@ -339,13 +340,13 @@ STYLE = f"""
   .swatch {{ display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; }}
   .count {{ margin-left: auto; padding-left: 18px; color: {MUTED}; font-variant-numeric: tabular-nums; }}
 
-  .leaflet-bar {{ border-radius: 12px !important; overflow: hidden; {GLASS} border: 1px solid rgba(255,255,255,.06) !important; }}
+  .leaflet-bar {{ border-radius: 8px !important; overflow: hidden; {GLASS} border: none !important; }}
   .leaflet-bar a {{ background: transparent !important; color: {TEXT} !important; border-bottom: 1px solid rgba(255,255,255,.06) !important; }}
   .leaflet-bar a:hover {{ color: {ACCENT} !important; }}
 
   .leaflet-popup-content-wrapper, .leaflet-popup-tip {{ background: rgba(18,20,24,.94); color: {TEXT};
       box-shadow: 0 10px 40px rgba(0,0,0,.5); }}
-  .leaflet-popup-content-wrapper {{ border-radius: 14px; border: 1px solid rgba(255,255,255,.06); }}
+  .leaflet-popup-content-wrapper {{ border-radius: 10px; border: none; }}
   .leaflet-popup-content {{ margin: 18px 20px; }}
   .leaflet-container a.leaflet-popup-close-button {{ color: {MUTED}; top: 8px; right: 8px; }}
 
@@ -392,7 +393,7 @@ STYLE = f"""
   .hq:hover .hq-dot {{ left: 5px; top: 5px; width: 12px; height: 12px; background: #ffffff;
                       box-shadow: 0 0 0 3px {BACKGROUND}, 0 0 0 5px #ffffff, 0 0 24px rgba(255,255,255,.8); }}
   .hq-card {{ position: absolute; left: 30px; top: -20px; display: flex; align-items: center; gap: 14px;
-             padding: 12px 18px 12px 12px; border-radius: 14px; white-space: nowrap; {GLASS}
+             padding: 12px 18px 12px 12px; border-radius: 10px; white-space: nowrap; {GLASS}
              opacity: 0; transform: translateX(-6px) scale(.94); transform-origin: left center;
              transition: opacity .25s ease, transform .25s ease; pointer-events: none; }}
   .hq.left .hq-card {{ left: auto; right: 30px; transform-origin: right center; }}
@@ -405,7 +406,7 @@ STYLE = f"""
   .hq-text span {{ display: block; font-size: 11px; color: {MUTED}; }}
 
   /* price filter, stacked under the layer panel */
-  .ds-filter {{ width: 240px; padding: 14px 16px; border-radius: 14px; color: {TEXT}; {GLASS}
+  .ds-filter {{ width: 240px; padding: 14px 16px; border-radius: 10px; color: {TEXT}; {GLASS}
                font-family: Inter, Arial, sans-serif; }}
   .ds-filter .ft {{ font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
   .ds-filter .fv {{ display: block; margin-top: 6px; font-size: 13px; letter-spacing: 0; text-transform: none;
@@ -420,7 +421,7 @@ STYLE = f"""
 
   /* deal sheet in a side panel */
   .ds-panel {{ position: fixed; top: 140px; left: 16px; bottom: 16px; width: 390px; z-index: 9998;
-              overflow-y: auto; padding: 22px 22px 18px; border-radius: 16px; {GLASS}
+              overflow-y: auto; padding: 22px 22px 18px; border-radius: 10px; {GLASS}
               transform: translateX(-120%); transition: transform .55s cubic-bezier(.22,1,.36,1); will-change: transform;
               font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
   .ds-panel.open {{ transform: none; }}
@@ -436,7 +437,7 @@ STYLE = f"""
   .deal .chips span {{ display: inline-block; margin: 10px 4px 0 0; padding: 3px 9px; border-radius: 999px;
                       border: 1px solid rgba(255,255,255,.1); font-size: 10px; color: {TEXT}; }}
   .deal .tiles {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }}
-  .deal .tile {{ background: rgba(255,255,255,.04); border-radius: 10px; padding: 9px 10px; }}
+  .deal .tile {{ background: rgba(255,255,255,.06); border-radius: 6px; padding: 9px 10px; }}
   .deal .tile b {{ display: block; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }}
   .deal .tile small {{ font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: {MUTED}; }}
   .deal .sec {{ margin: 14px 0 4px; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: {MUTED}; }}
@@ -466,7 +467,7 @@ STYLE = f"""
   .deal .muted {{ color: {MUTED}; padding: 4px 0; }}
 
   /* selection window (land assembly), bottom right */
-  .ds-select {{ width: 310px; padding: 12px 14px; border-radius: 14px; color: {TEXT}; {GLASS}
+  .ds-select {{ width: 310px; padding: 12px 14px; border-radius: 10px; color: {TEXT}; {GLASS}
                font-family: Inter, Arial, sans-serif; }}
   .ds-select .sh {{ display: flex; align-items: center; justify-content: space-between; }}
   .ds-select .ft {{ font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
@@ -500,14 +501,14 @@ STYLE = f"""
 
   /* filter drawer on the right (layers, price filter, selection), opened by the icon at the top right */
   .ds-toggle {{ position: fixed; top: 16px; right: 16px; z-index: 10001; width: 44px; height: 44px; padding: 0;
-               display: grid; place-items: center; border-radius: 14px; cursor: pointer; color: {TEXT}; {GLASS}
+               display: grid; place-items: center; border-radius: 8px; cursor: pointer; color: {TEXT}; {GLASS}
                transition: color .2s, background .2s; }}
   .ds-toggle svg {{ width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }}
   .ds-toggle:hover, .drawer-open .ds-toggle {{ color: {ACCENT}; }}
-  .ds-drawer {{ position: fixed; top: 0; right: 0; bottom: 0; width: 360px; z-index: 10000; box-sizing: border-box;
-               padding: 16px 20px 20px; overflow-y: auto; {GLASS} background: rgba(14,15,18,.94);
-               border: none; border-left: 1px solid rgba(255,255,255,.06); border-radius: 0;
-               transform: translateX(100%); transition: transform .6s cubic-bezier(.22,1,.36,1); will-change: transform;
+  .ds-drawer {{ position: fixed; top: 8px; right: 8px; bottom: 8px; width: 360px; z-index: 10000; box-sizing: border-box;
+               padding: 8px 20px 20px; overflow-y: auto; {GLASS} background: rgba(8,9,11,.55);
+               border-radius: 10px;
+               transform: translateX(calc(100% + 16px)); transition: transform .6s cubic-bezier(.22,1,.36,1); will-change: transform;
                font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
   .drawer-open .ds-drawer {{ transform: none; }}
   .ds-drawer .dt {{ height: 44px; display: flex; align-items: center; font-size: 11px; font-weight: 600;
@@ -518,11 +519,13 @@ STYLE = f"""
                                   border-radius: 0 !important; }}
   .ds-drawer .ds-select .sbody {{ max-height: none; overflow: visible; }}
   /* link to Baldwin Alexandria, the source library */
-  .ds-alexandria {{ display: block; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; text-decoration: none;
-                   border: 1px solid rgba(143,227,160,.22); background: rgba(143,227,160,.06); transition: background .2s; }}
-  .ds-alexandria:hover {{ background: rgba(143,227,160,.12); }}
-  .ds-alexandria b {{ display: block; color: {ACCENT}; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }}
-  .ds-alexandria span {{ display: block; margin-top: 3px; color: {MUTED}; font-size: 11px; }}
+  .ds-alexandria {{ display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 4px 2px;
+                   text-decoration: none; color: {TEXT}; transition: color .2s; }}
+  .ds-alexandria:hover {{ color: {ACCENT}; }}
+  .ds-alexandria svg {{ width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.4;
+                       stroke-linecap: round; stroke-linejoin: round; }}
+  .ds-alexandria svg .fire {{ fill: {ACCENT}; stroke: none; }}
+  .ds-alexandria b {{ font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }}
 
   /* phones: search across the top, the drawer and the deal sheet slide up from the bottom so the top of
      the map stays visible and tappable; pinch replaces the zoom buttons */
@@ -533,8 +536,8 @@ STYLE = f"""
     .ds-results {{ max-height: 50vh; }}
     .leaflet-control-zoom {{ display: none; }}
     .ds-toggle {{ top: 12px; right: 12px; }}
-    .ds-drawer {{ top: auto; height: 62vh; width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,.08);
-                 border-radius: 18px 18px 0 0; padding-top: 6px; transform: translateY(100%); }}
+    .ds-drawer {{ top: auto; left: 8px; height: 62vh; width: auto; padding-top: 6px;
+                 transform: translateY(calc(100% + 16px)); }}
     .ds-panel {{ top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 62vh; padding: 18px 16px 24px;
                 border-radius: 18px 18px 0 0; transform: translateY(110%); }}
     .deal .prow {{ grid-template-columns: 54px 72px 1fr auto; gap: 6px; }}

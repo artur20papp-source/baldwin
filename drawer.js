@@ -9,8 +9,11 @@
   const drawer = document.createElement("aside");
   drawer.className = "ds-drawer";
   drawer.innerHTML = '<div class="dt">Filtry a výběr</div>'
-    + '<a class="ds-alexandria" href="alexandria/" target="_blank" rel="noopener">'
-    + '<b>Baldwin Alexandria</b><span>zdroje dat a jak ovlivňují výpočty ↗</span></a>';
+    + '<a class="ds-alexandria" href="alexandria/" target="_blank" rel="noopener" title="Zdroje dat a jak ovlivňují výpočty">'
+    // the Lighthouse of Alexandria: square base, octagonal middle, round top, the fire and its rays
+    + '<svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>'
+    + '<path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg>'
+    + '<b>Baldwin Alexandria</b></a>';
   for (const sel of [".leaflet-control-layers", ".ds-filter", ".ds-select"]) {
     const el = map.getContainer().querySelector(sel);
     if (el) drawer.appendChild(el);
@@ -26,29 +29,16 @@
     + '<circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>';
   document.body.appendChild(button);
 
-  // Opening: glide the map left by half the drawer while it slides over the right edge, then narrow the
-  // map to the free space (left-anchored, so nothing jumps). Closing does the same in reverse.
-  // On phones the drawer is a bottom sheet (see the CSS), so the map stays as it is.
+  // The drawer is a glass window floating over the map (the map shows blurred through it). Opening glides
+  // the map left by half the drawer, so what was in the middle stays in the free part; closing glides it
+  // back. On phones the drawer is a bottom sheet (see the CSS), so the map stays as it is.
   const phone = () => window.matchMedia("(max-width: 700px)").matches;
-  const box = map.getContainer();
   let open = false;
   function toggle(on) {
     if (on === open) return;
     open = on;
     document.body.classList.toggle("drawer-open", on);
-    if (phone() && box.style.width !== `calc(100% - ${W}px)`) return;
-    if (on) {
-      map.panBy([W / 2, 0], GLIDE);
-      map.once("moveend", () => {
-        if (!open) return;
-        box.style.width = `calc(100% - ${W}px)`;
-        map.invalidateSize({ pan: false });
-      });
-    } else {
-      box.style.width = "100%";
-      map.invalidateSize({ pan: false });
-      map.panBy([-W / 2, 0], GLIDE);
-    }
+    if (!phone()) map.panBy([(on ? 1 : -1) * W / 2, 0], GLIDE);
   }
   button.addEventListener("click", () => toggle(!open));
   document.addEventListener("keydown", (e) => {
