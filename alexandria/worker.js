@@ -106,7 +106,8 @@ export default {
     const body = {
       systemInstruction: { parts: [{ text: RULES + library }] },
       contents,
-      generationConfig: { temperature: 0.2, maxOutputTokens: 900 },
+      // generous: newer models spend part of this on thinking first (900 cut answers off mid-sentence)
+      generationConfig: { temperature: 0.2, maxOutputTokens: 8192 },
     };
     // The model that answered last time first; if it is retired, overloaded, rate-limited or slow, the
     // next ones from Google's list (up to four tries), remembering whichever answers.
