@@ -76,6 +76,9 @@ STYLE = f"""
                radial-gradient(ellipse 30% 6% at 50% var(--floor), rgba(255,105,45,.18) 0%, rgba(255,90,40,.05) 55%, rgba(0,0,0,0) 100%),
                radial-gradient(ellipse 55% 14% at 50% var(--floor), rgba(150,45,20,.08) 0%, rgba(0,0,0,0) 100%),
                radial-gradient(ellipse 65% 38% at 50% var(--floor), rgba(110,38,18,.1) 0%, rgba(0,0,0,0) 75%),
+               /* a dim light high above, falling softly onto the orb and the floor around it */
+               radial-gradient(ellipse 26% 75% at 50% -12%, rgba(225,230,245,.055) 0%, rgba(225,230,245,.018) 50%, rgba(0,0,0,0) 85%),
+               radial-gradient(ellipse 28% 7% at 50% calc(var(--floor) + 6px), rgba(225,230,245,.025) 0%, rgba(0,0,0,0) 100%),
                /* back wall, then a soft edge behind the orb where it meets the slightly paler floor */
                linear-gradient(180deg, #030303 0%, #040404 calc(var(--floor) - 64px), #0d0b0a calc(var(--floor) - 50px),
                                #0a0908 calc(var(--floor) + 40px), #050505 100%);
