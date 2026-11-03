@@ -88,6 +88,7 @@
         <div class="links">
           <a href="${LOCALITY_PDF}${p.lokalita}.pdf" target="_blank" rel="noopener">Krycí list lokality ${p.lokalita} ↗</a>
         </div>
+        <button class="acre">Export to Baldwin Acre</button>
       </div>`;
   }
 
@@ -192,6 +193,27 @@
   function render(p, parcelsBody) {
     panel.innerHTML = '<button class="ds-close" title="Zavřít">×</button>' + sheet(p, parcelsBody);
     panel.querySelector(".ds-close").addEventListener("click", close);
+    panel.querySelector(".acre").addEventListener("click", (e) => exportAcre(p, e.currentTarget));
+  }
+
+  // The open area as the site of an appraisal in the Baldwin Acre model; the farmland (ZPF) share is
+  // known once its parcels have loaded.
+  async function exportAcre(p, button) {
+    // ZPF: the farmland share of its parcels applied to the area itself (parcels that reach beyond the
+    // area's edge would otherwise count at their full size)
+    const rows = (current && current.rows) || null;
+    const m2 = (list) => list.reduce((s, r) => s + r.area, 0);
+    const zpf = rows && m2(rows) ? p.area_m2 * m2(rows.filter((r) => FARMLAND.has(r.type))) / m2(rows) : null;
+    const label = `${p.area_code} ${p.locality_name}`;
+    button.disabled = true;
+    button.textContent = "Připravuji…";
+    try {
+      await window.baldwinExportAcre({ siteArea: p.area_m2, zpfM2: zpf, price: p.price || null, label,
+                                       zz: typeof p.z_z === "number" ? p.z_z : null, codes: [p.area_code],
+                                       file: label.replace(/[\\/:*?"<>|]+/g, "-"), date: new Date().toLocaleDateString("cs-CZ") });
+    } catch (err) { alert("Export se nepovedl: " + err.message); }
+    button.disabled = false;
+    button.textContent = "Export to Baldwin Acre";
   }
 
   async function open(layer) {
@@ -213,6 +235,7 @@
     if (current !== mine) return;  // another area was opened, or the panel closed, while loading
     render(p, parcelsHtml(result));
     mine.parcels = drawParcels(result.rows);
+    mine.rows = result.rows;  // for the export
   }
 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });

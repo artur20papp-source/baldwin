@@ -130,13 +130,43 @@
           <span>${num(r.area)} m²</span><a href="${cad.KN_PARCEL}${r.id}" target="_blank" rel="noopener">Vlastník ↗</a>
           <button class="x" data-p="${r.id}" title="Odebrat">×</button></div>`).join("")}`;
     }
-    if (A.length || P.length) h += '<button class="clear">Vymazat výběr</button>';
+    if (A.length || P.length) h += '<button class="acre">Export to Baldwin Acre</button><button class="clear">Vymazat výběr</button>';
     body.innerHTML = h;
+  }
+
+  // The selection as the site of an appraisal in the Baldwin Acre model: the parcels if any are picked
+  // (they are the land actually bought), otherwise the areas.
+  async function exportAcre(button) {
+    const A = [...areas.values()].map((a) => a.layer.feature.properties);
+    const P = [...parcels.values()];
+    const weighted = (list, m2, price) => {
+      const priced = list.filter(price);
+      const m = sum(priced, m2);
+      return m ? sum(priced, (x) => m2(x) * price(x)) / m : null;
+    };
+    const short = (list) => list.slice(0, 3).join(", ") + (list.length > 3 ? ` +${list.length - 3}` : "");
+    const zz = (p) => (typeof p.z_z === "number" ? p.z_z : 0);
+    const d = P.length
+      ? { siteArea: sum(P, (p) => p.r.area), zpfM2: sum(P.filter((p) => cad.FARMLAND.has(p.r.type)), (p) => p.r.area),
+          price: weighted(P, (p) => p.r.area, (p) => p.price), zz: null,
+          priceMixed: new Set(P.map((p) => p.price)).size > 1, label: `parcely ${short(P.map((p) => p.r.label))}` }
+      : { siteArea: sum(A, (p) => p.area_m2), zpfM2: null,
+          price: weighted(A, (p) => p.area_m2, (p) => p.price), zz: weighted(A, (p) => p.area_m2, zz),
+          priceMixed: new Set(A.map((p) => p.price)).size > 1, zzMixed: new Set(A.map(zz)).size > 1,
+          label: `plochy ${short(A.map((p) => p.area_code))}`, codes: A.map((p) => p.area_code) };
+    d.file = d.label.replace(/[\\/:*?"<>|]+/g, "-");
+    d.date = new Date().toLocaleDateString("cs-CZ");
+    button.disabled = true;
+    button.textContent = "Připravuji…";
+    try { await window.baldwinExportAcre(d); } catch (err) { alert("Export se nepovedl: " + err.message); }
+    button.disabled = false;
+    button.textContent = "Export to Baldwin Acre";
   }
 
   body.addEventListener("click", (e) => {
     const t = e.target;
     if (t.classList.contains("clear")) return clear();
+    if (t.classList.contains("acre")) return exportAcre(t);
     if (t.classList.contains("x")) {
       if (t.dataset.a) toggleArea(areas.get(t.dataset.a).layer);
       else toggleParcel(parcels.get(t.dataset.p).r);

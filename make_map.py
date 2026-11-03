@@ -22,6 +22,77 @@ SELECT_JS = Path(__file__).with_name("selection.js")
 DRAWER_JS = Path(__file__).with_name("drawer.js")
 LIGHTNING_JS = Path(__file__).with_name("lightning.js")
 CLOUDS_JS = Path(__file__).with_name("clouds.js")
+EXPORT_JS = Path(__file__).with_name("export.js")
+ACRE_XLSX = Path(__file__).resolve().parent.parent / "Baldwin Acre.xlsx"  # the appraisal model, next to this folder
+# The model is built on this area, so for it the export hands out the filled model itself as a worked
+# example (copied next to the page on every build, so it follows the model)
+ACRE_EXAMPLE_AREA, ACRE_EXAMPLE = "414/267/5033", "baldwin-acre-seberov.xlsx"
+
+
+def acre_template():
+    """The Baldwin Acre model as an empty template, so "Export to Baldwin Acre" can write a workbook with
+    the same sheets and cells: labels, formulas, fonts, fills, borders, number formats, column widths and
+    merged cells. No numbers of the model go into the page (inputs, sensitivity axes, stored results),
+    except the year counters of the cash-flow timelines (0, 1, 2 …), which the formulas build on. Excel
+    "What-If" data tables can't be written by the export library and are left out."""
+    import openpyxl
+    from openpyxl.worksheet.formula import ArrayFormula, DataTableFormula
+
+    def rgb(color):
+        return color.rgb if color is not None and isinstance(color.rgb, str) else None
+
+    def timeline(ws):
+        """Cells holding year counters: a 0 that the next cell counts on from (=D56+1), or a row of 0, 1, 2 …"""
+        keep = set()
+        for row in ws.iter_rows():
+            ints = [c for c in row if isinstance(c.value, int) and not isinstance(c.value, bool)]
+            if len(ints) >= 3 and [c.value for c in ints] == list(range(len(ints))):
+                keep.update(c.coordinate for c in ints)
+            for i, c in enumerate(row[:-1]):
+                nxt = row[i + 1].value
+                if c.value == 0 and isinstance(nxt, str) and nxt.replace("$", "").startswith(f"={c.coordinate}+"):
+                    keep.add(c.coordinate)
+        return keep
+
+    sheets = []
+    for ws in openpyxl.load_workbook(ACRE_XLSX).worksheets:
+        if ws.max_row <= 1 and ws.max_column <= 1 and ws["A1"].value is None:
+            continue  # an empty sheet
+        keep, cells = timeline(ws), []
+        for row in ws.iter_rows():
+            for c in row:
+                v = c.value
+                item = {"a": c.coordinate}
+                if isinstance(v, ArrayFormula):
+                    item["f"] = v.text.lstrip("=")
+                elif isinstance(v, DataTableFormula):
+                    pass
+                elif isinstance(v, str) and v.startswith("="):
+                    item["f"] = v[1:]
+                elif isinstance(v, (int, float)) and not isinstance(v, bool):
+                    if c.coordinate in keep:
+                        item["v"] = v
+                elif v is not None:
+                    item["v"] = v
+                font, fill, b = c.font, c.fill, c.border
+                style = {"b": bool(font.b), "i": bool(font.i), "sz": font.sz, "n": font.name, "c": rgb(font.color)}
+                if fill is not None and fill.fill_type == "solid" and rgb(fill.fgColor):
+                    style["bg"] = rgb(fill.fgColor)
+                edges = {side: [getattr(b, side).style, rgb(getattr(b, side).color)]
+                         for side in ("top", "bottom", "left", "right") if getattr(b, side) is not None and getattr(b, side).style}
+                if edges:
+                    style["bd"] = edges
+                if c.alignment is not None and (c.alignment.horizontal or c.alignment.indent):
+                    style["al"] = [c.alignment.horizontal, c.alignment.indent or 0]
+                if c.number_format != "General":
+                    style["fmt"] = c.number_format
+                if v is None and "bg" not in style and "bd" not in style:
+                    continue  # nothing to draw
+                item.update(style)
+                cells.append(item)
+        sheets.append({"name": ws.title, "cells": cells, "merged": [str(r) for r in ws.merged_cells.ranges],
+                       "widths": {k: round(d.width, 1) for k, d in ws.column_dimensions.items() if d.width}})
+    return {"sheets": sheets}
 CUZK_WMS = "https://services.cuzk.cz/wms/wms.asp"
 
 BACKGROUND = "#0b0c0e"
@@ -48,6 +119,7 @@ FLIGHTS = ["M0,0 C60,-20 140,-60 260,-150", "M0,0 C-70,25 -160,40 -290,10",
            "M0,0 C40,30 120,60 230,170", "M0,0 C-30,-40 -80,-110 -120,-230"]
 
 WATER_FILL, WATER_EDGE = "#2b66a0", "#4a8fd6"
+SMOOTH = 1.5  # Leaflet may simplify outlines by this many screen pixels while drawing: invisible, faster zooms
 
 METRO_COLORS = {"A": "#1fa65a", "B": "#f6c21c", "C": "#e5352b", "D": "#3b8ef0"}  # official line colours
 STOP_COLORS = {"A": "#7fd8a2", "B": "#fbe07f", "C": "#f2918a"}  # same, lighter, for the stops
@@ -396,6 +468,13 @@ STYLE = f"""
   .ds-select .clear {{ margin-top: 12px; width: 100%; padding: 7px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
                       background: none; color: {TEXT}; font: 500 11px Inter, Arial, sans-serif; cursor: pointer; }}
   .ds-select .clear:hover {{ background: rgba(255,255,255,.05); }}
+  /* Export to Acre: the one filled button, in the selection window and the deal sheet */
+  .ds-select .acre, .deal .acre {{ margin-top: 12px; width: 100%; padding: 8px; border-radius: 8px; border: none;
+                                  background: {ACCENT}; color: #0b0c0e; font: 600 11px Inter, Arial, sans-serif;
+                                  letter-spacing: .06em; cursor: pointer; transition: filter .15s; }}
+  .ds-select .acre:hover, .deal .acre:hover {{ filter: brightness(1.1); }}
+  .ds-select .acre:disabled, .deal .acre:disabled {{ filter: grayscale(.6); cursor: progress; }}
+  .ds-select .acre + .clear {{ margin-top: 6px; }}
   .ds-select.busy {{ cursor: progress; }}
   .selecting, .selecting .leaflet-interactive {{ cursor: crosshair !important; }}
 
@@ -603,7 +682,7 @@ def _add_trams(m, trams):
     """Tram tracks in orange, with tram stops. Returns (group, [(sub-layer, min zoom)])."""
     group = folium.FeatureGroup(name=_label("Tramvaje", TRAM, len(trams["stops"])), show=True)
     folium.GeoJson(
-        trams["tracks"], interactive=False,
+        trams["tracks"], interactive=False, smooth_factor=SMOOTH,
         style_function=lambda _: {"color": TRAM, "weight": 1.6, "opacity": 0.85},
     ).add_to(group)
     dots = _stop_dots(group, trams["stops"], TRAM, TRAM_STOP, "tram")
@@ -617,7 +696,7 @@ def _add_buses(m, stops, routes):
     zoomed = []
     if routes:
         lines = folium.GeoJson(
-            routes, interactive=False, style_function=lambda _: {"color": BUS, "weight": 1.2, "opacity": 0.7})
+            routes, interactive=False, smooth_factor=SMOOTH, style_function=lambda _: {"color": BUS, "weight": 1.2, "opacity": 0.7})
         lines.add_to(group)
         zoomed.append((lines, BUS_STOPS_FROM_ZOOM))
     zoomed.append((_stop_dots(group, stops, BUS, BUS_STOP, "bus"), BUS_STOPS_FROM_ZOOM))
@@ -650,7 +729,7 @@ def build_map():
 
     # Prague itself: dark neighbourhoods with faint borders (not a toggleable layer).
     city = folium.GeoJson(
-        localities, name="Praha", control=False,
+        localities, name="Praha", control=False, smooth_factor=SMOOTH,
         style_function=lambda _: {"color": CITY_BORDER, "weight": 0.8, "fillColor": CITY, "fillOpacity": 1},
         tooltip=folium.GeoJsonTooltip(fields=["nazev"], labels=False),
     ).add_to(m)
@@ -660,21 +739,26 @@ def build_map():
     if parks:
         park_layer = folium.FeatureGroup(name=_label("Parky", "#33363d", len(parks["features"])), show=True)
         park_geo = folium.GeoJson(
-            parks,
+            parks, smooth_factor=SMOOTH,
             style_function=lambda _: {"color": PARK, "weight": 0, "fillColor": PARK, "fillOpacity": 1},
             tooltip=folium.GeoJsonTooltip(fields=["nazev"], labels=False),
         ).add_to(park_layer)
         park_layer.add_to(m)
 
     # Water in blue so the Vltava stands out; not interactive, so hovering shows the locality under it.
+    # All 3,500 water shapes merged into one: the browser redraws every shape at the end of each zoom
+    # step, and thousands of tiny ponds made that redraw the jerk in zooming.
     if water:
+        from shapely.geometry import mapping
+        merged = unary_union([shape(f["geometry"]) for f in water["features"]])
+        water = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": mapping(merged)}]}
         if rivers:  # under IPR's water, no outline: only shows where IPR's river has a gap
             folium.GeoJson(
-                rivers, name="Řeky", control=False, interactive=False,
+                rivers, name="Řeky", control=False, interactive=False, smooth_factor=SMOOTH,
                 style_function=lambda _: {"weight": 0, "fillColor": WATER_FILL, "fillOpacity": 1},
             ).add_to(m)
         folium.GeoJson(
-            water, name="Voda", control=False, interactive=False,
+            water, name="Voda", control=False, interactive=False, smooth_factor=SMOOTH,
             style_function=lambda _: {"color": WATER_EDGE, "weight": 0.8, "fillColor": WATER_FILL, "fillOpacity": 1},
         ).add_to(m)
 
@@ -683,7 +767,7 @@ def build_map():
         _dash_empty(features)
         layer = folium.FeatureGroup(name=_label(name, color, len(features)), show=show)
         folium.GeoJson(
-            {"type": "FeatureCollection", "features": features},
+            {"type": "FeatureCollection", "features": features}, smooth_factor=SMOOTH,
             style_function=lambda _, c=color, o=fill: {"color": c, "weight": 0.6, "fillColor": c, "fillOpacity": o},
             highlight_function=lambda _: {"weight": 2, "fillOpacity": 0.95},
             tooltip=folium.GeoJsonTooltip(fields=["area_code", "locality_name"], aliases=["", ""], labels=False),
@@ -755,6 +839,10 @@ def build_map():
                .replace("__METRO__", json.dumps(METRO_COLORS))
                .replace("__ACCENT__", json.dumps(ACCENT)).replace("__ORANGE__", json.dumps(ORANGE)))
     filter_js = FILTER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
+    import shutil
+    shutil.copy2(ACRE_XLSX, OUT.with_name(ACRE_EXAMPLE))
+    export_js = (EXPORT_JS.read_text(encoding="utf-8").replace("__ACRE__", json.dumps(acre_template(), ensure_ascii=False))
+                 .replace("__EXAMPLE__", json.dumps({"area": ACRE_EXAMPLE_AREA, "file": ACRE_EXAMPLE})))
     select_js = SELECT_JS.read_text(encoding="utf-8").replace("__MAP__", name).replace("__PURPLE__", json.dumps(PURPLE))
     drawer_js = DRAWER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     stations = [{k: s[k] for k in ("name", "lines", "lat", "lon")} for s in (metro or {}).get("stations", [])]
@@ -794,6 +882,7 @@ def build_map():
         // hide hover labels while a popup is open, so they don't sit on top of it
         {name}.on('popupopen', () => {name}.getContainer().classList.add('popup-open'));
         {name}.on('popupclose', () => {name}.getContainer().classList.remove('popup-open'));
+        {export_js}
         {deal_js}
         {filter_js}
         {search_js}
