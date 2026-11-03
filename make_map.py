@@ -92,11 +92,19 @@ STYLE = f"""
   .orb-smoke {{ opacity: .85; animation: orb-swirl 60s linear infinite; }}
   .orb-fire {{ mix-blend-mode: screen; animation: orb-swirl 38s linear infinite reverse; }}
   .orb-core {{ mix-blend-mode: screen; filter: blur(1px); animation: orb-swirl 24s linear infinite; }}
+  /* hover lures you in: the flames swell towards the glass and burn brighter, the glow flares */
+  .orb-fire, .orb-core {{ transition: scale 1.4s cubic-bezier(.22,1,.36,1), filter 1.4s ease; }}
+  .orb:hover .orb-fire {{ scale: 1.18; filter: brightness(1.5) saturate(1.25); }}
+  .orb:hover .orb-core {{ scale: 1.35; filter: blur(1px) brightness(1.9); }}
+  .orb-wrap:has(.orb:hover) .orb-halo {{ scale: 1.2; filter: blur(34px) saturate(1.6) brightness(1.5); }}
+  .ds-menu::before {{ transition: filter 1.4s ease; }}
+  .ds-menu:has(.orb:hover)::before {{ filter: brightness(1.45); }}
   @keyframes orb-swirl {{ to {{ transform: rotate(360deg); }} }}
   /* live light: a big blurred copy of the fire behind the glass, turning with it, so the glow on the
      room moves wherever the flames inside are */
   .orb-halo {{ position: absolute; left: 0; top: 0; width: 240px; height: 240px; pointer-events: none;
-              transform: scale(2.3); filter: blur(34px) saturate(1.3); opacity: .8; transition: opacity .6s ease;
+              transform: scale(2.3); filter: blur(34px) saturate(1.3); opacity: .8;
+              transition: opacity .6s ease, scale 1.4s cubic-bezier(.22,1,.36,1), filter 1.4s ease;
               animation: orb-flicker 8s ease-in-out infinite; }}
   /* uneven steps, like a flame catching and dropping; the room glow below runs on a different beat */
   @keyframes orb-flicker {{
@@ -406,7 +414,36 @@ STYLE = f"""
     <mask id="orb-mask-core"><circle cx="100" cy="100" r="62" fill="url(#orb-m-core)"/></mask>
   </defs><rect width="200" height="200" filter="url(#orb-smoke-f)" mask="url(#orb-mask-all)"/></svg>
   <svg class="orb-layer orb-fire" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-fire-f)" mask="url(#orb-mask-all)"/></svg>
-  <svg class="orb-layer orb-core" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-core-f)" mask="url(#orb-mask-core)"/></svg><div class="orb-gloss"></div><div class="orb-spec"></div></div><div class="orb-shadow"></div></div>
+  <svg class="orb-layer orb-core" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-core-f)" mask="url(#orb-mask-core)"/></svg><svg class="orb-layer orb-glass" viewBox="0 0 200 200"><defs>
+    <!-- the glass, in vectors so it stays sharp on any screen. Real glass reflects more the flatter you
+         look at it, so it brightens towards the rim (fading out before the edge, no outline line); a
+         faint sheen of the ceiling over the top; a window reflected as tapered curved panes on both
+         sides, softly edged and fading at their ends; a glint at the top; a caustic at the bottom -->
+    <radialGradient id="glass-fresnel" cx=".5" cy=".5" r=".5"><stop offset=".7" stop-color="#cfd8ff" stop-opacity="0"/>
+      <stop offset=".9" stop-color="#cfd8ff" stop-opacity=".07"/><stop offset=".97" stop-color="#e6ecff" stop-opacity=".13"/>
+      <stop offset="1" stop-color="#e6ecff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glass-sky" cx=".5" cy=".2" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".1"/>
+      <stop offset=".6" stop-color="#fff" stop-opacity=".03"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="glass-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".7"/>
+      <stop offset=".55" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>
+    <linearGradient id="glass-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".45"/>
+      <stop offset=".55" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#fff" stop-opacity=".02"/></linearGradient>
+    <radialGradient id="glass-c"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="glass-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".3" stop-color="#fff"/><stop offset=".7" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="glass-ends" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#glass-fade)"/></mask>
+    <filter id="glass-soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".55"/></filter>
+  </defs>
+    <circle cx="100" cy="100" r="100" fill="url(#glass-fresnel)"/>
+    <ellipse cx="100" cy="46" rx="74" ry="42" fill="url(#glass-sky)"/>
+    <g filter="url(#glass-soft)">
+      <path d="M142.7 19.7 A91 91 0 0 1 183.1 63 A150 150 0 0 0 142.7 19.7 Z" fill="url(#glass-r)" mask="url(#glass-ends)"/>
+      <path d="M185.5 68.9 A91 91 0 0 1 190.1 112.7 A150 150 0 0 0 185.5 68.9 Z" fill="url(#glass-r)" mask="url(#glass-ends)"/>
+      <path d="M24.5 147.2 A89 89 0 0 1 19.3 62.4 A170 170 0 0 0 24.5 147.2 Z" fill="url(#glass-l)" mask="url(#glass-ends)"/>
+      <path d="M37.6 34.6 A92 92 0 0 1 68.5 13.6" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.6" stroke-linecap="round"/>
+    </g>
+    <ellipse cx="100" cy="182" rx="34" ry="6" fill="url(#glass-c)"/></svg>
+  </div><div class="orb-shadow"></div></div>
 </div>
 <div class="ds-title">
   <div class="ds-brand"><b>BALDWIN</b><span>PALANTIR</span></div>
