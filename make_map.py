@@ -79,7 +79,7 @@ STYLE = f"""
                radial-gradient(circle at 50% 50%, rgba(110,28,12,.12) 0%, rgba(60,14,6,.05) 22%, rgba(0,0,0,0) 48%),
                radial-gradient(ellipse 24% 72% at 50% -12%, rgba(220,226,242,.045) 0%, rgba(220,226,242,.014) 50%, rgba(0,0,0,0) 85%),
                #030303;
-             transition: opacity .9s ease .25s, visibility .9s ease .25s; }}
+             transition: opacity 1.5s cubic-bezier(.4,0,.2,1) .45s, visibility 0s linear 1.95s; }}
   @media (max-width: 700px) {{ .ds-menu {{ --s: .72; }} }}
   /* the floor, seen in perspective: its own surface from where it meets the wall (just behind the orb)
      down to the bottom. Light lies on it as flattened ellipses, brightest where the orb touches it:
@@ -156,7 +156,6 @@ STYLE = f"""
   @keyframes orb-flicker-room {{
     0%, 100% {{ opacity: .8; }} 13% {{ opacity: .95; }} 22% {{ opacity: .72; }} 38% {{ opacity: .9; }}
     47% {{ opacity: .78; }} 61% {{ opacity: 1; }} 69% {{ opacity: .74; }} 84% {{ opacity: .92; }} }}
-  .ds-menu.gone .orb-halo {{ opacity: 0; }}
   /* curved reflection across the top, like light on a glass dome */
   .orb-gloss {{ position: absolute; left: 13%; top: 5%; width: 74%; height: 46%; border-radius: 50%;
                background: radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.12) 0%, rgba(255,255,255,.035) 45%, rgba(255,255,255,0) 70%); }}
@@ -170,7 +169,29 @@ STYLE = f"""
   .orb-shadow {{ position: absolute; left: 50%; bottom: -20px; width: 230px; height: 38px; transform: translateX(-50%);
                 border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.95), rgba(0,0,0,0));
                 filter: blur(5px); transition: opacity .6s ease; }}
-  .ds-menu.gone .orb {{ transform: scale(6); opacity: 0; transition: transform .9s cubic-bezier(.6,0,.4,1), opacity .9s ease; }}
+  /* entering: the orb dives at you and its light floods the screen, while the map surfaces from the
+     dark underneath (slightly zoomed in, settling), then the controls slide in */
+  .ds-menu.gone .orb {{ transform: scale(2.2); opacity: 0;
+                       transition: transform 1.8s cubic-bezier(.65,0,.25,1), opacity 1.1s ease .6s; }}
+  .ds-menu.gone .orb-halo {{ opacity: 0; transition: opacity 1.4s ease .2s; }}
+  /* the orb's light floods the screen: a ready-made full-screen glow that only fades in (growing the
+     room glow instead made the browser re-render it at four times the size, which stuttered) */
+  .orb-flash {{ position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; will-change: opacity;
+               background: radial-gradient(circle at 50% 50%, rgba(255,125,55,.6) 0%, rgba(210,70,25,.42) 28%,
+                           rgba(130,35,12,.28) 60%, rgba(50,12,5,.18) 100%); }}
+  .ds-menu.gone .orb-flash {{ opacity: 1; transition: opacity 1s cubic-bezier(.4,0,.2,1); }}
+  html, body {{ overflow: hidden; }}  /* the zoomed-in map would otherwise flash scrollbars */
+  /* smoothness: the orb and the map are their own ready-made layers before the click, and on the
+     click every running effect freezes, so the move itself is only sliding and fading finished images */
+  .orb-wrap, .orb, .orb-halo, .ds-menu::before {{ will-change: transform, opacity; }}
+  .ds-menu.frozen *, .ds-menu.frozen::before, .ds-menu.frozen::after {{ animation-play-state: paused !important; }}
+  .ds-menu ~ .folium-map {{ opacity: 0; transform: scale(1.12); will-change: transform, opacity; }}
+  body.map-settled .ds-menu ~ .folium-map {{ will-change: auto; }}  /* back to a normal, crisp map */
+  .ds-menu.gone ~ .folium-map {{ opacity: 1; transform: none; will-change: transform, opacity;
+                                transition: opacity 1.4s ease .5s, transform 1.8s cubic-bezier(.22,1,.36,1) .4s; }}
+  .ds-menu ~ .ds-title, body > .ds-toggle {{ opacity: .001; translate: 0 -10px; will-change: opacity, translate; }}  /* painted ahead, like the map */
+  .ds-menu.gone ~ .ds-title, .ds-menu.gone ~ .ds-toggle {{ opacity: 1; translate: none;
+                                transition: opacity .8s ease 2.2s, translate .8s cubic-bezier(.22,1,.36,1) 2.2s; }}  /* after the map has stopped: their glass blur over a moving map is costly */
   .ds-menu.gone .orb-shadow {{ opacity: 0; }}
 
   /* title panel: wordmark + search */
@@ -420,7 +441,7 @@ STYLE = f"""
   .leaflet-control-attribution a {{ color: #4d5158; }}
 </style>
 <div class="ds-menu" title="Vstoupit">
-  <div class="orb-wrap"><div class="orb-halo">
+  <div class="orb-flash"></div><div class="orb-wrap"><div class="orb-halo">
     <svg class="orb-layer orb-fire" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-fire-f)" mask="url(#orb-mask-all)"/></svg>
     <svg class="orb-layer orb-core" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-core-f)" mask="url(#orb-mask-core)"/></svg></div>
   <div class="orb"><svg class="orb-layer orb-smoke" viewBox="0 0 200 200"><defs>
@@ -701,9 +722,22 @@ def build_map():
     m.get_root().html.add_child(folium.Element("""<script>
       (function () {
         const menu = document.querySelector('.ds-menu');
-        const enter = () => menu.classList.add('gone');
-        menu.querySelector('.orb').addEventListener('click', enter);
-        document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !menu.classList.contains('gone')) enter(); });
+        // Entering is pure transform/opacity work for the graphics card: the costly effects (the fire's
+        // morphing SVG filters, the CSS flicker) freeze on the click, and once the move is over the start
+        // screen is switched off completely so nothing keeps running behind the map.
+        // Freezing costs one slow frame, so it happens first, while nothing moves yet; the move starts two
+        // frames later. It starts on the press, not the release, which gives the freeze a head start.
+        const enter = () => {
+          if (menu.classList.contains('frozen')) return;
+          menu.querySelectorAll('svg').forEach((s) => s.pauseAnimations && s.pauseAnimations());
+          menu.classList.add('frozen');
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            menu.classList.add('gone');
+            setTimeout(() => { menu.style.display = 'none'; }, 2300);
+          }));
+        };
+        menu.querySelector('.orb').addEventListener('pointerdown', enter);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Enter') enter(); });
       })();
     </script>""" + f"<script>{LIGHTNING_JS.read_text(encoding='utf-8')}</script>"
                  + f"<script>{CLOUDS_JS.read_text(encoding='utf-8')}</script>"))
