@@ -20,6 +20,7 @@ SEARCH_JS = Path(__file__).with_name("search.js")
 SKY_JS = Path(__file__).with_name("sky.js")
 SELECT_JS = Path(__file__).with_name("selection.js")
 DRAWER_JS = Path(__file__).with_name("drawer.js")
+LIGHTNING_JS = Path(__file__).with_name("lightning.js")
 CUZK_WMS = "https://services.cuzk.cz/wms/wms.asp"
 
 BACKGROUND = "#0b0c0e"
@@ -102,6 +103,7 @@ STYLE = f"""
                      animation: orb-breathe 6s ease-in-out infinite, orb-flicker-room 11s ease-in-out infinite; }}
   @keyframes orb-breathe {{ 0%, 100% {{ opacity: .75; transform: scale(.96); }} 50% {{ opacity: 1; transform: scale(1.04); }} }}
   .ds-menu.gone {{ opacity: 0; visibility: hidden; }}
+  .orb-lightning {{ position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }}
   .orb-wrap {{ position: relative; z-index: 2; }}  /* above the floor (::after) and the room glow (::before) */
   /* dark glass: deep body, rim light (fresnel) and a cool bounce light at the bottom */
   .orb {{ position: relative; width: 240px; height: 240px; border-radius: 50%; cursor: pointer; overflow: hidden;
@@ -701,7 +703,7 @@ def build_map():
         menu.querySelector('.orb').addEventListener('click', enter);
         document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !menu.classList.contains('gone')) enter(); });
       })();
-    </script>"""))
+    </script>""" + f"<script>{LIGHTNING_JS.read_text(encoding='utf-8')}</script>"))
     # Explicit zoom range (otherwise Leaflet takes min zoom 17 from the parcel layer), and the
     # visible credit the CC BY licence requires for the IPR data.
     name = m.get_name()
