@@ -124,6 +124,12 @@ STYLE = f"""
   .orb:hover .orb-core {{ scale: 1.2; filter: blur(1px) brightness(1.1) saturate(1.3); }}
   .orb-wrap:has(.orb:hover) .orb-halo {{ transition: opacity .6s ease, scale 6s cubic-bezier(.45,0,.25,1), filter 5s ease-in; }}
   .orb-wrap:has(.orb:hover) .orb-halo {{ scale: 1.9; filter: blur(44px) saturate(1.7) brightness(1.3); }}
+  /* the glare follows the room's light: warm reflections flicker with the fire (same beat as the
+     glow), and on hover, as the room fills with firelight, they slowly take over from the white ones */
+  .glass-white {{ transition: opacity 3s ease; }}
+  .glass-warm {{ animation: orb-flicker-room 11s ease-in-out infinite; transition: filter 3s ease; }}
+  .orb:hover .glass-white {{ opacity: .35; transition: opacity 6s ease-in; }}
+  .orb:hover .glass-warm {{ filter: brightness(2.2) saturate(1.2); transition: filter 6s ease-in; }}
   /* ...and the light slowly spills out of the glass until it fills the whole room */
   .ds-menu::before {{ transition: filter 2.5s ease, scale 3s cubic-bezier(.4,0,.2,1); }}  /* pulling back */
   .ds-menu:has(.orb:hover)::before {{ scale: 3.2; filter: brightness(1.7) saturate(1.2);
@@ -462,14 +468,28 @@ STYLE = f"""
       <stop offset=".3" stop-color="#fff"/><stop offset=".7" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <mask id="glass-ends" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#glass-fade)"/></mask>
     <filter id="glass-soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".55"/></filter>
+    <!-- warm versions: the same reflections lit by the fire's light in the room, and the glowing floor
+         reflected in the bottom of the glass; they flicker with the fire and take over on hover -->
+    <linearGradient id="glass-warm-r" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ff8a4a" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ff6a2a" stop-opacity="0"/></linearGradient>
+    <linearGradient id="glass-warm-l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff8a4a" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#ff6a2a" stop-opacity="0"/></linearGradient>
+    <linearGradient id="glass-floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff7a3a" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#ff5a20" stop-opacity="0"/></linearGradient>
   </defs>
     <circle cx="100" cy="100" r="100" fill="url(#glass-fresnel)"/>
     <ellipse cx="100" cy="46" rx="74" ry="42" fill="url(#glass-sky)"/>
-    <g filter="url(#glass-soft)">
-      <path d="M142.7 19.7 A91 91 0 0 1 183.1 63 A150 150 0 0 0 142.7 19.7 Z" fill="url(#glass-r)" mask="url(#glass-ends)"/>
-      <path d="M185.5 68.9 A91 91 0 0 1 190.1 112.7 A150 150 0 0 0 185.5 68.9 Z" fill="url(#glass-r)" mask="url(#glass-ends)"/>
-      <path d="M24.5 147.2 A89 89 0 0 1 19.3 62.4 A170 170 0 0 0 24.5 147.2 Z" fill="url(#glass-l)" mask="url(#glass-ends)"/>
-      <path d="M37.6 34.6 A92 92 0 0 1 68.5 13.6" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.6" stroke-linecap="round"/>
+    <g class="glass-white">
+      <path filter="url(#glass-soft)" d="M142.7 19.7 A91 91 0 0 1 183.1 63 A150 150 0 0 0 142.7 19.7 Z" fill="url(#glass-r)" mask="url(#glass-ends)"/>
+      <path filter="url(#glass-soft)" d="M185.5 68.9 A91 91 0 0 1 190.1 112.7 A150 150 0 0 0 185.5 68.9 Z" fill="url(#glass-r)" mask="url(#glass-ends)"/>
+      <path filter="url(#glass-soft)" d="M24.5 147.2 A89 89 0 0 1 19.3 62.4 A170 170 0 0 0 24.5 147.2 Z" fill="url(#glass-l)" mask="url(#glass-ends)"/>
+      <path filter="url(#glass-soft)" d="M37.6 34.6 A92 92 0 0 1 68.5 13.6" fill="none" stroke="#fff" stroke-opacity=".32" stroke-width="1.6" stroke-linecap="round"/>
+    </g>
+    <g class="glass-warm">
+      <path filter="url(#glass-soft)" d="M142.7 19.7 A91 91 0 0 1 183.1 63 A150 150 0 0 0 142.7 19.7 Z" fill="url(#glass-warm-r)" mask="url(#glass-ends)"/>
+      <path filter="url(#glass-soft)" d="M185.5 68.9 A91 91 0 0 1 190.1 112.7 A150 150 0 0 0 185.5 68.9 Z" fill="url(#glass-warm-r)" mask="url(#glass-ends)"/>
+      <path filter="url(#glass-soft)" d="M24.5 147.2 A89 89 0 0 1 19.3 62.4 A170 170 0 0 0 24.5 147.2 Z" fill="url(#glass-warm-l)" mask="url(#glass-ends)"/>
+      <path filter="url(#glass-soft)" d="M31.1 157.9 A90 90 0 0 0 168.9 157.9 A150 150 0 0 1 31.1 157.9 Z" fill="url(#glass-floor)"/>
     </g>
     <ellipse cx="100" cy="182" rx="34" ry="6" fill="url(#glass-c)"/></svg>
   </div><div class="orb-shadow"></div></div>
