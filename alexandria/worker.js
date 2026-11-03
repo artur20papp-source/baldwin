@@ -7,7 +7,7 @@
 // https://aistudio.google.com/apikey.
 
 const SITE = "https://artur20papp-source.github.io";
-const KNOWLEDGE_URL = `${SITE}/baldwin-palantir/alexandria/knowledge.md`;
+const KNOWLEDGE_URL = `${SITE}/baldwin/alexandria/knowledge.md`;
 // Google retires model names over time; this one is tried first, and if Google rejects it the worker
 // picks the newest "flash" model from Google's own list (or set a GEMINI_MODEL variable to choose one).
 const MODEL = "gemini-3.8-flash";

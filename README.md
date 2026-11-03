@@ -2,8 +2,8 @@
 
 Interactive deal screener for Prague land development: every development and transformation area of the Metropolitní plán, with regulated floor area (HPP), price-map land prices, metro distance, flood risk and the cadastral parcels inside, plus multi-area / multi-parcel selection for land assembly and an export into the Baldwin Acre appraisal model.
 
-**Live map:** https://artur20papp-source.github.io/baldwin-palantir/
-**Baldwin Alexandria** (ask about the sources and how they affect the calculations): https://artur20papp-source.github.io/baldwin-palantir/alexandria/
+**Live map:** https://artur20papp-source.github.io/baldwin/
+**Baldwin Alexandria** (ask about the sources and how they affect the calculations): https://artur20papp-source.github.io/baldwin/alexandria/
 
 Build: `python make_map.py` (writes `index.html`).
 
