@@ -8,7 +8,10 @@
 
 const SITE = "https://artur20papp-source.github.io";
 const KNOWLEDGE_URL = `${SITE}/baldwin-palantir/alexandria/knowledge.md`;
-const MODEL = "gemini-2.5-flash";
+// Google retires model names over time; this one is tried first, and if Google rejects it the worker
+// picks the newest "flash" model from Google's own list (or set a GEMINI_MODEL variable to choose one).
+const MODEL = "gemini-3.8-flash";
+const API = "https://generativelanguage.googleapis.com/v1beta";
 const ALLOWED_ORIGINS = [SITE, "http://localhost:8765"];  // who may use it: the site, and local testing
 const MAX_TURNS = 12, MAX_CHARS = 2000;                    // keep requests small on the free tier
 
@@ -38,6 +41,25 @@ async function knowledge() {
   if (!res.ok) throw new Error(`library not reachable (${res.status})`);
   cached = { text: await res.text(), at: Date.now() };
   return cached.text;
+}
+
+// the newest text "flash" model this key may use, from Google's model list
+let picked = null;
+async function newestFlash(key) {
+  const res = await fetch(`${API}/models?pageSize=200`, { headers: { "x-goog-api-key": key } });
+  const data = await res.json().catch(() => ({}));
+  const version = (name) => (name.match(/gemini-(\d+(?:\.\d+)?)/) || [0, 0])[1] * 1;
+  const usable = (data.models || []).map((m) => ({ id: m.name.replace("models/", ""), methods: m.supportedGenerationMethods || [] }))
+    .filter((m) => m.methods.includes("generateContent") && /^gemini-[\d.]+-flash$|^gemini-[\d.]+-flash-latest$/.test(m.id))
+    .sort((a, b) => version(b.id) - version(a.id));
+  return usable.length ? usable[0].id : null;
+}
+
+async function generate(key, model, body) {
+  const res = await fetch(`${API}/models/${model}:generateContent`, {
+    method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(body),
+  });
+  return { res, data: await res.json().catch(() => ({})) };
 }
 
 const json = (body, status, origin) => new Response(JSON.stringify(body), {
@@ -73,16 +95,21 @@ export default {
     } catch (err) {
       return json({ error: err.message }, 502, allowed);
     }
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: RULES + library }] },
-        contents,
-        generationConfig: { temperature: 0.2, maxOutputTokens: 900 },
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
+    const body = {
+      systemInstruction: { parts: [{ text: RULES + library }] },
+      contents,
+      generationConfig: { temperature: 0.2, maxOutputTokens: 900 },
+    };
+    let model = env.GEMINI_MODEL || picked || MODEL;
+    let { res, data } = await generate(env.GEMINI_API_KEY, model, body);
+    // the model was retired or is not offered to this key: take the newest flash model and try once more
+    if (!res.ok && res.status !== 429 && !env.GEMINI_MODEL) {
+      const fresh = await newestFlash(env.GEMINI_API_KEY);
+      if (fresh && fresh !== model) {
+        model = picked = fresh;
+        ({ res, data } = await generate(env.GEMINI_API_KEY, model, body));
+      }
+    }
     if (!res.ok) {
       const busy = res.status === 429;
       return json({ error: busy ? "Alexandria is busy (free-tier limit). Try again in a minute."
