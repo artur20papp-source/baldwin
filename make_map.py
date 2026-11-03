@@ -84,7 +84,7 @@ STYLE = f"""
            radial-gradient(circle at 52% 58%, rgba(255,150,50,.38) 0%, rgba(200,60,20,.22) 18%, rgba(120,25,15,0) 45%),
            radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 60%, rgba(120,130,160,.10) 68%, rgba(200,210,235,.22) 71.6%, rgba(0,0,0,0) 72%),
            radial-gradient(circle at 40% 36%, #2b2f3a 0%, #171a22 38%, #0a0b0f 72%, #020203 100%);
-         box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), inset -26px -30px 54px rgba(0,0,0,.85),
+         box-shadow: inset -26px -30px 54px rgba(0,0,0,.85),
                      inset 0 -8px 18px rgba(200,60,25,.18), 0 0 80px rgba(220,70,25,.16);
          transition: transform .6s cubic-bezier(.2,.8,.2,1), box-shadow .6s ease; }}
   /* smoke and fire turning slowly inside the glass (SVG noise, see the menu markup) */
@@ -112,13 +112,13 @@ STYLE = f"""
   .ds-menu.gone .orb-halo {{ opacity: 0; }}
   /* curved reflection across the top, like light on a glass dome */
   .orb-gloss {{ position: absolute; left: 13%; top: 5%; width: 74%; height: 46%; border-radius: 50%;
-               background: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 45%, rgba(255,255,255,0) 72%); }}
+               background: radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.12) 0%, rgba(255,255,255,.035) 45%, rgba(255,255,255,0) 70%); }}
   /* sharp specular highlight of the light source, plus a small secondary glint */
   .orb-spec {{ position: absolute; left: 25%; top: 15%; width: 22%; height: 13%; border-radius: 50%; transform: rotate(-30deg);
               background: radial-gradient(closest-side, rgba(255,255,255,.75) 0%, rgba(255,255,255,.3) 45%, rgba(255,255,255,0) 100%); }}
   .orb-spec::after {{ content: ""; position: absolute; left: 150%; top: 260%; width: 32%; height: 40%; border-radius: 50%;
                      background: radial-gradient(closest-side, rgba(255,235,230,.18), rgba(255,255,255,0)); }}
-  .orb:hover {{ transform: scale(1.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), inset -26px -30px 54px rgba(0,0,0,.85),
+  .orb:hover {{ transform: scale(1.04); box-shadow: inset -26px -30px 54px rgba(0,0,0,.85),
                 inset 0 -8px 18px rgba(220,70,25,.26), 0 0 120px rgba(230,80,25,.26); }}
   .orb-shadow {{ position: absolute; left: 50%; bottom: -20px; width: 230px; height: 38px; transform: translateX(-50%);
                 border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.95), rgba(0,0,0,0));
