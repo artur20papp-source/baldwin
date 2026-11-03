@@ -95,6 +95,9 @@
     if (!A.length && !P.length && mode) {
       h += `<div class="hint">${mode === "areas" ? "Klikněte na zelené nebo hnědé plochy."
         : `Klikněte na parcely v mapě${map.getZoom() < PARCEL_ZOOM ? " (první klik přiblíží mapu)" : ""}.`}</div>`;
+    } else if (!A.length && !P.length) {
+      // nothing picked yet: what the selection is for
+      h += `<div class="hint explain">Klikáním v mapě poskládejte pozemek z ploch nebo parcel a pošlete ho do <b>Baldwin Acre</b>.</div>`;
     }
     if (A.length) {
       const priced = A.filter((p) => p.price);
@@ -198,5 +201,6 @@
     }
   });
   map.on("zoomend", () => { if (mode === "parcels" && !areas.size && !parcels.size) render(); });
+  render();  // the explanation, before anything is picked
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && mode) setMode(null); });
 })();

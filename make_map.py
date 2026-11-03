@@ -1,4 +1,4 @@
-﻿"""Builds index.html: a minimal dark map of Prague's development areas with cadastral parcels.
+"""Builds index.html: a minimal dark map of Prague's development areas with cadastral parcels.
 
 No street base map: Prague is drawn from its own plan data (neighbourhoods, parks, areas).
 Clicking an area opens a deal sheet (deal_popup.js) that also lists its parcels live from ČÚZK.
@@ -115,16 +115,20 @@ def acre_template():
     return {"sheets": sheets}
 CUZK_WMS = "https://services.cuzk.cz/wms/wms.asp"
 
-BACKGROUND = "#0b0c0e"
-CITY = "#17191d"
-CITY_BORDER = "#262930"
-PARK = "#111316"  # parks: a quiet background tone, darker than the city
+BACKGROUND = "#0d0d0d"
+CITY = "#1a1a1a"
+CITY_BORDER = "#2a2a2a"
+PARK = "#131313"  # parks: a quiet background tone, darker than the city
 ACCENT = "#8fe3a0"  # rozvojové obytné plochy, our targets
 ORANGE = "#f08a3c"  # farmland (ZPF) highlights in the parcel list
 PURPLE = "#b48cff"  # selected areas and parcels
 BROWN = "#a8744c"  # transformační obytné plochy
 TEXT = "#ececec"
-MUTED = "#7d828c"
+MUTED = "#8a8a8a"
+UI = "#f2f2f2"  # the interface's second colour (switches, sliders, links): white, the green stays on the map
+TRACK = ("linear-gradient(90deg, transparent var(--a, 0%), #f2f2f2 var(--a, 0%), #f2f2f2 var(--b, 100%), transparent var(--b, 100%)),"
+         " linear-gradient(180deg, transparent 1px, rgba(255,255,255,.18) 1px, rgba(255,255,255,.18) 3px, transparent 3px)")
+# the price sliders: the track up to the knob thick and white, the rest a thin grey line
 
 RSJ_HQ = (50.08915565, 14.43531183)  # Na Florenci 2116/15, Praha 1 (RÚIAN geocode)
 RSJ_LOGO = Path(__file__).with_name("rsj-logo.svg")  # from rsj.com/layout/rsj-logo.svg
@@ -154,7 +158,7 @@ GROUPS = [
 
 # Panels: dark frosted glass in the manner of Rockaway Capital's site: smoky and half see-through, the
 # map strongly blurred behind it, no border and no shadow
-GLASS = ("background: rgba(8,9,11,.5); backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3);"
+GLASS = ("background: rgba(16,16,16,.5); backdrop-filter: blur(14px) saturate(1); -webkit-backdrop-filter: blur(14px) saturate(1);"
          "border: none; box-shadow: none;")
 
 STYLE = f"""
@@ -287,33 +291,60 @@ STYLE = f"""
   .ds-menu ~ .folium-map {{ opacity: .001; transform: scale(.3); will-change: transform, opacity; }}
   .ds-menu.gone ~ .folium-map {{ opacity: 1; transform: none;
                                 transition: opacity .9s ease .55s, transform 1.9s cubic-bezier(.7,0,.2,1) .1s; }}
-  .ds-menu ~ .ds-title, body > .ds-toggle {{ opacity: .001; translate: 0 -10px; will-change: opacity, translate; }}  /* painted ahead, like the map */
-  .ds-menu.gone ~ .ds-title, .ds-menu.gone ~ .ds-toggle {{ opacity: 1; translate: none;
+  .ds-menu ~ .ds-title {{ opacity: .001; translate: 0 -10px; will-change: opacity, translate; }}  /* painted ahead, like the map */
+  .ds-menu.gone ~ .ds-title {{ opacity: 1; translate: none;
                                 transition: opacity .8s ease 2.1s, translate .8s cubic-bezier(.22,1,.36,1) 2.1s; }}  /* after the map has stopped: their glass blur over a moving map is costly */
   /* the map's own furniture (zoom buttons, scale bar, credits) waits too, instead of unfolding with it */
   .ds-menu ~ .folium-map .leaflet-control-container {{ opacity: 0; }}
   .ds-menu.gone ~ .folium-map .leaflet-control-container {{ opacity: 1; transition: opacity .8s ease 2.1s; }}
   .ds-menu.gone .orb-shadow {{ opacity: 0; }}
 
-  /* title panel: wordmark + search */
-  .ds-title {{ position: fixed; top: 16px; left: 64px; z-index: 9999; width: 330px; padding: 16px 16px 14px;
-              border-radius: 10px; box-sizing: border-box; font-family: Inter, Arial, sans-serif; {GLASS} }}
-  .ds-brand {{ display: flex; align-items: baseline; gap: 10px; padding: 0 4px 12px; font-size: 14px;
-              letter-spacing: .34em; }}
+  /* the top bar, after Rockaway's: one strip of dark frosted glass across the top. Left the lighthouse of
+     filter button, the name in the middle, the search and the lighthouse of Baldwin Alexandria on the right
+     (its name slides out to the right from behind it on hover) */
+  .ds-bar {{ position: fixed; top: 8px; left: 8px; right: 8px; height: 56px; z-index: 9999; box-sizing: border-box;
+            padding: 0 8px; display: flex; align-items: center; gap: 12px;
+            border-radius: 10px; font-family: Inter, Arial, sans-serif; {GLASS} }}
+  .ds-brand {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none;
+              display: flex; align-items: baseline; gap: 12px; font-size: 15px; letter-spacing: .42em; white-space: nowrap;
+              margin-right: -.42em; }}  /* the last letter's spacing would push the name off centre */
   .ds-brand b {{ font-weight: 600; color: {TEXT}; }}
   .ds-brand span {{ font-weight: 400; color: {MUTED}; }}
-  .ds-search {{ position: relative; }}
-  .ds-search svg {{ position: absolute; left: 11px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%);
+  .ds-left {{ justify-self: start; display: flex; }}
+  .ds-lighthouse, .ds-lighthouse:visited {{ flex-shrink: 0; display: flex; align-items: center; height: 40px; border-radius: 6px;
+                   background: rgba(255,255,255,.07); color: {TEXT}; text-decoration: none; overflow: hidden;
+                   transition: transform 1.2s cubic-bezier(.16,1,.3,1); }}
+  .ds-lighthouse .lh-icon {{ position: relative; z-index: 1; display: grid; place-items: center; width: 44px; height: 40px;
+                            flex-shrink: 0; }}
+  .ds-lighthouse svg {{ width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.4;
+                       stroke-linecap: round; stroke-linejoin: round; }}
+  .ds-lighthouse svg .fire {{ fill: currentColor; stroke: none; }}
+  /* the name hides behind the lighthouse and slides out to the right on hover */
+  .ds-lighthouse .lh-text {{ color: {TEXT}; max-width: 0; opacity: 0; transform: translateX(-24px); white-space: nowrap;
+                            font-size: 11px; letter-spacing: .3em;
+                            transition: max-width 2s cubic-bezier(.16,1,.3,1), opacity 1.4s ease .2s, transform 2s cubic-bezier(.16,1,.3,1),
+                                        padding 2s cubic-bezier(.16,1,.3,1); }}
+  .ds-lighthouse .lh-text b {{ font-weight: 600; color: {TEXT}; }}
+  .ds-lighthouse .lh-text span {{ font-weight: 400; color: {MUTED}; }}
+  .ds-lighthouse:hover {{ transform: scale(1.03); text-decoration: none; }}  /* a slight pop, no colour change */
+  .ds-lighthouse:hover .lh-text {{ max-width: 260px; opacity: 1; transform: none; padding-right: 16px; }}
+  .ds-right {{ margin-left: auto; display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+              min-width: 0; max-width: calc(50% - 170px); }}  /* ends where the name begins: the search gives way as the lighthouse opens */
+  .ds-search {{ position: relative; flex: 0 1 300px; min-width: 120px; }}
+  @media (max-width: 1000px) {{ .ds-brand {{ font-size: 13px; letter-spacing: .3em; }} .ds-right {{ max-width: calc(50% - 140px); }} }}
+  @media (max-width: 900px) {{ .ds-brand {{ display: none; }} }}  /* too narrow for the name between the two sides */
+  .ds-search svg {{ position: absolute; left: 12px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%);
                    stroke: {MUTED}; fill: none; stroke-width: 2; pointer-events: none; }}
-  .ds-search input {{ width: 100%; box-sizing: border-box; padding: 9px 34px 9px 32px; border-radius: 6px;
-                     border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.04); color: {TEXT};
-                     font: 400 12px Inter, Arial, sans-serif; outline: none; transition: border-color .2s, background .2s; }}
-  .ds-search input::placeholder {{ color: #5c6068; }}
-  .ds-search input:focus {{ border-color: rgba(143,227,160,.45); background: rgba(255,255,255,.06); }}
-  .ds-search kbd {{ position: absolute; right: 9px; top: 50%; transform: translateY(-50%); padding: 1px 6px;
-                   border-radius: 5px; border: 1px solid rgba(255,255,255,.12); color: #5c6068; font: 500 10px Inter, Arial; }}
-  .ds-results {{ display: none; margin-top: 8px; max-height: 330px; overflow-y: auto; scrollbar-width: thin;
-                scrollbar-color: #2e3138 transparent; }}
+  .ds-search input {{ width: 100%; height: 34px; box-sizing: border-box; padding: 0 34px 0 36px; border-radius: 6px;
+                     border: 1px solid transparent; background: rgba(255,255,255,.07); color: {TEXT};
+                     font: 400 12.5px Inter, Arial, sans-serif; outline: none; transition: border-color .2s, background .2s; }}
+  .ds-search input::placeholder {{ color: {MUTED}; }}
+  .ds-search input:focus {{ border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.1); }}
+  .ds-search kbd {{ position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 1px 6px;
+                   border-radius: 4px; border: 1px solid rgba(255,255,255,.14); color: {MUTED}; font: 500 10px Inter, Arial; }}
+  .ds-results {{ display: none; position: absolute; top: calc(100% + 12px); right: 0; width: 380px; max-height: 60vh;
+                padding: 6px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; {GLASS} background: rgba(16,16,16,.72);
+                scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .ds-results.open {{ display: block; }}
   .ds-hit {{ display: grid; grid-template-columns: 62px 1fr; column-gap: 10px; padding: 7px 8px; border-radius: 8px;
             cursor: pointer; }}
@@ -326,23 +357,23 @@ STYLE = f"""
 
   /* layer panel with toggle switches */
   .leaflet-control-layers {{ border-radius: 10px !important; padding: 12px 16px; {GLASS} border: none !important; }}
-  .leaflet-control-layers label {{ font-size: 10px; font-weight: 500; letter-spacing: .14em;
-                                  text-transform: uppercase; color: {TEXT}; margin: 8px 0; cursor: pointer; }}
+  .leaflet-control-layers label {{ font-size: 12px; font-weight: 400; letter-spacing: 0;
+                                  color: {TEXT}; margin: 8px 0; cursor: pointer; }}
   .leaflet-control-layers label > span {{ display: flex; align-items: center; }}
   .leaflet-control-layers-separator {{ display: none; }}
   .leaflet-control-layers-selector {{ appearance: none; -webkit-appearance: none; position: relative; top: 0;
-      width: 26px; height: 14px; margin: 0 12px 0 0; border-radius: 7px; background: #2a2d33;
+      width: 26px; height: 14px; margin: 0 12px 0 0; border-radius: 7px; background: #2e2e2e;
       cursor: pointer; flex-shrink: 0; transition: background .2s; }}
   .leaflet-control-layers-selector::after {{ content: ""; position: absolute; top: 2px; left: 2px;
       width: 10px; height: 10px; border-radius: 50%; background: #5c6068; transition: transform .2s, background .2s; }}
-  .leaflet-control-layers-selector:checked {{ background: rgba(143,227,160,.28); }}
-  .leaflet-control-layers-selector:checked::after {{ transform: translateX(12px); background: {ACCENT}; }}
+  .leaflet-control-layers-selector:checked {{ background: rgba(255,255,255,.28); }}
+  .leaflet-control-layers-selector:checked::after {{ transform: translateX(12px); background: {UI}; }}
   .swatch {{ display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; }}
   .count {{ margin-left: auto; padding-left: 18px; color: {MUTED}; font-variant-numeric: tabular-nums; }}
 
   .leaflet-bar {{ border-radius: 8px !important; overflow: hidden; {GLASS} border: none !important; }}
   .leaflet-bar a {{ background: transparent !important; color: {TEXT} !important; border-bottom: 1px solid rgba(255,255,255,.06) !important; }}
-  .leaflet-bar a:hover {{ color: {ACCENT} !important; }}
+  .leaflet-bar a:hover {{ color: {UI} !important; }}
 
   .leaflet-popup-content-wrapper, .leaflet-popup-tip {{ background: rgba(18,20,24,.94); color: {TEXT};
       box-shadow: 0 10px 40px rgba(0,0,0,.5); }}
@@ -408,31 +439,37 @@ STYLE = f"""
   /* price filter, stacked under the layer panel */
   .ds-filter {{ width: 240px; padding: 14px 16px; border-radius: 10px; color: {TEXT}; {GLASS}
                font-family: Inter, Arial, sans-serif; }}
-  .ds-filter .ft {{ font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
+  .ds-filter .ft {{ font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
   .ds-filter .fv {{ display: block; margin-top: 6px; font-size: 13px; letter-spacing: 0; text-transform: none;
-                   color: {ACCENT}; font-variant-numeric: tabular-nums; }}
-  .ds-filter label {{ display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 10px;
+                   color: {UI}; font-variant-numeric: tabular-nums; }}
+  .ds-filter label {{ display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 11px;
                      letter-spacing: .1em; text-transform: uppercase; color: {MUTED}; }}
-  .ds-filter input[type=range] {{ flex: 1; accent-color: {ACCENT}; }}
-  .ds-filter label.chk {{ text-transform: none; letter-spacing: 0; font-size: 11px; }}
-  .ds-filter input[type=checkbox] {{ accent-color: {ACCENT}; }}
-  .ds-filter .fc {{ margin-top: 10px; font-size: 11px; color: {TEXT}; }}
+  /* slim price sliders: a hairline track and a small white knob */
+  .ds-filter input[type=range] {{ flex: 1; height: 14px; margin: 0; background: none; -webkit-appearance: none; appearance: none; }}
+  .ds-filter input[type=range]::-webkit-slider-runnable-track {{ height: 4px; border-radius: 2px; background: {TRACK}; }}
+  .ds-filter input[type=range]::-moz-range-track {{ height: 4px; border-radius: 2px; background: {TRACK}; }}
+  .ds-filter input[type=range]::-webkit-slider-thumb {{ -webkit-appearance: none; width: 11px; height: 11px; margin-top: -3.5px;
+                                                       border: none; border-radius: 50%; background: {UI}; cursor: pointer; }}
+  .ds-filter input[type=range]::-moz-range-thumb {{ width: 11px; height: 11px; border: none; border-radius: 50%; background: {UI}; cursor: pointer; }}
+  .ds-filter label.chk {{ text-transform: none; letter-spacing: 0; font-size: 12px; }}
+  .ds-filter input[type=checkbox] {{ accent-color: {UI}; }}
+  .ds-filter .fc {{ margin-top: 10px; font-size: 12px; color: {TEXT}; }}
   .ds-filter .fs {{ margin-top: 4px; font-size: 9px; color: #5c6068; }}
 
   /* deal sheet in a side panel */
-  .ds-panel {{ position: fixed; top: 140px; left: 16px; bottom: 16px; width: 390px; z-index: 9998;
+  .ds-panel {{ position: fixed; top: 72px; left: 8px; bottom: 8px; width: 390px; z-index: 9998;
               overflow-y: auto; padding: 22px 22px 18px; border-radius: 10px; {GLASS}
               transform: translateX(-120%); transition: transform .55s cubic-bezier(.22,1,.36,1); will-change: transform;
-              font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
+              font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .ds-panel.open {{ transform: none; }}
   .ds-panel::-webkit-scrollbar {{ width: 6px; }}
-  .ds-panel::-webkit-scrollbar-thumb {{ background: #2e3138; border-radius: 3px; }}
+  .ds-panel::-webkit-scrollbar-thumb {{ background: #333333; border-radius: 3px; }}
   .ds-close {{ position: absolute; top: 12px; right: 14px; background: none; border: none; color: {MUTED};
               font-size: 22px; line-height: 1; cursor: pointer; }}
   .ds-close:hover {{ color: {TEXT}; }}
   .ds-panel .deal .parcels {{ max-height: none; overflow: visible; margin-right: 0; padding-right: 0; }}
   .deal {{ font-size: 12px; color: {TEXT}; }}
-  .deal .code {{ color: {ACCENT}; font-size: 17px; font-weight: 600; letter-spacing: .03em; }}
+  .deal .code {{ color: {UI}; font-size: 17px; font-weight: 600; letter-spacing: .03em; }}
   .deal .loc {{ font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: {MUTED}; margin-top: 2px; }}
   .deal .chips span {{ display: inline-block; margin: 10px 4px 0 0; padding: 3px 9px; border-radius: 999px;
                       border: 1px solid rgba(255,255,255,.1); font-size: 10px; color: {TEXT}; }}
@@ -453,15 +490,15 @@ STYLE = f"""
                 padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 11px;
                 font-variant-numeric: tabular-nums; }}
   .deal .pnum {{ font-weight: 600; cursor: zoom-in; }}
-  .deal .prow.hot {{ background: rgba(143,227,160,.08); }}
+  .deal .prow.hot {{ background: rgba(255,255,255,.08); }}
   .deal .prow {{ border-radius: 6px; transition: background .15s; }}
   .deal .pnum em {{ font-style: normal; font-weight: 500; color: {MUTED}; font-size: 9px; margin-left: 4px; }}
   .deal .parcels::-webkit-scrollbar {{ width: 6px; }}
-  .deal .parcels::-webkit-scrollbar-thumb {{ background: #2e3138; border-radius: 3px; }}
-  .deal .parcels {{ scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
+  .deal .parcels::-webkit-scrollbar-thumb {{ background: #333333; border-radius: 3px; }}
+  .deal .parcels {{ scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .deal .ptype {{ color: {MUTED}; }}
   .deal .ptype i {{ font-style: normal; color: {ORANGE}; font-size: 9px; letter-spacing: .08em; margin-left: 3px; }}
-  .deal a {{ color: {ACCENT}; text-decoration: none; white-space: nowrap; }}
+  .deal a {{ color: {UI}; text-decoration: none; white-space: nowrap; }}
   .deal a:hover {{ text-decoration: underline; }}
   .deal .links {{ margin-top: 12px; font-size: 11px; }}
   .deal .muted {{ color: {MUTED}; padding: 4px 0; }}
@@ -470,15 +507,17 @@ STYLE = f"""
   .ds-select {{ width: 310px; padding: 12px 14px; border-radius: 10px; color: {TEXT}; {GLASS}
                font-family: Inter, Arial, sans-serif; }}
   .ds-select .sh {{ display: flex; align-items: center; justify-content: space-between; }}
-  .ds-select .ft {{ font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
+  .ds-select .ft {{ font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
   .ds-select .seg {{ display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.05); }}
   .ds-select .seg button {{ border: none; background: none; color: {MUTED}; font: 500 11px Inter, Arial, sans-serif;
                            padding: 4px 12px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }}
   .ds-select .seg button:hover {{ color: {TEXT}; }}
-  .ds-select .seg button.on {{ background: {PURPLE}; color: #0b0c0e; }}
-  .ds-select .sbody {{ max-height: 52vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
+  .ds-select .seg button.on {{ background: {PURPLE}; color: #0d0d0d; }}
+  .ds-select .sbody {{ max-height: 52vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .ds-select .sbody:empty {{ display: none; }}
-  .ds-select .hint {{ margin-top: 10px; font-size: 11px; color: {MUTED}; }}
+  .ds-select .hint {{ margin-top: 10px; font-size: 12px; line-height: 1.5; color: {MUTED}; }}
+  .ds-select .hint.explain {{ line-height: 1.55; }}
+  .ds-select .hint.explain b {{ color: {TEXT}; font-weight: 600; }}
   .ds-select .srow {{ display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 5px 0;
                      border-bottom: 1px solid rgba(255,255,255,.05); font-size: 11px; font-variant-numeric: tabular-nums; }}
   .ds-select .srow.p {{ grid-template-columns: 1fr auto auto auto; }}
@@ -491,7 +530,7 @@ STYLE = f"""
   .ds-select .clear:hover {{ background: rgba(255,255,255,.05); }}
   /* Export to Acre: the one filled button, in the selection window and the deal sheet */
   .ds-select .acre, .deal .acre {{ margin-top: 12px; width: 100%; padding: 8px; border-radius: 8px; border: none;
-                                  background: {ACCENT}; color: #0b0c0e; font: 600 11px Inter, Arial, sans-serif;
+                                  background: {UI}; color: #0d0d0d; font: 600 11px Inter, Arial, sans-serif;
                                   letter-spacing: .06em; cursor: pointer; transition: filter .15s; }}
   .ds-select .acre:hover, .deal .acre:hover {{ filter: brightness(1.1); }}
   .ds-select .acre:disabled, .deal .acre:disabled {{ filter: grayscale(.6); cursor: progress; }}
@@ -499,45 +538,57 @@ STYLE = f"""
   .ds-select.busy {{ cursor: progress; }}
   .selecting, .selecting .leaflet-interactive {{ cursor: crosshair !important; }}
 
-  /* filter drawer on the right (layers, price filter, selection), opened by the icon at the top right */
-  .ds-toggle {{ position: fixed; top: 16px; right: 16px; z-index: 10001; width: 44px; height: 44px; padding: 0;
-               display: grid; place-items: center; border-radius: 8px; cursor: pointer; color: {TEXT}; {GLASS}
-               transition: color .2s, background .2s; }}
+  /* filter window (layers, price filter, selection), under the icon at the top right and only as tall as
+     its content. Opening, it unfolds out of the button's corner, its sections rise in one after another,
+     and the icon's two slider knobs slide to their other ends */
+  .ds-toggle {{ width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border: none; border-radius: 6px;
+               cursor: pointer; color: {TEXT}; background: rgba(255,255,255,.07); transition: color .2s, background .2s; }}
+  .ds-toggle:hover {{ background: rgba(255,255,255,.12); }}
   .ds-toggle svg {{ width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }}
-  .ds-toggle:hover, .drawer-open .ds-toggle {{ color: {ACCENT}; }}
-  .ds-drawer {{ position: fixed; top: 8px; right: 8px; bottom: 8px; width: 360px; z-index: 10000; box-sizing: border-box;
-               padding: 8px 20px 20px; overflow-y: auto; {GLASS} background: rgba(8,9,11,.55);
-               border-radius: 10px;
-               transform: translateX(calc(100% + 16px)); transition: transform .6s cubic-bezier(.22,1,.36,1); will-change: transform;
-               font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #2e3138 transparent; }}
-  .drawer-open .ds-drawer {{ transform: none; }}
-  .ds-drawer .dt {{ height: 44px; display: flex; align-items: center; font-size: 11px; font-weight: 600;
-                   letter-spacing: .22em; text-transform: uppercase; color: {TEXT}; margin-bottom: 6px; }}
-  .ds-drawer > .leaflet-control {{ float: none; clear: none; margin: 0; width: auto; padding: 16px 0;
+  .ds-toggle svg circle {{ transform-box: fill-box; transition: transform .55s cubic-bezier(.22,1,.36,1); }}
+  .drawer-open .ds-toggle svg circle:first-of-type {{ transform: translateX(-6px); }}
+  .drawer-open .ds-toggle svg circle:last-of-type {{ transform: translateX(6px); }}
+  .ds-toggle:hover, .drawer-open .ds-toggle {{ color: {UI}; }}
+  .ds-drawer {{ position: fixed; top: 72px; left: 8px; width: 320px; max-height: calc(100vh - 84px); z-index: 10000;
+               box-sizing: border-box; padding: 2px 18px 14px; overflow-y: auto; {GLASS} background: rgba(16,16,16,.55);
+               border-radius: 10px; transform-origin: top left;
+               opacity: 0; visibility: hidden; transform: translateY(-10px) scale(.92);
+               transition: opacity .3s ease, transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s;
+               font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
+  .drawer-open .ds-drawer {{ opacity: 1; visibility: visible; transform: none;
+                            transition: opacity .3s ease, transform .55s cubic-bezier(.22,1,.36,1), visibility 0s; }}
+  .ds-drawer > * {{ opacity: 0; transform: translateY(8px);
+                   transition: opacity .3s ease, transform .45s cubic-bezier(.22,1,.36,1); }}
+  .drawer-open .ds-drawer > * {{ opacity: 1; transform: none; }}
+  .drawer-open .ds-drawer > :nth-child(1) {{ transition-delay: .06s; }}
+  .drawer-open .ds-drawer > :nth-child(2) {{ transition-delay: .12s; }}
+  .drawer-open .ds-drawer > :nth-child(3) {{ transition-delay: .18s; }}
+  .drawer-open .ds-drawer > :nth-child(4) {{ transition-delay: .24s; }}
+  .ds-drawer .dt {{ padding-top: 16px; font-size: 11px; font-weight: 500;
+                   letter-spacing: .14em; text-transform: uppercase; color: {TEXT}; }}
+  .ds-drawer > .leaflet-control {{ float: none; clear: none; margin: 0; width: auto; padding: 14px 0;
                                   background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
-                                  border: none !important; border-top: 1px solid rgba(255,255,255,.06) !important;
+                                  border: none !important;
                                   border-radius: 0 !important; }}
   .ds-drawer .ds-select .sbody {{ max-height: none; overflow: visible; }}
-  /* link to Baldwin Alexandria, the source library */
-  .ds-alexandria {{ display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 4px 2px;
-                   text-decoration: none; color: {TEXT}; transition: color .2s; }}
-  .ds-alexandria:hover {{ color: {ACCENT}; }}
-  .ds-alexandria svg {{ width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.4;
-                       stroke-linecap: round; stroke-linejoin: round; }}
-  .ds-alexandria svg .fire {{ fill: {ACCENT}; stroke: none; }}
-  .ds-alexandria b {{ font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }}
 
   /* phones: search across the top, the drawer and the deal sheet slide up from the bottom so the top of
      the map stays visible and tappable; pinch replaces the zoom buttons */
   @media (max-width: 700px) {{
-    .ds-title {{ top: 12px; left: 12px; right: 68px; width: auto; padding: 12px; }}
-    .ds-brand {{ font-size: 12px; padding-bottom: 10px; }}
+    .ds-bar {{ padding: 0 6px; gap: 6px; }}
+    .ds-right {{ gap: 6px; }}
+    .ds-brand {{ display: none; }}
+    .ds-right {{ flex: 1; max-width: none; }}
+    .ds-search {{ flex: 1; width: auto; }}
+    .ds-search kbd {{ display: none; }}
+    .ds-results {{ position: fixed; top: 72px; left: 8px; right: 8px; width: auto; }}
+    .ds-lighthouse:hover .lh-text {{ max-width: 0; opacity: 0; padding-right: 0; }}  /* no hover on a phone */
     .ds-search input {{ font-size: 16px; }}  /* 16px stops iOS from zooming into the field */
     .ds-results {{ max-height: 50vh; }}
     .leaflet-control-zoom {{ display: none; }}
-    .ds-toggle {{ top: 12px; right: 12px; }}
-    .ds-drawer {{ top: auto; left: 8px; height: 62vh; width: auto; padding-top: 6px;
-                 transform: translateY(calc(100% + 16px)); }}
+    .ds-drawer {{ top: auto; bottom: 8px; left: 8px; right: 8px; width: auto; max-height: 62vh;
+                 transform-origin: bottom center; transform: translateY(14px) scale(.97); }}
+
     .ds-panel {{ top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 62vh; padding: 18px 16px 24px;
                 border-radius: 18px 18px 0 0; transform: translateY(110%); }}
     .deal .prow {{ grid-template-columns: 54px 72px 1fr auto; gap: 6px; }}
@@ -634,14 +685,22 @@ STYLE = f"""
     <ellipse cx="100" cy="182" rx="34" ry="6" fill="url(#glass-c)"/></svg>
   </div><div class="orb-shadow"></div></div>
 </div>
-<div class="ds-title">
+<div class="ds-title ds-bar">
+  <div class="ds-left"></div>
   <div class="ds-brand"><b>BALDWIN</b><span>PALANTIR</span></div>
-  <div class="ds-search">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-    <input type="text" placeholder="Plocha, lokalita, metro, adresa…" autocomplete="off" spellcheck="false">
-    <kbd>/</kbd>
+  <div class="ds-right">
+    <div class="ds-search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input type="text" placeholder="Plocha, lokalita, metro, adresa…" autocomplete="off" spellcheck="false">
+      <kbd>/</kbd>
+      <div class="ds-results"></div>
+    </div>
+    <a class="ds-lighthouse" href="alexandria/" target="_blank" rel="noopener" aria-label="Baldwin Alexandria">
+      <span class="lh-icon"><svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>
+        <path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg></span>
+      <span class="lh-text"><b>BALDWIN</b> <span>ALEXANDRIA</span></span>
+    </a>
   </div>
-  <div class="ds-results"></div>
 </div>
 """
 

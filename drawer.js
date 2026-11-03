@@ -1,19 +1,13 @@
-// Drawer on the right with the layer switches, the price filter and the selection. The icon at the top
-// right opens it: the drawer slides in while the map glides left, so what was in the middle stays in
-// view. Inlined into map.html by make_map.py after the controls exist; __MAP__ is filled in there.
+// The filter window (layer switches, price filter, selection) under the button at the left of the top
+// bar. The window unfolds out of the button (see the CSS)
+// and floats over the map, so the map itself stays still. Inlined into map.html by make_map.py after the
+// controls exist; __MAP__ is filled in there.
 (function () {
   const map = __MAP__;
-  const W = 360;  // drawer width, px (same as .ds-drawer in the CSS)
-  const GLIDE = { duration: 0.6, easeLinearity: 0.2 };  // a soft ease-out, like the drawer's CSS curve
 
   const drawer = document.createElement("aside");
   drawer.className = "ds-drawer";
-  drawer.innerHTML = '<div class="dt">Filtry a výběr</div>'
-    + '<a class="ds-alexandria" href="alexandria/" target="_blank" rel="noopener" title="Zdroje dat a jak ovlivňují výpočty">'
-    // the Lighthouse of Alexandria: square base, octagonal middle, round top, the fire and its rays
-    + '<svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>'
-    + '<path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg>'
-    + '<b>Baldwin Alexandria</b></a>';
+  drawer.innerHTML = '<div class="dt">Filtry</div>';
   for (const sel of [".leaflet-control-layers", ".ds-filter", ".ds-select"]) {
     const el = map.getContainer().querySelector(sel);
     if (el) drawer.appendChild(el);
@@ -24,22 +18,13 @@
 
   const button = document.createElement("button");
   button.className = "ds-toggle";
-  button.title = "Filtry a výběr";
-  button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/>'
-    + '<circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>';
-  document.body.appendChild(button);
+  button.title = "Filtry";
+  button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/>'
+    + '<circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>';
+  document.querySelector(".ds-bar .ds-left").appendChild(button);
 
-  // The drawer is a glass window floating over the map (the map shows blurred through it). Opening glides
-  // the map left by half the drawer, so what was in the middle stays in the free part; closing glides it
-  // back. On phones the drawer is a bottom sheet (see the CSS), so the map stays as it is.
-  const phone = () => window.matchMedia("(max-width: 700px)").matches;
   let open = false;
-  function toggle(on) {
-    if (on === open) return;
-    open = on;
-    document.body.classList.toggle("drawer-open", on);
-    if (!phone()) map.panBy([(on ? 1 : -1) * W / 2, 0], GLIDE);
-  }
+  const toggle = (on) => { open = on; document.body.classList.toggle("drawer-open", on); };
   button.addEventListener("click", () => toggle(!open));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && open && !window.baldwinSelectMode) toggle(false);

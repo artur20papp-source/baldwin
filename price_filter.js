@@ -49,6 +49,8 @@
       if (!keep && geo.hasLayer(layer)) geo.removeLayer(layer);
       if (keep) shown += 1;
     }
+    // each slider's track thick and white up to its knob
+    for (const el of [lo, hi]) el.style.setProperty("--b", `${el.value / max * 100}%`);
     box.querySelector(".fv").textContent = `${fmt(a)} – ${fmt(b)} Kč/m²`;
     box.querySelector(".fc").textContent = `Zobrazeno ${fmt(shown)} z ${fmt(areas.length)} ploch`;
   }
