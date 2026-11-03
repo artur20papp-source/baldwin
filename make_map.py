@@ -69,35 +69,46 @@ STYLE = f"""
 
   /* start screen: a black palantír in the middle; click it to enter the map */
   .ds-menu {{ position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center;
-             --floor: calc(50% + 122px);  /* where the orb touches the floor */
-             /* a dark studio with no lights on: the only light is the orb's own, pooling warm on the floor
-                around it and catching faintly where the floor curves up into the back wall */
+             --s: 1;  /* orb size: 1 on a desktop, .72 on a phone */
+             --floor: calc(50% + 122px * var(--s));  /* where the orb touches the floor */
+             /* the back wall of a dark studio: the orb lights it in a circle that falls off quickly, and a
+                dim light high above throws a soft cone down it */
              background:
-               radial-gradient(ellipse 30% 6% at 50% var(--floor), rgba(255,105,45,.18) 0%, rgba(255,90,40,.05) 55%, rgba(0,0,0,0) 100%),
-               radial-gradient(ellipse 55% 14% at 50% var(--floor), rgba(150,45,20,.08) 0%, rgba(0,0,0,0) 100%),
-               radial-gradient(ellipse 65% 38% at 50% var(--floor), rgba(110,38,18,.1) 0%, rgba(0,0,0,0) 75%),
-               /* a dim light high above, falling softly onto the orb and the floor around it */
-               radial-gradient(ellipse 26% 75% at 50% -12%, rgba(225,230,245,.055) 0%, rgba(225,230,245,.018) 50%, rgba(0,0,0,0) 85%),
-               radial-gradient(ellipse 28% 7% at 50% calc(var(--floor) + 6px), rgba(225,230,245,.025) 0%, rgba(0,0,0,0) 100%),
-               /* back wall, then a soft edge behind the orb where it meets the slightly paler floor */
-               linear-gradient(180deg, #030303 0%, #040404 calc(var(--floor) - 64px), #0d0b0a calc(var(--floor) - 50px),
-                               #0a0908 calc(var(--floor) + 40px), #050505 100%);
+               radial-gradient(circle at 50% 50%, rgba(110,28,12,.12) 0%, rgba(60,14,6,.05) 22%, rgba(0,0,0,0) 48%),
+               radial-gradient(ellipse 24% 72% at 50% -12%, rgba(220,226,242,.045) 0%, rgba(220,226,242,.014) 50%, rgba(0,0,0,0) 85%),
+               #030303;
              transition: opacity .9s ease .25s, visibility .9s ease .25s; }}
-  @media (max-width: 700px) {{ .ds-menu {{ --floor: calc(50% + 88px); }} }}
+  @media (max-width: 700px) {{ .ds-menu {{ --s: .72; }} }}
+  /* the floor, seen in perspective: its own surface from where it meets the wall (just behind the orb)
+     down to the bottom. Light lies on it as flattened ellipses, brightest where the orb touches it:
+     the orb's warm pool, a wider warm spill, and the overhead light's faint patch. Near-black, warm, no grey */
+  .ds-menu::after {{ content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none;
+                    top: calc(var(--floor) - 48px * var(--s));
+                    --c: calc(48px * var(--s));  /* the contact point, measured from the top of the floor */
+                    background:
+                      radial-gradient(ellipse calc(150px * var(--s)) calc(20px * var(--s)) at 50% var(--c),
+                                      rgba(255,110,50,.2) 0%, rgba(255,90,40,.06) 50%, rgba(0,0,0,0) 100%),
+                      radial-gradient(ellipse calc(440px * var(--s)) calc(80px * var(--s)) at 50% calc(var(--c) + 6px),
+                                      rgba(150,45,18,.2) 0%, rgba(90,25,10,.08) 45%, rgba(0,0,0,0) 100%),
+                      radial-gradient(ellipse calc(260px * var(--s)) calc(42px * var(--s)) at 50% calc(var(--c) + 10px),
+                                      rgba(220,226,242,.03) 0%, rgba(0,0,0,0) 100%),
+                      linear-gradient(180deg, #0a0605 0%, #060404 35%, #030202 100%);
+                    -webkit-mask: linear-gradient(180deg, transparent 0, #000 12px);
+                            mask: linear-gradient(180deg, transparent 0, #000 12px); }}
   /* the orb's light spilling into the dark room: a wide warm glow that slowly breathes */
-  .ds-menu::before {{ content: ""; position: absolute; inset: 0; pointer-events: none;
+  .ds-menu::before {{ content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
                      background: radial-gradient(circle at 50% 50%, rgba(220,70,25,.5) 0%, rgba(170,45,18,.3) 12%,
                                  rgba(110,25,10,.15) 24%, rgba(50,12,5,.06) 38%, rgba(0,0,0,0) 56%);
                      animation: orb-breathe 6s ease-in-out infinite, orb-flicker-room 11s ease-in-out infinite; }}
   @keyframes orb-breathe {{ 0%, 100% {{ opacity: .75; transform: scale(.96); }} 50% {{ opacity: 1; transform: scale(1.04); }} }}
   .ds-menu.gone {{ opacity: 0; visibility: hidden; }}
-  .orb-wrap {{ position: relative; }}
+  .orb-wrap {{ position: relative; z-index: 2; }}  /* above the floor (::after) and the room glow (::before) */
   /* dark glass: deep body, rim light (fresnel) and a cool bounce light at the bottom */
   .orb {{ position: relative; width: 240px; height: 240px; border-radius: 50%; cursor: pointer; overflow: hidden;
          background:
            radial-gradient(circle at 52% 58%, rgba(255,150,50,.38) 0%, rgba(200,60,20,.22) 18%, rgba(120,25,15,0) 45%),
            radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 60%, rgba(120,130,160,.10) 68%, rgba(200,210,235,.22) 71.6%, rgba(0,0,0,0) 72%),
-           radial-gradient(circle at 40% 36%, #2b2f3a 0%, #171a22 38%, #0a0b0f 72%, #020203 100%);
+           radial-gradient(circle at 40% 36%, #16181e 0%, #0c0d11 38%, #050507 72%, #010101 100%);
          box-shadow: inset -26px -30px 54px rgba(0,0,0,.85),
                      inset 0 -8px 18px rgba(200,60,25,.18), 0 0 80px rgba(220,70,25,.16);
          transition: transform .6s cubic-bezier(.2,.8,.2,1), box-shadow .6s ease; }}
@@ -411,7 +422,7 @@ STYLE = f"""
         <animate attributeName="baseFrequency" dur="31s" repeatCount="indefinite" values="0.005;0.0068;0.0054;0.005"/></feTurbulence>
       <feDisplacementMap in="n" in2="flow" scale="46" xChannelSelector="R" yChannelSelector="G">
         <animate attributeName="scale" dur="23s" repeatCount="indefinite" values="46;70;38;46"/></feDisplacementMap>
-      <feColorMatrix type="matrix" values="0 0 0 0 .2  0 0 0 0 .25  0 0 0 0 .4  2.2 0 0 0 -.95"/></filter>
+      <feColorMatrix type="matrix" values="0 0 0 0 .1  0 0 0 0 .12  0 0 0 0 .2  2.2 0 0 0 -.95"/></filter>
     <filter id="orb-fire-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
       <feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="3" seed="11" result="n"/>
       <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="2" seed="4" result="flow">
@@ -438,7 +449,7 @@ STYLE = f"""
          faint sheen of the ceiling over the top; a window reflected as tapered curved panes on both
          sides, softly edged and fading at their ends; a glint at the top; a caustic at the bottom -->
     <radialGradient id="glass-fresnel" cx=".5" cy=".5" r=".5"><stop offset=".7" stop-color="#cfd8ff" stop-opacity="0"/>
-      <stop offset=".9" stop-color="#cfd8ff" stop-opacity=".07"/><stop offset=".97" stop-color="#e6ecff" stop-opacity=".13"/>
+      <stop offset=".9" stop-color="#cfd8ff" stop-opacity=".045"/><stop offset=".97" stop-color="#e6ecff" stop-opacity=".09"/>
       <stop offset="1" stop-color="#e6ecff" stop-opacity="0"/></radialGradient>
     <radialGradient id="glass-sky" cx=".5" cy=".2" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".1"/>
       <stop offset=".6" stop-color="#fff" stop-opacity=".03"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
