@@ -5,6 +5,7 @@ Clicking an area opens a deal sheet (deal_popup.js) that also lists its parcels 
 """
 import json
 import re
+from urllib.parse import quote
 from pathlib import Path
 
 import folium
@@ -59,6 +60,25 @@ GROUPS = [
     ("Rozvojové obytné", ACCENT, 0.75, True, lambda p: p["stabilita"] == 3 and p["vyuziti"] == 1),
     ("Transformační obytné", BROWN, 0.75, True, lambda p: p["stabilita"] != 3 and p["vyuziti"] == 1),
 ]
+
+# Mouse cursor: our own chrome cyber-hand pointing (32 × 32, the tip of the index finger is the hotspot):
+# plated fingers with joint lines, a thin glowing orange seam across the palm to match the orb.
+HAND = """<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><defs>
+<linearGradient id="m" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5d6470"/><stop offset=".35" stop-color="#eef2f7"/>
+<stop offset=".62" stop-color="#9aa3b1"/><stop offset="1" stop-color="#363b45"/></linearGradient></defs>
+<g fill="url(#m)" stroke="#0b0c0e" stroke-width="1" stroke-linejoin="round">
+<path d="M12 27 H22 V31 H12 Z"/>
+<path d="M8.5 16.5 L5.2 14.8 A1.9 1.9 0 0 0 3.2 17.9 L8.5 22 Z"/>
+<path d="M8.5 14 H25 V21 Q25 27 19 27.5 H14 Q8.5 27 8.5 21 Z"/>
+<path d="M21.5 17.5 V15.2 A1.75 1.75 0 0 1 25 15.2 V17.5 Z"/>
+<path d="M17.5 17 V13.8 A2 2 0 0 1 21.5 13.8 V17 Z"/>
+<path d="M13.5 16.5 V12.8 A2 2 0 0 1 17.5 12.8 V16.5 Z"/>
+<path d="M8.5 15 V4 A2.5 2.5 0 0 1 13.5 4 V15 Z"/></g>
+<g stroke="#0b0c0e" stroke-width=".7"><path d="M8.8 6.8 H13.2 M8.8 10.8 H13.2 M12 29 H22"/></g>
+<path d="M9.6 3.6 V13.4" stroke="#fff" stroke-opacity=".75" stroke-width=".7" stroke-linecap="round"/>
+<path d="M10.5 20.2 H23" stroke="#ff7a2a" stroke-width=".9" stroke-linecap="round"/>
+<circle cx="11" cy="10.8" r=".6" fill="#ff7a2a"/></svg>"""
+HAND_CURSOR = f'url("data:image/svg+xml,{quote(HAND.replace(chr(10), ""))}") 11 2, pointer'
 
 GLASS = ("background: rgba(18,20,24,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);"
          "border: 1px solid rgba(255,255,255,.06); box-shadow: 0 10px 40px rgba(0,0,0,.45);")
@@ -394,6 +414,10 @@ STYLE = f"""
                       background: none; color: {TEXT}; font: 500 11px Inter, Arial, sans-serif; cursor: pointer; }}
   .ds-select .clear:hover {{ background: rgba(255,255,255,.05); }}
   .ds-select.busy {{ cursor: progress; }}
+  /* the cyber-hand everywhere instead of the arrow; text fields keep the text cursor, and selecting
+     keeps the crosshair, since those help aim */
+  html, body, body * {{ cursor: {HAND_CURSOR} !important; }}
+  input, textarea {{ cursor: text !important; }}
   .selecting, .selecting .leaflet-interactive {{ cursor: crosshair !important; }}
 
   /* filter drawer on the right (layers, price filter, selection), opened by the icon at the top right */
