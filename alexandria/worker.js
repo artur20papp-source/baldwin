@@ -32,7 +32,9 @@ moves). Rules:
 let cached = { text: null, at: 0 };
 async function knowledge() {
   if (cached.text && Date.now() - cached.at < 10 * 60 * 1000) return cached.text;  // refresh every 10 min
-  const res = await fetch(KNOWLEDGE_URL, { cf: { cacheTtl: 600 } });
+  // a fresh address every 10 minutes, and only good answers cached (a cached 404 once kept it offline)
+  const res = await fetch(`${KNOWLEDGE_URL}?v=${Math.floor(Date.now() / 600000)}`,
+                          { cf: { cacheTtlByStatus: { "200-299": 600, "400-599": 0 } } });
   if (!res.ok) throw new Error(`library not reachable (${res.status})`);
   cached = { text: await res.text(), at: Date.now() };
   return cached.text;
