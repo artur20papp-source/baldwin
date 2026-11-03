@@ -8,7 +8,9 @@
 
   const drawer = document.createElement("aside");
   drawer.className = "ds-drawer";
-  drawer.innerHTML = '<div class="dt">Filtry a výběr</div>';
+  drawer.innerHTML = '<div class="dt">Filtry a výběr</div>'
+    + '<a class="ds-alexandria" href="alexandria/" target="_blank" rel="noopener">'
+    + '<b>Baldwin Alexandria</b><span>zdroje dat a jak ovlivňují výpočty ↗</span></a>';
   for (const sel of [".leaflet-control-layers", ".ds-filter", ".ds-select"]) {
     const el = map.getContainer().querySelector(sel);
     if (el) drawer.appendChild(el);

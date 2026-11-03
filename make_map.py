@@ -497,6 +497,12 @@ STYLE = f"""
                                   border: none !important; border-top: 1px solid rgba(255,255,255,.06) !important;
                                   border-radius: 0 !important; }}
   .ds-drawer .ds-select .sbody {{ max-height: none; overflow: visible; }}
+  /* link to Baldwin Alexandria, the source library */
+  .ds-alexandria {{ display: block; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; text-decoration: none;
+                   border: 1px solid rgba(143,227,160,.22); background: rgba(143,227,160,.06); transition: background .2s; }}
+  .ds-alexandria:hover {{ background: rgba(143,227,160,.12); }}
+  .ds-alexandria b {{ display: block; color: {ACCENT}; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }}
+  .ds-alexandria span {{ display: block; margin-top: 3px; color: {MUTED}; font-size: 11px; }}
 
   /* phones: search across the top, the drawer and the deal sheet slide up from the bottom so the top of
      the map stays visible and tappable; pinch replaces the zoom buttons */
