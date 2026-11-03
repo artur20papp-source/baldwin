@@ -7,7 +7,7 @@ no external source; values marked **verify** come from a source that may have ch
 The project has two parts:
 
 - **Baldwin Palantir**: an interactive map of Prague's development and transformation areas
-  (https://artur20papp-source.github.io/baldwin-palantir/). For each area it shows size, regulated
+  (https://artur20papp-source.github.io/baldwin/). For each area it shows size, regulated
   floor area (HPP), an official land price, metro access, flood risk and the cadastral parcels inside.
 - **Baldwin Acre**: an Excel development appraisal (land subdivision into plots, an optional phase 2
   building houses, and a version with a bank loan). Its worked example is area 414/267/5033 in
