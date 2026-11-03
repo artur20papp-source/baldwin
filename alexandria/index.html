@@ -122,6 +122,10 @@
   q.placeholder = t("Zeptejte se na zdroj nebo výpočet…", "Ask about a source or a calculation…", "Opýtajte sa na zdroj alebo výpočet…");
   document.querySelector("#chips button").textContent =
     t("Které vstupy jsou jen předpoklady?", "Which inputs are just assumptions?", "Ktoré vstupy sú len predpoklady?");
+  // back to the map without its start screen
+  document.querySelector(".orb-link").addEventListener("click", () => {
+    try { sessionStorage.setItem("baldwin-skip-intro", "1"); } catch (e) {}
+  });
   // the language switcher: a choice reloads the page (the map follows it too)
   const lang = document.querySelector(".lang");
   lang.querySelector(`[data-lang="${window.baldwinLang}"]`).classList.add("on");
