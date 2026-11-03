@@ -359,11 +359,28 @@ STYLE = f"""
     <svg class="orb-layer orb-fire" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-fire-f)" mask="url(#orb-mask-all)"/></svg>
     <svg class="orb-layer orb-core" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-core-f)" mask="url(#orb-mask-core)"/></svg></div>
   <div class="orb"><svg class="orb-layer orb-smoke" viewBox="0 0 200 200"><defs>
-    <filter id="orb-smoke-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.014 0.022" numOctaves="4" seed="5"/>
+    <!-- each layer = a noise pattern bent by a second, slowly changing low-frequency "current" noise
+         (feDisplacementMap), so the smoke and fire flow like ink in water instead of re-forming -->
+    <filter id="orb-smoke-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014 0.022" numOctaves="3" seed="5" result="n"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.005" numOctaves="2" seed="8" result="flow">
+        <animate attributeName="baseFrequency" dur="31s" repeatCount="indefinite" values="0.005;0.0068;0.0054;0.005"/></feTurbulence>
+      <feDisplacementMap in="n" in2="flow" scale="46" xChannelSelector="R" yChannelSelector="G">
+        <animate attributeName="scale" dur="23s" repeatCount="indefinite" values="46;70;38;46"/></feDisplacementMap>
       <feColorMatrix type="matrix" values="0 0 0 0 .2  0 0 0 0 .25  0 0 0 0 .4  2.2 0 0 0 -.95"/></filter>
-    <filter id="orb-fire-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="4" seed="11"><animate attributeName="baseFrequency" dur="16s" repeatCount="indefinite" values="0.02 0.03;0.023 0.036;0.019 0.032;0.022 0.027;0.02 0.03"/></feTurbulence>
+    <filter id="orb-fire-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="3" seed="11" result="n"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="2" seed="4" result="flow">
+        <animate attributeName="baseFrequency" dur="24s" repeatCount="indefinite" values="0.006;0.0082;0.0064;0.006"/></feTurbulence>
+      <feDisplacementMap in="n" in2="flow" scale="55" xChannelSelector="R" yChannelSelector="G">
+        <animate attributeName="scale" dur="17s" repeatCount="indefinite" values="55;85;45;55"/></feDisplacementMap>
       <feColorMatrix type="matrix" values="0 0 0 0 .9  0 0 0 0 .12  0 0 0 0 .04  3 0 0 0 -1.45"/></filter>
-    <filter id="orb-core-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="2"><animate attributeName="baseFrequency" dur="10s" repeatCount="indefinite" values="0.035;0.041;0.032;0.038;0.035"/></feTurbulence>
+    <filter id="orb-core-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="2" result="n"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="2" seed="13" result="flow">
+        <animate attributeName="baseFrequency" dur="19s" repeatCount="indefinite" values="0.008;0.0105;0.0086;0.008"/></feTurbulence>
+      <feDisplacementMap in="n" in2="flow" scale="40" xChannelSelector="R" yChannelSelector="G">
+        <animate attributeName="scale" dur="13s" repeatCount="indefinite" values="40;64;34;40"/></feDisplacementMap>
       <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 .5  0 0 0 0 .08  3.4 0 0 0 -1.5"/></filter>
     <radialGradient id="orb-m-all"><stop offset=".55" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
     <radialGradient id="orb-m-core"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
