@@ -23,10 +23,30 @@ DRAWER_JS = Path(__file__).with_name("drawer.js")
 LIGHTNING_JS = Path(__file__).with_name("lightning.js")
 CLOUDS_JS = Path(__file__).with_name("clouds.js")
 EXPORT_JS = Path(__file__).with_name("export.js")
-ACRE_XLSX = Path(__file__).resolve().parent.parent / "Baldwin Acre.xlsx"  # the appraisal model, next to this folder
+ACRE_XLSX = Path(__file__).resolve().parent.parent / "Baldwin Acre" / "Baldwin Acre.xlsx"  # the appraisal model, in its own folder
 # The model is built on this area, so for it the export hands out the filled model itself as a worked
 # example (copied next to the page on every build, so it follows the model)
 ACRE_EXAMPLE_AREA, ACRE_EXAMPLE = "414/267/5033", "baldwin-acre-seberov.xlsx"
+# Baldwin Alexandria (the source-library chatbot) is kept in its own folder and published as part of this
+# site: every build copies its page, library and worker code into alexandria/ here
+ALEXANDRIA_DIR = Path(__file__).resolve().parent.parent / "Baldwin Alexandria"
+ALEXANDRIA_FILES = ("index.html", "knowledge.md", "worker.js")
+
+
+def acre_copy():
+    """A fresh copy of the Acre model to read and publish. Windows' own CopyFile works even while the
+    model is open in Excel (Python cannot open the locked file itself)."""
+    import ctypes
+    import shutil
+    import tempfile
+
+    dst = Path(tempfile.gettempdir()) / "baldwin-acre-build.xlsx"
+    try:
+        shutil.copyfile(ACRE_XLSX, dst)
+    except PermissionError:
+        if not ctypes.windll.kernel32.CopyFileW(str(ACRE_XLSX), str(dst), False):
+            raise
+    return dst
 
 
 def acre_template():
@@ -55,7 +75,7 @@ def acre_template():
         return keep
 
     sheets = []
-    for ws in openpyxl.load_workbook(ACRE_XLSX).worksheets:
+    for ws in openpyxl.load_workbook(acre_copy()).worksheets:
         if ws.max_row <= 1 and ws.max_column <= 1 and ws["A1"].value is None:
             continue  # an empty sheet
         keep, cells = timeline(ws), []
@@ -846,7 +866,11 @@ def build_map():
                .replace("__ACCENT__", json.dumps(ACCENT)).replace("__ORANGE__", json.dumps(ORANGE)))
     filter_js = FILTER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     import shutil
-    shutil.copy2(ACRE_XLSX, OUT.with_name(ACRE_EXAMPLE))
+    shutil.copy2(acre_copy(), OUT.with_name(ACRE_EXAMPLE))
+    site_alexandria = OUT.with_name("alexandria")
+    site_alexandria.mkdir(exist_ok=True)
+    for file in ALEXANDRIA_FILES:
+        shutil.copy2(ALEXANDRIA_DIR / file, site_alexandria / file)
     export_js = (EXPORT_JS.read_text(encoding="utf-8").replace("__ACRE__", json.dumps(acre_template(), ensure_ascii=False))
                  .replace("__EXAMPLE__", json.dumps({"area": ACRE_EXAMPLE_AREA, "file": ACRE_EXAMPLE})))
     select_js = SELECT_JS.read_text(encoding="utf-8").replace("__MAP__", name).replace("__PURPLE__", json.dumps(PURPLE))
