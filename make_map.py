@@ -124,8 +124,8 @@ STYLE = f"""
   .orb:hover .orb-fire, .orb:hover .orb-core {{ transition: scale 3.5s cubic-bezier(.45,0,.25,1), filter 3.5s ease; }}
   .orb:hover .orb-fire {{ scale: 1.12; filter: brightness(1.12) saturate(1.3); }}  /* stays orange, no yellow */
   .orb:hover .orb-core {{ scale: 1.2; filter: blur(1px) brightness(1.1) saturate(1.3); }}
-  .orb-wrap:has(.orb:hover) .orb-halo {{ transition: opacity .6s ease, scale 6s cubic-bezier(.45,0,.25,1), filter 5s ease-in; }}
-  .orb-wrap:has(.orb:hover) .orb-halo {{ scale: 1.9; filter: blur(44px) saturate(1.7) brightness(1.3); }}
+  .orb-wrap:has(.orb:hover) .orb-halo {{ transition: opacity .6s ease, scale 6s cubic-bezier(.45,0,.25,1); }}
+  .orb-wrap:has(.orb:hover) .orb-halo {{ scale: 1.9; }}  /* only grows: changing its blur every frame lagged */
   /* the glare follows the room's light: warm reflections flicker with the fire (same beat as the
      glow), and on hover, as the room fills with firelight, they slowly take over from the white ones */
   .glass-white {{ transition: opacity 3s ease; }}
