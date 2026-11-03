@@ -69,7 +69,18 @@ STYLE = f"""
 
   /* start screen: a black palantír in the middle; click it to enter the map */
   .ds-menu {{ position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center;
-             background: #020202; transition: opacity .9s ease .25s, visibility .9s ease .25s; }}
+             --floor: calc(50% + 122px);  /* where the orb touches the floor */
+             /* a dark studio with no lights on: the only light is the orb's own, pooling warm on the floor
+                around it and catching faintly where the floor curves up into the back wall */
+             background:
+               radial-gradient(ellipse 30% 6% at 50% var(--floor), rgba(255,105,45,.18) 0%, rgba(255,90,40,.05) 55%, rgba(0,0,0,0) 100%),
+               radial-gradient(ellipse 55% 14% at 50% var(--floor), rgba(150,45,20,.08) 0%, rgba(0,0,0,0) 100%),
+               radial-gradient(ellipse 65% 38% at 50% var(--floor), rgba(110,38,18,.1) 0%, rgba(0,0,0,0) 75%),
+               /* back wall, then a soft edge behind the orb where it meets the slightly paler floor */
+               linear-gradient(180deg, #030303 0%, #040404 calc(var(--floor) - 64px), #0d0b0a calc(var(--floor) - 50px),
+                               #0a0908 calc(var(--floor) + 40px), #050505 100%);
+             transition: opacity .9s ease .25s, visibility .9s ease .25s; }}
+  @media (max-width: 700px) {{ .ds-menu {{ --floor: calc(50% + 88px); }} }}
   /* the orb's light spilling into the dark room: a wide warm glow that slowly breathes */
   .ds-menu::before {{ content: ""; position: absolute; inset: 0; pointer-events: none;
                      background: radial-gradient(circle at 50% 50%, rgba(220,70,25,.5) 0%, rgba(170,45,18,.3) 12%,
@@ -94,11 +105,15 @@ STYLE = f"""
   .orb-core {{ mix-blend-mode: screen; filter: blur(1px); animation: orb-swirl 24s linear infinite; }}
   /* hover lures you in: the flames swell towards the glass and burn brighter, the glow flares */
   .orb-fire, .orb-core {{ transition: scale 1.4s cubic-bezier(.22,1,.36,1), filter 1.4s ease; }}
-  .orb:hover .orb-fire {{ scale: 1.18; filter: brightness(1.5) saturate(1.25); }}
-  .orb:hover .orb-core {{ scale: 1.35; filter: blur(1px) brightness(1.9); }}
-  .orb-wrap:has(.orb:hover) .orb-halo {{ scale: 1.2; filter: blur(34px) saturate(1.6) brightness(1.5); }}
-  .ds-menu::before {{ transition: filter 1.4s ease; }}
-  .ds-menu:has(.orb:hover)::before {{ filter: brightness(1.45); }}
+  .orb:hover .orb-fire, .orb:hover .orb-core {{ transition: scale 3.5s cubic-bezier(.45,0,.25,1), filter 3.5s ease; }}
+  .orb:hover .orb-fire {{ scale: 1.12; filter: brightness(1.12) saturate(1.3); }}  /* stays orange, no yellow */
+  .orb:hover .orb-core {{ scale: 1.2; filter: blur(1px) brightness(1.1) saturate(1.3); }}
+  .orb-wrap:has(.orb:hover) .orb-halo {{ transition: opacity .6s ease, scale 6s cubic-bezier(.45,0,.25,1), filter 5s ease-in; }}
+  .orb-wrap:has(.orb:hover) .orb-halo {{ scale: 1.9; filter: blur(44px) saturate(1.7) brightness(1.3); }}
+  /* ...and the light slowly spills out of the glass until it fills the whole room */
+  .ds-menu::before {{ transition: filter 2.5s ease, scale 3s cubic-bezier(.4,0,.2,1); }}  /* pulling back */
+  .ds-menu:has(.orb:hover)::before {{ scale: 3.2; filter: brightness(1.7) saturate(1.2);
+                                     transition: filter 6s ease-in, scale 7s cubic-bezier(.45,0,.25,1); }}  /* creeping out */
   @keyframes orb-swirl {{ to {{ transform: rotate(360deg); }} }}
   /* live light: a big blurred copy of the fire behind the glass, turning with it, so the glow on the
      room moves wherever the flames inside are */
