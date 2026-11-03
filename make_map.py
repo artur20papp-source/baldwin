@@ -79,7 +79,7 @@ STYLE = f"""
                radial-gradient(circle at 50% 50%, rgba(110,28,12,.12) 0%, rgba(60,14,6,.05) 22%, rgba(0,0,0,0) 48%),
                radial-gradient(ellipse 24% 72% at 50% -12%, rgba(220,226,242,.045) 0%, rgba(220,226,242,.014) 50%, rgba(0,0,0,0) 85%),
                #030303;
-             transition: opacity 1.5s cubic-bezier(.4,0,.2,1) .45s, visibility 0s linear 1.95s; }}
+             transition: opacity 1s cubic-bezier(.4,0,.2,1) .6s, visibility 0s linear 1.6s; }}
   @media (max-width: 700px) {{ .ds-menu {{ --s: .72; }} }}
   /* the floor, seen in perspective: its own surface from where it meets the wall (just behind the orb)
      down to the bottom. Light lies on it as flattened ellipses, brightest where the orb touches it:
@@ -169,29 +169,33 @@ STYLE = f"""
   .orb-shadow {{ position: absolute; left: 50%; bottom: -20px; width: 230px; height: 38px; transform: translateX(-50%);
                 border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.95), rgba(0,0,0,0));
                 filter: blur(5px); transition: opacity .6s ease; }}
-  /* entering: the orb dives at you and its light floods the screen, while the map surfaces from the
-     dark underneath (slightly zoomed in, settling), then the controls slide in */
-  .ds-menu.gone .orb {{ transform: scale(2.2); opacity: 0;
-                       transition: transform 1.8s cubic-bezier(.65,0,.25,1), opacity 1.1s ease .6s; }}
-  .ds-menu.gone .orb-halo {{ opacity: 0; transition: opacity 1.4s ease .2s; }}
+  /* entering: we fly into the orb. It swells until it fills the screen while its glass fades, and Prague
+     is inside it, small at first, unfolding to full size; then the controls slide in. The slow start of
+     the curve hides the one heavy frame where the browser prepares the big orb */
+  .ds-menu.gone .orb {{ transform: scale(6); opacity: 0;
+                       transition: transform 1.7s cubic-bezier(.7,0,.2,1), opacity .7s ease .95s; }}
+  .ds-menu.gone .orb-halo {{ opacity: 0; transition: opacity .6s ease; }}
   /* the orb's light floods the screen: a ready-made full-screen glow that only fades in (growing the
      room glow instead made the browser re-render it at four times the size, which stuttered) */
   .orb-flash {{ position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; will-change: opacity;
                background: radial-gradient(circle at 50% 50%, rgba(255,125,55,.6) 0%, rgba(210,70,25,.42) 28%,
                            rgba(130,35,12,.28) 60%, rgba(50,12,5,.18) 100%); }}
-  .ds-menu.gone .orb-flash {{ opacity: 1; transition: opacity 1s cubic-bezier(.4,0,.2,1); }}
-  html, body {{ overflow: hidden; }}  /* the zoomed-in map would otherwise flash scrollbars */
+  .ds-menu.gone .orb-flash {{ opacity: .7; transition: opacity 1.1s cubic-bezier(.4,0,.2,1) .3s; }}
+  /* no scrollbars while the map is scaled, and the page behind it as dark as the map, so the map's
+     edges vanish while it unfolds from inside the orb */
+  html, body {{ overflow: hidden; background: {BACKGROUND}; }}
   /* smoothness: the orb and the map are their own ready-made layers before the click, and on the
      click every running effect freezes, so the move itself is only sliding and fading finished images */
   .orb-wrap, .orb, .orb-halo, .ds-menu::before {{ will-change: transform, opacity; }}
   .ds-menu.frozen *, .ds-menu.frozen::before, .ds-menu.frozen::after {{ animation-play-state: paused !important; }}
-  .ds-menu ~ .folium-map {{ opacity: 0; transform: scale(1.12); will-change: transform, opacity; }}
-  body.map-settled .ds-menu ~ .folium-map {{ will-change: auto; }}  /* back to a normal, crisp map */
-  .ds-menu.gone ~ .folium-map {{ opacity: 1; transform: none; will-change: transform, opacity;
-                                transition: opacity 1.4s ease .5s, transform 1.8s cubic-bezier(.22,1,.36,1) .4s; }}
+  /* opacity .001, not 0: the map is painted (invisibly) while the start screen shows, so revealing it
+     costs nothing; it keeps its own layer afterwards, so it never has to be painted again all at once */
+  .ds-menu ~ .folium-map {{ opacity: .001; transform: scale(.3); will-change: transform, opacity; }}
+  .ds-menu.gone ~ .folium-map {{ opacity: 1; transform: none;
+                                transition: opacity .9s ease .55s, transform 1.9s cubic-bezier(.7,0,.2,1) .1s; }}
   .ds-menu ~ .ds-title, body > .ds-toggle {{ opacity: .001; translate: 0 -10px; will-change: opacity, translate; }}  /* painted ahead, like the map */
   .ds-menu.gone ~ .ds-title, .ds-menu.gone ~ .ds-toggle {{ opacity: 1; translate: none;
-                                transition: opacity .8s ease 2.2s, translate .8s cubic-bezier(.22,1,.36,1) 2.2s; }}  /* after the map has stopped: their glass blur over a moving map is costly */
+                                transition: opacity .8s ease 2.1s, translate .8s cubic-bezier(.22,1,.36,1) 2.1s; }}  /* after the map has stopped: their glass blur over a moving map is costly */
   .ds-menu.gone .orb-shadow {{ opacity: 0; }}
 
   /* title panel: wordmark + search */
