@@ -311,23 +311,32 @@ STYLE = f"""
   .ds-brand b {{ font-weight: 600; color: {TEXT}; }}
   .ds-brand span {{ font-weight: 400; color: {MUTED}; }}
   .ds-left {{ justify-self: start; display: flex; }}
-  .ds-lighthouse, .ds-lighthouse:visited {{ flex-shrink: 0; display: flex; align-items: center; height: 40px; border-radius: 6px;
+  .ds-lighthouse, .ds-lighthouse:visited, .ds-lighthouse:hover, .ds-lighthouse:focus, .ds-lighthouse:active {{ color: {TEXT} !important; }}
+  .ds-lighthouse, .ds-lighthouse:visited {{ flex-shrink: 0; display: flex; align-items: center; height: 34px; border-radius: 6px;
                    background: rgba(255,255,255,.07); color: {TEXT}; text-decoration: none; overflow: hidden;
                    transition: transform 1.2s cubic-bezier(.16,1,.3,1); }}
-  .ds-lighthouse .lh-icon {{ position: relative; z-index: 1; display: grid; place-items: center; width: 44px; height: 40px;
+  .ds-lighthouse .lh-icon {{ position: relative; z-index: 1; display: grid; place-items: center; width: 40px; height: 34px;
                             flex-shrink: 0; }}
-  .ds-lighthouse svg {{ width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.4;
+  .ds-lighthouse svg {{ width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4;
                        stroke-linecap: round; stroke-linejoin: round; }}
   .ds-lighthouse svg .fire {{ fill: currentColor; stroke: none; }}
   /* the name hides behind the lighthouse and slides out to the right on hover */
   .ds-lighthouse .lh-text {{ color: {TEXT}; max-width: 0; opacity: 0; transform: translateX(-24px); white-space: nowrap;
                             font-size: 11px; letter-spacing: .3em;
-                            transition: max-width 2s cubic-bezier(.16,1,.3,1), opacity 1.4s ease .2s, transform 2s cubic-bezier(.16,1,.3,1),
-                                        padding 2s cubic-bezier(.16,1,.3,1); }}
+                            transition: max-width 3.2s cubic-bezier(.16,1,.3,1), opacity 2.2s ease .3s, transform 3.2s cubic-bezier(.16,1,.3,1),
+                                        padding 3.2s cubic-bezier(.16,1,.3,1); }}
   .ds-lighthouse .lh-text b {{ font-weight: 600; color: {TEXT}; }}
   .ds-lighthouse .lh-text span {{ font-weight: 400; color: {MUTED}; }}
-  .ds-lighthouse:hover {{ transform: scale(1.03); text-decoration: none; }}  /* a slight pop, no colour change */
+  .ds-lighthouse:hover {{ transform: scale(1.03); color: {TEXT}; text-decoration: none; }}  /* a slight pop, no colour
+                                                                     change (Bootstrap would turn a hovered link blue) */
   .ds-lighthouse:hover .lh-text {{ max-width: 260px; opacity: 1; transform: none; padding-right: 16px; }}
+  /* the controls grow a smidge under the mouse */
+  .ds-toggle, .ds-search, .ds-select .seg, .ds-select .acre, .ds-select .clear, .deal .acre, .leaflet-bar a,
+  .ds-drawer .leaflet-control-layers label {{ transition: transform .5s cubic-bezier(.16,1,.3,1); }}
+  .ds-toggle:hover, .ds-search:hover, .ds-select .seg:hover, .ds-select .acre:hover, .ds-select .clear:hover,
+  .deal .acre:hover, .leaflet-bar a:hover {{ transform: scale(1.03); }}
+  .ds-drawer .leaflet-control-layers label {{ transform-origin: left center; }}
+  .ds-drawer .leaflet-control-layers label:hover {{ transform: scale(1.03); }}
   .ds-right {{ margin-left: auto; display: flex; justify-content: flex-end; align-items: center; gap: 8px;
               min-width: 0; max-width: calc(50% - 170px); }}  /* ends where the name begins: the search gives way as the lighthouse opens */
   .ds-search {{ position: relative; flex: 0 1 300px; min-width: 120px; }}
@@ -541,10 +550,10 @@ STYLE = f"""
   /* filter window (layers, price filter, selection), under the icon at the top right and only as tall as
      its content. Opening, it unfolds out of the button's corner, its sections rise in one after another,
      and the icon's two slider knobs slide to their other ends */
-  .ds-toggle {{ width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border: none; border-radius: 6px;
-               cursor: pointer; color: {TEXT}; background: rgba(255,255,255,.07); transition: color .2s, background .2s; }}
+  .ds-toggle {{ width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border: none; border-radius: 6px;
+               cursor: pointer; color: {TEXT}; background: rgba(255,255,255,.07); transition: color .2s, background .2s, transform .5s cubic-bezier(.16,1,.3,1); }}
   .ds-toggle:hover {{ background: rgba(255,255,255,.12); }}
-  .ds-toggle svg {{ width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }}
+  .ds-toggle svg {{ width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }}
   .ds-toggle svg circle {{ transform-box: fill-box; transition: transform .55s cubic-bezier(.22,1,.36,1); }}
   .drawer-open .ds-toggle svg circle:first-of-type {{ transform: translateX(-6px); }}
   .drawer-open .ds-toggle svg circle:last-of-type {{ transform: translateX(6px); }}
@@ -602,9 +611,14 @@ STYLE = f"""
   .leaflet-tooltip:before {{ display: none; }}
   .popup-open .leaflet-tooltip {{ display: none; }}
 
-  .leaflet-control-scale-line {{ background: rgba(18,20,24,.7); color: {MUTED}; border-color: #3a3d44; }}
-  .leaflet-control-attribution {{ background: transparent !important; color: #4d5158; font-size: 9px; }}
-  .leaflet-control-attribution a {{ color: #4d5158; }}
+  .leaflet-control-scale {{ margin: 0 0 14px 16px !important; }}
+  .leaflet-top.leaflet-left {{ top: 64px; }}  /* the zoom buttons under the top bar, not behind it */
+  .leaflet-control-scale-line {{ background: none; color: {MUTED}; border: 1px solid rgba(255,255,255,.35); border-top: none;
+                                padding: 0 6px 2px; font: 500 10px Inter, Arial, sans-serif; letter-spacing: .08em; text-shadow: none; }}
+  .leaflet-control-attribution {{ background: transparent !important; color: #5a5a5a; margin: 0 16px 12px 0 !important;
+                                 font: 400 10px Inter, Arial, sans-serif; letter-spacing: .02em; }}
+  .leaflet-control-attribution a {{ color: #7a7a7a; text-decoration: none; }}
+  .leaflet-control-attribution a:hover {{ color: {TEXT}; }}
 </style>
 <div class="ds-menu" title="Vstoupit">
   <div class="orb-flash"></div><div class="orb-wrap"><div class="orb-halo">
@@ -954,6 +968,10 @@ def build_map():
         Object.assign({name}.options, {{ zoomSnap: 0.25, wheelPxPerZoomLevel: 110 }});
         {name}.setMaxZoom(20);
         {name}.setView([50.075, 14.46], 11);
+        // a metric ruler only, and the credits without Leaflet's flag
+        document.querySelector('.leaflet-control-scale')?.remove();
+        L.control.scale({{ imperial: false, maxWidth: 90 }}).addTo({name});
+        {name}.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
         {name}.attributionControl.addAttribution('datový podklad © IPR Praha (CC BY) · zastávky © PID (CC BY) · Vltava © ČÚZK ZABAGED (CC BY)');
         // tram stops, bus stops and bus routes only once zoomed in
         const byZoom = () => {{

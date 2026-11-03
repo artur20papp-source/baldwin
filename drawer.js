@@ -12,6 +12,10 @@
     const el = map.getContainer().querySelector(sel);
     if (el) drawer.appendChild(el);
   }
+  // parks last among the layer switches (they are drawn first, under everything, but matter least)
+  const overlays = drawer.querySelector(".leaflet-control-layers-overlays");
+  const parks = overlays && [...overlays.children].find((l) => /Parky/.test(l.textContent));
+  if (parks) overlays.appendChild(parks);
   document.body.appendChild(drawer);
   L.DomEvent.disableClickPropagation(drawer);
   L.DomEvent.disableScrollPropagation(drawer);
