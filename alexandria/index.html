@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Baldwin Alexandria</title>
+<script src="../i18n.js"></script>  <!-- the language shared with the map: t(cs, en, sk) -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   /* Baldwin Alexandria: chat with the source library of Baldwin Palantir and Baldwin Acre.
@@ -32,6 +33,24 @@
   .orb-link .tx b { font-weight: 600; } .orb-link .tx span { font-weight: 400; color: var(--muted); }
   .orb-link:hover .tx { max-width: 260px; opacity: 1; transform: none; padding-right: 16px; }
   @media (hover: none) { .orb-link:hover .tx { max-width: 0; opacity: 0; padding-right: 0; } }
+  /* languages, and the switcher right of the orb (the same as on the map) */
+  .l-cs, .l-en, .l-sk { display: none; }
+  html[lang=cs] .l-cs, html[lang=en] .l-en, html[lang=sk] .l-sk { display: inline; }
+  .hr { align-self: center; display: flex; align-items: center; gap: 8px; }
+  .lang { position: relative; }
+  .lang-btn { width: 34px; height: 34px; padding: 0; border: none; border-radius: 6px; cursor: pointer; background: rgba(255,255,255,.07);
+              color: var(--text); font: 500 11px Inter, Arial, sans-serif; letter-spacing: .08em; transition: transform .5s cubic-bezier(.16,1,.3,1); }
+  .lang-btn:hover { transform: scale(1.03); }
+  .lang-menu { position: absolute; z-index: 5; top: calc(100% + 12px); right: 0; min-width: 150px; padding: 6px; border-radius: 10px;
+               background: rgba(16,16,16,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transform-origin: top right;
+               opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.96);
+               transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s linear .45s; }
+  .lang.open .lang-menu { opacity: 1; visibility: visible; transform: none; transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s; }
+  .lang-menu button { display: flex; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; border-radius: 6px;
+                      background: none; color: var(--muted); font: 400 12px Inter, Arial, sans-serif; cursor: pointer; }
+  .lang-menu button:hover { background: rgba(255,255,255,.07); color: var(--text); }
+  .lang-menu button.on { color: var(--text); font-weight: 500; }
+  .lang-menu small { font-size: 10px; letter-spacing: .08em; color: var(--muted); }
   .log { flex: 1; overflow-y: auto; padding: 4px; display: flex; flex-direction: column; gap: 12px;
          scrollbar-width: thin; scrollbar-color: #333333 transparent; }
   .msg { max-width: 88%; padding: 12px 15px; border-radius: 10px; font-size: 14px; line-height: 1.55;
@@ -67,19 +86,29 @@
   <header>
     <div>
       <div class="brand"><b>BALDWIN</b> <span>ALEXANDRIA</span></div>
-      <div class="sub">Knihovna zdrojů · ptejte se, odkud čísla jsou a jak ovlivňují výpočty</div>
+      <div class="sub"><span class="l-cs">Knihovna zdrojů · ptejte se, odkud čísla jsou a jak ovlivňují výpočty</span><span class="l-en">Source library · ask where the numbers come from and how they move the calculations</span><span class="l-sk">Knižnica zdrojov · pýtajte sa, odkiaľ sú čísla a ako ovplyvňujú výpočty</span></div>
     </div>
+    <div class="hr">
     <a class="orb-link" href="../" aria-label="Baldwin Palantir">
       <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8.2 9.2a4.6 4.6 0 0 1 3.4-2.3"/></svg></span>
       <span class="tx"><b>BALDWIN</b> <span>PALANTIR</span></span>
     </a>
+    <div class="lang">
+      <button class="lang-btn" aria-label="Language"><span class="l-cs">CS</span><span class="l-en">EN</span><span class="l-sk">SK</span></button>
+      <div class="lang-menu">
+        <button data-lang="en">English <small>EN</small></button>
+        <button data-lang="cs">Čeština <small>CS</small></button>
+        <button data-lang="sk">Slovenčina <small>SK</small></button>
+      </div>
+    </div>
+    </div>
   </header>
   <div class="log" id="log"></div>
   <div class="chips" id="chips">
-    <button>Které vstupy jsou jen předpoklady?</button>
+    <button></button>
   </div>
   <form id="ask">
-    <textarea id="q" rows="1" placeholder="Zeptejte se na zdroj nebo výpočet…" autocomplete="off"></textarea>
+    <textarea id="q" rows="1" autocomplete="off"></textarea>
   </form>
   <footer>Google Gemini</footer>
 </div>
@@ -90,6 +119,18 @@
   const log = document.getElementById("log"), q = document.getElementById("q");
   const history = [];
   let busy = false;  // one question at a time (Enter sends)
+  q.placeholder = t("Zeptejte se na zdroj nebo výpočet…", "Ask about a source or a calculation…", "Opýtajte sa na zdroj alebo výpočet…");
+  document.querySelector("#chips button").textContent =
+    t("Které vstupy jsou jen předpoklady?", "Which inputs are just assumptions?", "Ktoré vstupy sú len predpoklady?");
+  // the language switcher: a choice reloads the page (the map follows it too)
+  const lang = document.querySelector(".lang");
+  lang.querySelector(`[data-lang="${window.baldwinLang}"]`).classList.add("on");
+  lang.querySelector(".lang-btn").addEventListener("click", (e) => { e.stopPropagation(); lang.classList.toggle("open"); });
+  lang.querySelector(".lang-menu").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (b) window.baldwinSetLang(b.dataset.lang);
+  });
+  document.addEventListener("click", (e) => { if (!lang.contains(e.target)) lang.classList.remove("open"); });
 
   // Tiny, safe Markdown: escape everything first, then bold, code, links, bullet lists and paragraphs.
   function md(text) {
@@ -116,7 +157,9 @@
     return div;
   }
 
-  if (!WORKER_URL) add("note", "Alexandria ještě není připojená k modelu (chybí adresa Workeru).");
+  if (!WORKER_URL) add("note", t("Alexandria ještě není připojená k modelu (chybí adresa Workeru).",
+                               "Alexandria isn't connected to the model yet (no Worker address).",
+                               "Alexandria ešte nie je pripojená k modelu (chýba adresa Workera)."));
 
   async function ask(text) {
     text = text.trim();
@@ -128,16 +171,16 @@
     busy = true;
     const wait = add("bot", '<span class="typing"><span></span><span></span><span></span></span>');
     try {
-      if (!WORKER_URL) throw new Error("Alexandria ještě není připojená.");
+      if (!WORKER_URL) throw new Error(t("Alexandria ještě není připojená.", "Alexandria isn't connected yet.", "Alexandria ešte nie je pripojená."));
       const res = await fetch(WORKER_URL, { method: "POST", headers: { "content-type": "application/json" },
                                             body: JSON.stringify({ messages: history }) });
       const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || `chyba ${res.status}`);
+      if (!res.ok || data.error) throw new Error(data.error || `${t("chyba", "error", "chyba")} ${res.status}`);
       wait.innerHTML = md(data.text);
       history.push({ role: "assistant", text: data.text });
     } catch (err) {
       wait.className = "msg note";
-      wait.textContent = "Nepodařilo se odpovědět: " + err.message;
+      wait.textContent = t("Nepodařilo se odpovědět: ", "Couldn't answer: ", "Nepodarilo sa odpovedať: ") + err.message;
       history.pop();
     }
     busy = false;

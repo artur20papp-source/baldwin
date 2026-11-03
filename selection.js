@@ -8,7 +8,8 @@
   const cad = window.baldwinCadastre;
 
   const num = (v) => Math.round(v).toLocaleString("cs-CZ");
-  const mil = (kc) => `${(kc / 1e6).toLocaleString("cs-CZ", { maximumFractionDigits: 1 })} mil. Kč`;
+  const MIL = t(" mil. Kč", " m CZK", " mil. Kč");
+  const mil = (kc) => `${(kc / 1e6).toLocaleString("cs-CZ", { maximumFractionDigits: 1 })}${MIL}`;
   const sum = (list, f) => list.reduce((s, x) => s + (f(x) || 0), 0);
   // Regulated gross floor area, Metropolitní plán čl. 96 odst. 4: HPPreg = P × Zz × Vz
   const hpp = (p) => (typeof p.z_z === "number" && typeof p.v_z === "number" ? p.area_m2 * p.z_z / 100 * p.v_z : 0);
@@ -68,9 +69,9 @@
 
   // ---- window
   const el = L.DomUtil.create("div", "ds-select");
-  el.innerHTML = `<div class="sh"><span class="ft">Výběr</span><div class="seg">
-      <button data-m="areas" title="Vybírat zelené a hnědé plochy">Plochy</button>
-      <button data-m="parcels" title="Vybírat parcely z katastru">Parcely</button></div></div>
+  el.innerHTML = `<div class="sh"><span class="ft">${t("Výběr", "Selection", "Výber")}</span><div class="seg">
+      <button data-m="areas" title="${t("Vybírat zelené a hnědé plochy", "Pick the green and brown areas", "Vyberať zelené a hnedé plochy")}">${t("Plochy", "Areas", "Plochy")}</button>
+      <button data-m="parcels" title="${t("Vybírat parcely z katastru", "Pick parcels from the cadastre", "Vyberať parcely z katastra")}">${t("Parcely", "Parcels", "Parcely")}</button></div></div>
     <div class="sbody deal"></div>`;
   const body = el.querySelector(".sbody");
   L.DomEvent.disableClickPropagation(el);
@@ -93,26 +94,31 @@
     const P = [...parcels.values()];
     let h = note ? `<div class="hint">${note}</div>` : "";
     if (!A.length && !P.length && mode) {
-      h += `<div class="hint">${mode === "areas" ? "Klikněte na zelené nebo hnědé plochy."
-        : `Klikněte na parcely v mapě${map.getZoom() < PARCEL_ZOOM ? " (první klik přiblíží mapu)" : ""}.`}</div>`;
+      h += `<div class="hint">${mode === "areas"
+        ? t("Klikněte na zelené nebo hnědé plochy.", "Click the green or brown areas.", "Kliknite na zelené alebo hnedé plochy.")
+        : t("Klikněte na parcely v mapě", "Click parcels on the map", "Kliknite na parcely v mape")
+          + (map.getZoom() < PARCEL_ZOOM ? t(" (první klik přiblíží mapu)", " (the first click zooms in)", " (prvé kliknutie priblíži mapu)") : "")
+          + "."}</div>`;
     } else if (!A.length && !P.length) {
       // nothing picked yet: what the selection is for
-      h += `<div class="hint explain">Klikáním v mapě poskládejte pozemek z ploch nebo parcel a pošlete ho do <b>Baldwin Acre</b>.</div>`;
+      h += `<div class="hint explain">${t("Klikáním v mapě poskládejte pozemek z ploch nebo parcel a pošlete ho do",
+        "Click on the map to assemble a site from areas or parcels and send it to",
+        "Klikaním v mape poskladajte pozemok z plôch alebo parciel a pošlite ho do")} <b>Baldwin Acre</b>.</div>`;
     }
     if (A.length) {
       const priced = A.filter((p) => p.price);
       const value = sum(priced, (p) => p.area_m2 * p.price);
       const pricedM2 = sum(priced, (p) => p.area_m2);
-      h += `<div class="sec">Plochy · ${A.length}</div>
+      h += `<div class="sec">${t("Plochy", "Areas", "Plochy")} · ${A.length}</div>
         <div class="tiles">
-          <div class="tile"><b>${num(sum(A, (p) => p.area_m2))}</b><small>m² výměra</small></div>
-          <div class="tile"><b>${num(sum(A, hpp))}</b><small>m² HPP reg.</small></div>
-          <div class="tile"><b>${pricedM2 ? num(value / pricedM2) : "–"}</b><small>Kč/m² průměr</small></div>
+          <div class="tile"><b>${num(sum(A, (p) => p.area_m2))}</b><small>${t("m² výměra", "m² area", "m² výmera")}</small></div>
+          <div class="tile"><b>${num(sum(A, hpp))}</b><small>${t("m² HPP reg.", "m² GFA reg.", "m² HPP reg.")}</small></div>
+          <div class="tile"><b>${pricedM2 ? num(value / pricedM2) : "–"}</b><small>${t("Kč/m² průměr", "CZK/m² average", "Kč/m² priemer")}</small></div>
         </div>
-        <div class="drow"><span>Hodnota dle cenové mapy</span><span>${priced.length ? mil(value) : "–"}</span></div>
-        ${priced.length < A.length ? `<div class="drow"><span>Bez ceny</span><span>${A.length - priced.length} z ${A.length}</span></div>` : ""}
-        ${A.map((p) => `<div class="srow"><span class="sname" data-a="${p.area_code}" title="Otevřít">${p.area_code}</span>
-          <span>${num(p.area_m2)} m²</span><button class="x" data-a="${p.area_code}" title="Odebrat">×</button></div>`).join("")}`;
+        <div class="drow"><span>${t("Hodnota dle cenové mapy", "Value by the price map", "Hodnota podľa cenovej mapy")}</span><span>${priced.length ? mil(value) : "–"}</span></div>
+        ${priced.length < A.length ? `<div class="drow"><span>${t("Bez ceny", "No price", "Bez ceny")}</span><span>${A.length - priced.length} ${t("z", "of", "z")} ${A.length}</span></div>` : ""}
+        ${A.map((p) => `<div class="srow"><span class="sname" data-a="${p.area_code}" title="${t("Otevřít", "Open", "Otvoriť")}">${p.area_code}</span>
+          <span>${num(p.area_m2)} m²</span><button class="x" data-a="${p.area_code}" title="${t("Odebrat", "Remove", "Odobrať")}">×</button></div>`).join("")}`;
     }
     if (P.length) {
       const farm = P.filter((p) => cad.FARMLAND.has(p.r.type));
@@ -120,20 +126,20 @@
       const value = sum(priced, (p) => p.r.area * p.price);
       const types = {};
       for (const p of P) types[p.r.type] = (types[p.r.type] || 0) + p.r.area;
-      h += `<div class="sec">Parcely · ${P.length}</div>
+      h += `<div class="sec">${t("Parcely", "Parcels", "Parcely")} · ${P.length}</div>
         <div class="tiles">
-          <div class="tile"><b>${num(sum(P, (p) => p.r.area))}</b><small>m² výměra</small></div>
+          <div class="tile"><b>${num(sum(P, (p) => p.r.area))}</b><small>${t("m² výměra", "m² area", "m² výmera")}</small></div>
           <div class="tile"><b>${num(sum(farm, (p) => p.r.area))}</b><small>m² ZPF</small></div>
-          <div class="tile"><b>${priced.length ? mil(value).replace(" mil. Kč", "") : "–"}</b><small>mil. Kč odhad</small></div>
+          <div class="tile"><b>${priced.length ? mil(value).replace(MIL, "") : "–"}</b><small>${t("mil. Kč odhad", "CZK m estimate", "mil. Kč odhad")}</small></div>
         </div>
         ${Object.entries(types).sort((a, b) => b[1] - a[1]).map(([t, m2]) =>
           `<div class="drow"><span>${cad.LAND[t] || t}</span><span>${num(m2)} m²</span></div>`).join("")}
-        ${priced.length < P.length ? `<div class="drow"><span>Mimo plochy s cenou</span><span>${P.length - priced.length} z ${P.length}</span></div>` : ""}
-        ${P.map(({ r }) => `<div class="srow p"><span class="sname" data-p="${r.id}" title="Přiblížit">${r.label}</span>
-          <span>${num(r.area)} m²</span><a href="${cad.KN_PARCEL}${r.id}" target="_blank" rel="noopener">Vlastník ↗</a>
-          <button class="x" data-p="${r.id}" title="Odebrat">×</button></div>`).join("")}`;
+        ${priced.length < P.length ? `<div class="drow"><span>${t("Mimo plochy s cenou", "Outside priced areas", "Mimo plôch s cenou")}</span><span>${P.length - priced.length} ${t("z", "of", "z")} ${P.length}</span></div>` : ""}
+        ${P.map(({ r }) => `<div class="srow p"><span class="sname" data-p="${r.id}" title="${t("Přiblížit", "Zoom in", "Priblížiť")}">${r.label}</span>
+          <span>${num(r.area)} m²</span><a href="${cad.KN_PARCEL}${r.id}" target="_blank" rel="noopener">${t("Vlastník", "Owner", "Vlastník")} ↗</a>
+          <button class="x" data-p="${r.id}" title="${t("Odebrat", "Remove", "Odobrať")}">×</button></div>`).join("")}`;
     }
-    if (A.length || P.length) h += '<button class="acre">Export to Baldwin Acre</button><button class="clear">Vymazat výběr</button>';
+    if (A.length || P.length) h += `<button class="acre">Export to Baldwin Acre</button><button class="clear">${t("Vymazat výběr", "Clear selection", "Vymazať výber")}</button>`;
     body.innerHTML = h;
   }
 
@@ -152,16 +158,16 @@
     const d = P.length
       ? { siteArea: sum(P, (p) => p.r.area), zpfM2: sum(P.filter((p) => cad.FARMLAND.has(p.r.type)), (p) => p.r.area),
           price: weighted(P, (p) => p.r.area, (p) => p.price), zz: null,
-          priceMixed: new Set(P.map((p) => p.price)).size > 1, label: `parcely ${short(P.map((p) => p.r.label))}` }
+          priceMixed: new Set(P.map((p) => p.price)).size > 1, label: `${t("parcely", "parcels", "parcely")} ${short(P.map((p) => p.r.label))}` }
       : { siteArea: sum(A, (p) => p.area_m2), zpfM2: null,
           price: weighted(A, (p) => p.area_m2, (p) => p.price), zz: weighted(A, (p) => p.area_m2, zz),
           priceMixed: new Set(A.map((p) => p.price)).size > 1, zzMixed: new Set(A.map(zz)).size > 1,
-          label: `plochy ${short(A.map((p) => p.area_code))}`, codes: A.map((p) => p.area_code) };
+          label: `${t("plochy", "areas", "plochy")} ${short(A.map((p) => p.area_code))}`, codes: A.map((p) => p.area_code) };
     d.file = d.label.replace(/[\\/:*?"<>|]+/g, "-");
     d.date = new Date().toLocaleDateString("cs-CZ");
     button.disabled = true;
-    button.textContent = "Připravuji…";
-    try { await window.baldwinExportAcre(d); } catch (err) { alert("Export se nepovedl: " + err.message); }
+    button.textContent = t("Připravuji…", "Preparing…", "Pripravujem…");
+    try { await window.baldwinExportAcre(d); } catch (err) { alert(t("Export se nepovedl: ", "Export failed: ", "Export sa nepodaril: ") + err.message); }
     button.disabled = false;
     button.textContent = "Export to Baldwin Acre";
   }
@@ -194,7 +200,7 @@
       const hit = found.find((r) => cad.inside([lng, lat], { type: "Polygon", coordinates: r.rings }));
       if (hit) toggleParcel(hit);
     } catch (err) {
-      render("Katastr teď neodpovídá, zkuste to znovu.");
+      render(t("Katastr teď neodpovídá, zkuste to znovu.", "The cadastre isn't responding, try again.", "Kataster teraz neodpovedá, skúste to znova."));
     } finally {
       busy = false;
       el.classList.remove("busy");

@@ -24,12 +24,12 @@
     onAdd() {
       const box = L.DomUtil.create("div", "ds-filter");
       box.innerHTML = `
-        <div class="ft">Cena pozemku <span class="fv"></span></div>
-        <label>Od <input type="range" class="lo" min="0" max="${max}" step="${STEP}" value="0"></label>
-        <label>Do <input type="range" class="hi" min="0" max="${max}" step="${STEP}" value="${max}"></label>
-        <label class="chk"><input type="checkbox" class="none" checked> i plochy bez ceny</label>
+        <div class="ft">${t("Cena pozemku", "Land price", "Cena pozemku")} <span class="fv"></span></div>
+        <label>${t("Od", "From", "Od")} <input type="range" class="lo" min="0" max="${max}" step="${STEP}" value="0"></label>
+        <label>${t("Do", "To", "Do")} <input type="range" class="hi" min="0" max="${max}" step="${STEP}" value="${max}"></label>
+        <label class="chk"><input type="checkbox" class="none" checked> ${t("i plochy bez ceny", "incl. areas without a price", "aj plochy bez ceny")}</label>
         <div class="fc"></div>
-        <div class="fs">Cenová mapa hl. m. Prahy · IPR</div>`;
+        <div class="fs">${t("Cenová mapa hl. m. Prahy · IPR", "Prague official price map · IPR", "Cenová mapa hl. m. Prahy · IPR")}</div>`;
       L.DomEvent.disableClickPropagation(box);
       L.DomEvent.disableScrollPropagation(box);
       return box;
@@ -52,7 +52,8 @@
     // each slider's track thick and white up to its knob
     for (const el of [lo, hi]) el.style.setProperty("--b", `${el.value / max * 100}%`);
     box.querySelector(".fv").textContent = `${fmt(a)} – ${fmt(b)} Kč/m²`;
-    box.querySelector(".fc").textContent = `Zobrazeno ${fmt(shown)} z ${fmt(areas.length)} ploch`;
+    box.querySelector(".fc").textContent = t(`Zobrazeno ${fmt(shown)} z ${fmt(areas.length)} ploch`,
+      `Showing ${fmt(shown)} of ${fmt(areas.length)} areas`, `Zobrazených ${fmt(shown)} z ${fmt(areas.length)} plôch`);
   }
   for (const el of [lo, hi, none]) el.addEventListener("input", apply);
   apply();

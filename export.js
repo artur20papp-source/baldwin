@@ -69,6 +69,7 @@
       cell.font = { name: "Arial", size: 9, italic: true, color: { argb: "FF7F7F7F" } };
     };
     // what the map knows about the place; everything else in the model is the analyst's assumption
+    const WEIGHTED = t(", průměr vážený výměrou", ", area-weighted average", ", priemer vážený výmerou");
     const fill = (label, value, source) => {
       const r = rowOf(label);
       if (!r || value === null || value === undefined) return;
@@ -76,11 +77,13 @@
       note("E" + r, source);
     };
     fill("Site area", Math.round(d.siteArea),
-         `Baldwin Palantir: ${d.label}` + (d.zpfM2 ? ` · z toho ZPF ~${num(d.zpfM2)} m² (${Math.round(d.zpfM2 / d.siteArea * 100)} %)` : ""));
+         `Baldwin Palantir: ${d.label}` + (d.zpfM2 ? ` · ${t("z toho ZPF", "of which ZPF farmland", "z toho ZPF")} ~${num(d.zpfM2)} m² (${Math.round(d.zpfM2 / d.siteArea * 100)} %)` : ""));
     fill("Max house footprint", d.zz === null ? null : d.zz / 100,
-         "Metropolitní plán: Zz, základní zastavěnost (čl. 95)" + (d.zzMixed ? ", průměr vážený výměrou" : ""));
+         t("Metropolitní plán: Zz, základní zastavěnost (čl. 95)", "Prague Metropolitan Plan: Zz, basic coverage (art. 95)",
+           "Metropolitný plán: Zz, základná zastavanosť (čl. 95)") + (d.zzMixed ? WEIGHTED : ""));
     fill("Sell price (incl. VAT)", d.price ? Math.round(d.price) : null,
-         "cenová mapa stavebních pozemků hl. m. Prahy" + (d.priceMixed ? ", průměr vážený výměrou" : ""));
+         t("cenová mapa stavebních pozemků hl. m. Prahy", "Prague official building-land price map",
+           "cenová mapa stavebných pozemkov hl. m. Prahy") + (d.priceMixed ? WEIGHTED : ""));
     const sub = INPUTS.cells.find((x) => x.a === "B3");
     if (sub) ws.getCell("B3").value = `${sub.v}  ·  site from Baldwin Palantir, ${d.date}`;
 

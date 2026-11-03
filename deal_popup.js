@@ -10,9 +10,13 @@
 
   // ČÚZK land types (druh pozemku, codelist LandTypeValue); the farmland ones pay the ZPF removal fee.
   const LAND = {
-    ArableGround: "orná půda", Garden: "zahrada", Orchard: "ovocný sad", Grassland: "trvalý travní porost",
-    Vineyard: "vinice", Hopgarden: "chmelnice", Forest: "lesní pozemek", WaterArea: "vodní plocha",
-    BuiltUpArea: "zastavěná plocha", OtherArea: "ostatní plocha",
+    ArableGround: t("orná půda", "arable land", "orná pôda"), Garden: t("zahrada", "garden", "záhrada"),
+    Orchard: t("ovocný sad", "orchard", "ovocný sad"),
+    Grassland: t("trvalý travní porost", "permanent grassland", "trvalý trávny porast"),
+    Vineyard: t("vinice", "vineyard", "vinica"), Hopgarden: t("chmelnice", "hop garden", "chmeľnica"),
+    Forest: t("lesní pozemek", "forest land", "lesný pozemok"), WaterArea: t("vodní plocha", "water area", "vodná plocha"),
+    BuiltUpArea: t("zastavěná plocha", "built-up area", "zastavaná plocha"),
+    OtherArea: t("ostatní plocha", "other area", "ostatná plocha"),
   };
   const FARMLAND = new Set(["ArableGround", "Garden", "Orchard", "Grassland", "Vineyard", "Hopgarden"]);
 
@@ -57,36 +61,38 @@
     const metro = p.metro_line
       ? `<span class="mdot" style="background:${METRO[p.metro_line]}"></span>${p.metro_name} (${p.metro_line}) · ${km(p.metro_m)}` : "–";
     const flood = p.flood_pct === null || p.flood_pct === undefined ? "–"
-      : p.flood_pct > 0 ? `<span class="warn">ano · ${p.flood_pct} % plochy</span>` : "ne";
-    const priceSrc = { plocha: "v ploše", "okolí": "okolí 500 m" }[p.price_src] || "";
+      : p.flood_pct > 0 ? `<span class="warn">${t("ano", "yes", "áno")} · ${p.flood_pct} % ${t("plochy", "of the area", "plochy")}</span>`
+      : t("ne", "no", "nie");
+    const priceSrc = { plocha: t("v ploše", "in the area", "v ploche"),
+                       "okolí": t("okolí 500 m", "within 500 m", "okolie 500 m") }[p.price_src] || "";
     // Regulated gross floor area, Metropolitní plán čl. 96 odst. 4: HPPreg = P × Zz × Vz
     const hpp = typeof p.z_z === "number" && typeof p.v_z === "number" ? Math.round(p.area_m2 * p.z_z / 100 * p.v_z) : null;
     return `
       <div class="deal">
         <div class="code">${p.area_code}</div>
         <div class="loc">${p.locality_name}</div>
-        <div class="chips"><span>${p.stabilita_txt}</span><span>${p.vyuziti_txt}</span><span>${p.struktura_txt}</span></div>
+        <div class="chips"><span>${tw(p.stabilita_txt)}</span><span>${tw(p.vyuziti_txt)}</span><span>${tw(p.struktura_txt)}</span></div>
         <div class="tiles">
-          <div class="tile"><b>${num(p.area_m2)}</b><small>m² výměra</small></div>
-          <div class="tile"><b>${hpp === null ? "–" : num(hpp)}</b><small>m² HPP reg.</small></div>
-          <div class="tile"><b>${p.price ? num(p.price) : "–"}</b><small>Kč/m² cena</small></div>
+          <div class="tile"><b>${num(p.area_m2)}</b><small>${t("m² výměra", "m² area", "m² výmera")}</small></div>
+          <div class="tile"><b>${hpp === null ? "–" : num(hpp)}</b><small>${t("m² HPP reg.", "m² GFA reg.", "m² HPP reg.")}</small></div>
+          <div class="tile"><b>${p.price ? num(p.price) : "–"}</b><small>${t("Kč/m² cena", "CZK/m² price", "Kč/m² cena")}</small></div>
         </div>
-        <div class="sec">Cena pozemku</div>
-        <div class="drow"><span>Cenová mapa hl. m. Prahy</span><span>${p.price ? num(p.price) + " Kč/m²" : "–"}</span></div>
-        <div class="drow"><span>Zdroj ceny</span><span>${priceSrc || "bez ceny"}</span></div>
-        <div class="sec">Doprava</div>
-        <div class="drow"><span>Nejbližší metro</span><span>${metro}</span></div>
-        <div class="drow"><span>Metro D (plán)</span><span>${km(p.metro_d_m)}</span></div>
-        <div class="sec">Rizika a regulace</div>
-        <div class="drow"><span>Záplavové území</span><span>${flood}</span></div>
-        <div class="drow"><span>Zmax · max. zastavění budovami</span><span>${num(p.z_max)}${p.z_max === "–" ? "" : " %"}</span></div>
-        <div class="drow"><span>Zz · základní zastavění</span><span>${num(p.z_z)}${p.z_z === "–" ? "" : " %"}</span></div>
-        <div class="drow"><span>Vz · základní podlažnost</span><span>${num(p.v_z)}</span></div>
-        <div class="drow"><span>HPP reg. = výměra × Zz × Vz</span><span>${hpp === null ? "–" : num(hpp) + " m²"}</span></div>
-        <div class="sec">Parcely v ploše <span class="note">· vlastník v katastru ↗</span></div>
+        <div class="sec">${t("Cena pozemku", "Land price", "Cena pozemku")}</div>
+        <div class="drow"><span>${t("Cenová mapa hl. m. Prahy", "Prague price map", "Cenová mapa hl. m. Prahy")}</span><span>${p.price ? num(p.price) + " Kč/m²" : "–"}</span></div>
+        <div class="drow"><span>${t("Zdroj ceny", "Price source", "Zdroj ceny")}</span><span>${priceSrc || t("bez ceny", "no price", "bez ceny")}</span></div>
+        <div class="sec">${t("Doprava", "Transport", "Doprava")}</div>
+        <div class="drow"><span>${t("Nejbližší metro", "Nearest metro", "Najbližšie metro")}</span><span>${metro}</span></div>
+        <div class="drow"><span>${t("Metro D (plán)", "Metro D (planned)", "Metro D (plán)")}</span><span>${km(p.metro_d_m)}</span></div>
+        <div class="sec">${t("Rizika a regulace", "Risks and regulation", "Riziká a regulácia")}</div>
+        <div class="drow"><span>${t("Záplavové území", "Flood zone", "Záplavové územie")}</span><span>${flood}</span></div>
+        <div class="drow"><span>${t("Zmax · max. zastavění budovami", "Zmax · max. building coverage", "Zmax · max. zastavanosť budovami")}</span><span>${num(p.z_max)}${p.z_max === "–" ? "" : " %"}</span></div>
+        <div class="drow"><span>${t("Zz · základní zastavění", "Zz · basic coverage", "Zz · základná zastavanosť")}</span><span>${num(p.z_z)}${p.z_z === "–" ? "" : " %"}</span></div>
+        <div class="drow"><span>${t("Vz · základní podlažnost", "Vz · basic storeys", "Vz · základná podlažnosť")}</span><span>${num(p.v_z)}</span></div>
+        <div class="drow"><span>${t("HPP reg. = výměra × Zz × Vz", "GFA reg. = area × Zz × Vz", "HPP reg. = výmera × Zz × Vz")}</span><span>${hpp === null ? "–" : num(hpp) + " m²"}</span></div>
+        <div class="sec">${t("Parcely v ploše", "Parcels in the area", "Parcely v ploche")} <span class="note">· ${t("vlastník v katastru", "owner in the cadastre", "vlastník v katastri")} ↗</span></div>
         <div class="parcels">${parcelsHtml}</div>
         <div class="links">
-          <a href="${LOCALITY_PDF}${p.lokalita}.pdf" target="_blank" rel="noopener">Krycí list lokality ${p.lokalita} ↗</a>
+          <a href="${LOCALITY_PDF}${p.lokalita}.pdf" target="_blank" rel="noopener">${t("Krycí list lokality", "Locality sheet", "Krycí list lokality")} ${p.lokalita} ↗</a>
         </div>
         <button class="acre">Export to Baldwin Acre</button>
       </div>`;
@@ -124,16 +130,17 @@
   }
 
   function parcelsHtml({ rows, matched }) {
-    if (!rows.length) return '<div class="muted">V ploše není žádná parcela.</div>';
+    if (!rows.length) return `<div class="muted">${t("V ploše není žádná parcela.", "No parcels in this area.", "V ploche nie je žiadna parcela.")}</div>`;
     const farm = rows.filter((r) => FARMLAND.has(r.type)).length;
-    return `<div class="psum">${rows.length} parcel · zemědělská půda (ZPF): ${farm} z ${rows.length}`
-      + (matched > MAX_PARCELS ? ` · zobrazeno prvních ${MAX_PARCELS}` : "") + "</div>"
+    return `<div class="psum">${rows.length} ${t("parcel", "parcels", "parciel")} · ${t("zemědělská půda", "farmland", "poľnohospodárska pôda")} (ZPF): ${farm} ${t("z", "of", "z")} ${rows.length}`
+      + (matched > MAX_PARCELS ? ` · ${t("zobrazeno prvních", "first shown:", "zobrazených prvých")} ${MAX_PARCELS}` : "") + "</div>"
       + rows.map((r, i) => `
         <div class="prow" data-i="${i}">
-          <span class="pnum" title="Přiblížit na mapě">${r.label}${r.partial ? '<em title="Parcela přesahuje hranici plochy">část</em>' : ""}</span>
+          <span class="pnum" title="${t("Přiblížit na mapě", "Zoom to it", "Priblížiť na mape")}">${r.label}${r.partial
+            ? `<em title="${t("Parcela přesahuje hranici plochy", "The parcel crosses the area's border", "Parcela presahuje hranicu plochy")}">${t("část", "part", "časť")}</em>` : ""}</span>
           <span>${num(r.area)} m²</span>
           <span class="ptype">${LAND[r.type] || r.type}${FARMLAND.has(r.type) ? ' <i>ZPF</i>' : ""}</span>
-          <a href="${KN_PARCEL}${r.id}" target="_blank" rel="noopener">Vlastník ↗</a>
+          <a href="${KN_PARCEL}${r.id}" target="_blank" rel="noopener">${t("Vlastník", "Owner", "Vlastník")} ↗</a>
         </div>`).join("");
   }
 
@@ -191,7 +198,7 @@
   }
 
   function render(p, parcelsBody) {
-    panel.innerHTML = '<button class="ds-close" title="Zavřít">×</button>' + sheet(p, parcelsBody);
+    panel.innerHTML = `<button class="ds-close" title="${t("Zavřít", "Close", "Zavrieť")}">×</button>` + sheet(p, parcelsBody);
     panel.querySelector(".ds-close").addEventListener("click", close);
     panel.querySelector(".acre").addEventListener("click", (e) => exportAcre(p, e.currentTarget));
   }
@@ -206,12 +213,12 @@
     const zpf = rows && m2(rows) ? p.area_m2 * m2(rows.filter((r) => FARMLAND.has(r.type))) / m2(rows) : null;
     const label = `${p.area_code} ${p.locality_name}`;
     button.disabled = true;
-    button.textContent = "Připravuji…";
+    button.textContent = t("Připravuji…", "Preparing…", "Pripravujem…");
     try {
       await window.baldwinExportAcre({ siteArea: p.area_m2, zpfM2: zpf, price: p.price || null, label,
                                        zz: typeof p.z_z === "number" ? p.z_z : null, codes: [p.area_code],
                                        file: label.replace(/[\\/:*?"<>|]+/g, "-"), date: new Date().toLocaleDateString("cs-CZ") });
-    } catch (err) { alert("Export se nepovedl: " + err.message); }
+    } catch (err) { alert(t("Export se nepovedl: ", "Export failed: ", "Export sa nepodaril: ") + err.message); }
     button.disabled = false;
     button.textContent = "Export to Baldwin Acre";
   }
@@ -221,7 +228,7 @@
     const p = layer.feature.properties;
     const mine = (current = { layer, parcels: null });
     layer.setStyle({ weight: 2.5 });
-    render(p, '<div class="muted">Načítám z katastru…</div>');
+    render(p, `<div class="muted">${t("Načítám z katastru…", "Loading from the cadastre…", "Načítavam z katastra…")}</div>`);
     panel.classList.add("open");
     panel.scrollTop = 0;
     map.flyToBounds(layer.getBounds(), { ...FIT, duration: 0.9 });
@@ -229,7 +236,7 @@
     try {
       result = await fetchParcels(layer);
     } catch (err) {
-      if (current === mine) render(p, '<div class="muted">Katastr teď neodpovídá, zkuste to znovu.</div>');
+      if (current === mine) render(p, `<div class="muted">${t("Katastr teď neodpovídá, zkuste to znovu.", "The cadastre isn't responding, try again.", "Kataster teraz neodpovedá, skúste to znova.")}</div>`);
       return;
     }
     if (current !== mine) return;  // another area was opened, or the panel closed, while loading

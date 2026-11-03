@@ -19,19 +19,21 @@
       const p = l.feature && l.feature.properties;
       if (!p) return;
       if (p.area_code) {
-        index.push({ type: "Plocha", text: p.area_code, sub: `${p.locality_name} · ${p.stabilita_txt} ${p.vyuziti_txt}`,
+        index.push({ type: "Plocha", tag: t("Plocha", "Area", "Plocha"), text: p.area_code,
+                     sub: `${p.locality_name} · ${tw(p.stabilita_txt)} ${tw(p.vyuziti_txt)}`,
                      keys: [p.area_code, String(p.id), p.locality_name].map(norm), go: () => window.baldwinOpenArea(l) });
       } else if (p.lokalita && p.nazev) {
-        index.push({ type: "Lokalita", text: p.nazev, sub: `lokalita ${p.lokalita}`, keys: [norm(p.nazev), p.lokalita],
+        index.push({ type: "Lokalita", tag: t("Lokalita", "Locality", "Lokalita"), text: p.nazev,
+                     sub: `${t("lokalita", "locality", "lokalita")} ${p.lokalita}`, keys: [norm(p.nazev), p.lokalita],
                      go: () => map.flyToBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 16, duration: 0.9 }) });
       } else if (p.nazev && !p.parametr) {
-        index.push({ type: "Park", text: p.nazev, sub: "městský park", keys: [norm(p.nazev)],
+        index.push({ type: "Park", text: p.nazev, sub: t("městský park", "city park", "mestský park"), keys: [norm(p.nazev)],
                      go: () => map.flyToBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 17, duration: 0.9 }) });
       }
     });
   }
   for (const s of STATIONS) {
-    index.push({ type: "Metro", text: s.name, sub: `linka ${s.lines.join(" · ")}`, keys: [norm(s.name)],
+    index.push({ type: "Metro", text: s.name, sub: `${t("linka", "line", "linka")} ${s.lines.join(" · ")}`, keys: [norm(s.name)],
                  go: () => map.flyTo([s.lat, s.lon], 16, { duration: 0.9 }) });
   }
 
@@ -60,7 +62,8 @@
       const url = `${RUIAN}/suggest?text=${encodeURIComponent(q)}&maxSuggestions=5&f=json`;
       const data = await (await fetch(url)).json();
       return (data.suggestions || []).filter((s) => /Praha/.test(s.text)).map((s) => ({
-        type: s.type === "Ulice" ? "Ulice" : "Adresa", text: s.text.replace(/, \d{3} ?\d{2} Praha.*$/, ""), sub: s.text,
+        type: s.type === "Ulice" ? "Ulice" : "Adresa",
+        tag: s.type === "Ulice" ? t("Ulice", "Street", "Ulica") : t("Adresa", "Address", "Adresa"), text: s.text.replace(/, \d{3} ?\d{2} Praha.*$/, ""), sub: s.text,
         go: async () => {
           const u = `${RUIAN}/findAddressCandidates?SingleLine=${encodeURIComponent(s.text)}&magicKey=${s.magicKey}&outSR=4326&maxLocations=1&f=json`;
           const c = ((await (await fetch(u)).json()).candidates || [])[0];
@@ -79,13 +82,14 @@
 
   // ---- UI
   const input = document.querySelector(".ds-search input");
+  input.placeholder = t("Plocha, lokalita, metro, adresa…", "Area, locality, metro, address…", "Plocha, lokalita, metro, adresa…");
   const list = document.querySelector(".ds-results");
   let items = [], active = -1, seq = 0;
 
   function render() {
     list.innerHTML = items.map((it, i) => `
       <div class="ds-hit${i === active ? " active" : ""}" data-i="${i}">
-        <span class="ds-tag">${it.type}</span>
+        <span class="ds-tag">${it.tag || it.type}</span>
         <span class="ds-main">${it.text}</span>
         <span class="ds-sub">${it.sub || ""}</span>
       </div>`).join("");

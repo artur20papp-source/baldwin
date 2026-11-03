@@ -18,6 +18,7 @@ DEAL_JS = Path(__file__).with_name("deal_popup.js")
 FILTER_JS = Path(__file__).with_name("price_filter.js")
 SEARCH_JS = Path(__file__).with_name("search.js")
 SKY_JS = Path(__file__).with_name("sky.js")
+I18N_JS = Path(__file__).with_name("i18n.js")
 SELECT_JS = Path(__file__).with_name("selection.js")
 DRAWER_JS = Path(__file__).with_name("drawer.js")
 LIGHTNING_JS = Path(__file__).with_name("lightning.js")
@@ -151,9 +152,14 @@ TRAM, TRAM_STOP = "#ff9b2f", "#ffc98a"
 BUS, BUS_STOP = "#3d8bff", "#9cc4ff"
 TRAM_STOPS_FROM_ZOOM, BUS_STOPS_FROM_ZOOM = 13, 14  # stops only appear zoomed in, so they don't clutter
 
+def tr(cs, en, sk):
+    """A text in all three languages; the page's CSS shows the one chosen in the switcher (i18n.js)."""
+    return f'<span class="l-cs">{cs}</span><span class="l-en">{en}</span><span class="l-sk">{sk}</span>'
+
+
 GROUPS = [
-    ("Rozvojové obytné", ACCENT, 0.75, True, lambda p: p["stabilita"] == 3 and p["vyuziti"] == 1),
-    ("Transformační obytné", BROWN, 0.75, True, lambda p: p["stabilita"] != 3 and p["vyuziti"] == 1),
+    (tr("Rozvojové obytné", "Development residential", "Rozvojové obytné"), ACCENT, 0.75, True, lambda p: p["stabilita"] == 3 and p["vyuziti"] == 1),
+    (tr("Transformační obytné", "Transformation residential", "Transformačné obytné"), BROWN, 0.75, True, lambda p: p["stabilita"] != 3 and p["vyuziti"] == 1),
 ]
 
 # Panels: dark frosted glass in the manner of Rockaway Capital's site: smoky and half see-through, the
@@ -161,6 +167,7 @@ GROUPS = [
 GLASS = ("background: rgba(16,16,16,.5); backdrop-filter: blur(14px) saturate(1); -webkit-backdrop-filter: blur(14px) saturate(1);"
          "border: none; box-shadow: none;")
 
+I18N = I18N_JS.read_text(encoding="utf-8")  # inlined at the top of the page, before every other script
 STYLE = f"""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -618,8 +625,31 @@ STYLE = f"""
                                  font: 400 10px Inter, Arial, sans-serif; letter-spacing: .02em; }}
   .leaflet-control-attribution a {{ color: #7a7a7a; text-decoration: none; }}
   .leaflet-control-attribution a:hover {{ color: {TEXT}; }}
+  /* languages: every static text is there three times, the chosen one shows */
+  .l-cs, .l-en, .l-sk {{ display: none; }}
+  html[lang=cs] .l-cs, html[lang=en] .l-en, html[lang=sk] .l-sk {{ display: inline; }}
+  .skip-intro .ds-menu {{ display: none; }}
+  .skip-intro .ds-menu ~ *, .skip-intro .ds-menu ~ * * {{ transition: none !important; }}
+  /* the language switcher at the far right of the bar; its list unfolds under it */
+  .ds-lang {{ position: relative; }}
+  .ds-lang-btn {{ width: 34px; height: 34px; padding: 0; border: none; border-radius: 6px; cursor: pointer;
+                 background: rgba(255,255,255,.07); color: {TEXT}; font: 500 11px Inter, Arial, sans-serif; letter-spacing: .08em;
+                 transition: transform .5s cubic-bezier(.16,1,.3,1); }}
+  .ds-lang-btn:hover {{ transform: scale(1.03); }}
+  .ds-lang-menu {{ position: absolute; top: calc(100% + 12px); right: 0; min-width: 150px; padding: 6px; box-sizing: border-box;
+                  border-radius: 10px; {GLASS} background: rgba(16,16,16,.72); transform-origin: top right;
+                  opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.96);
+                  transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s linear .45s; }}
+  .ds-lang.open .ds-lang-menu {{ opacity: 1; visibility: visible; transform: none;
+                                transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s; }}
+  .ds-lang-menu button {{ display: flex; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; border-radius: 6px;
+                         background: none; color: {MUTED}; font: 400 12px Inter, Arial, sans-serif; cursor: pointer; text-align: left; }}
+  .ds-lang-menu button:hover {{ background: rgba(255,255,255,.07); color: {TEXT}; }}
+  .ds-lang-menu button.on {{ color: {TEXT}; font-weight: 500; }}
+  .ds-lang-menu button small {{ font-size: 10px; letter-spacing: .08em; color: {MUTED}; }}
 </style>
-<div class="ds-menu" title="Vstoupit">
+<script>{I18N}</script>
+<div class="ds-menu">
   <div class="orb-flash"></div><div class="orb-wrap"><div class="orb-halo">
     <svg class="orb-layer orb-fire" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-fire-f)" mask="url(#orb-mask-all)"/></svg>
     <svg class="orb-layer orb-core" viewBox="0 0 200 200"><rect width="200" height="200" filter="url(#orb-core-f)" mask="url(#orb-mask-core)"/></svg></div>
@@ -702,7 +732,7 @@ STYLE = f"""
   <div class="ds-left">
     <div class="ds-search">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input type="text" placeholder="Plocha, lokalita, metro, adresa…" autocomplete="off" spellcheck="false">
+      <input type="text" autocomplete="off" spellcheck="false">
       <kbd>/</kbd>
       <div class="ds-results"></div>
     </div>
@@ -714,6 +744,14 @@ STYLE = f"""
         <path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg></span>
       <span class="lh-text"><b>BALDWIN</b> <span>ALEXANDRIA</span></span>
     </a>
+    <div class="ds-lang">
+      <button class="ds-lang-btn" aria-label="Language"><span class="l-cs">CS</span><span class="l-en">EN</span><span class="l-sk">SK</span></button>
+      <div class="ds-lang-menu">
+        <button data-lang="en">English <small>EN</small></button>
+        <button data-lang="cs">Čeština <small>CS</small></button>
+        <button data-lang="sk">Slovenčina <small>SK</small></button>
+      </div>
+    </div>
   </div>
 </div>
 """
@@ -782,7 +820,7 @@ def _stop_dots(parent, stops, rim, fill, kind):
 
 def _add_trams(m, trams):
     """Tram tracks in orange, with tram stops. Returns (group, [(sub-layer, min zoom)])."""
-    group = folium.FeatureGroup(name=_label("Tramvaje", TRAM, len(trams["stops"])), show=True)
+    group = folium.FeatureGroup(name=_label(tr("Tramvaje", "Trams", "Električky"), TRAM, len(trams["stops"])), show=True)
     folium.GeoJson(
         trams["tracks"], interactive=False, smooth_factor=SMOOTH,
         style_function=lambda _: {"color": TRAM, "weight": 1.6, "opacity": 0.85},
@@ -794,7 +832,7 @@ def _add_trams(m, trams):
 
 def _add_buses(m, stops, routes):
     """Bus routes and stops in blue, both only when zoomed in. Returns (group, [(sub-layer, min zoom)])."""
-    group = folium.FeatureGroup(name=_label("Autobusy", BUS, len(stops)), show=True)
+    group = folium.FeatureGroup(name=_label(tr("Autobusy", "Buses", "Autobusy"), BUS, len(stops)), show=True)
     zoomed = []
     if routes:
         lines = folium.GeoJson(
@@ -839,7 +877,7 @@ def build_map():
     # Parks before the water: some park outlines reach over the Vltava and would cover it.
     park_geo = None
     if parks:
-        park_layer = folium.FeatureGroup(name=_label("Parky", "#33363d", len(parks["features"])), show=True)
+        park_layer = folium.FeatureGroup(name=_label(tr("Parky", "Parks", "Parky"), "#33363d", len(parks["features"])), show=True)
         park_geo = folium.GeoJson(
             parks, smooth_factor=SMOOTH,
             style_function=lambda _: {"color": PARK, "weight": 0, "fillColor": PARK, "fillOpacity": 1},
@@ -915,6 +953,13 @@ def build_map():
     m.get_root().html.add_child(folium.Element("""<script>
       (function () {
         const menu = document.querySelector('.ds-menu');
+        menu.title = t('Vstoupit', 'Enter', 'Vstúpiť');
+        // after a language switch the page comes back straight to the map
+        if (document.documentElement.classList.contains('skip-intro')) {
+          menu.classList.add('frozen', 'gone');
+          menu.style.display = 'none';
+          setTimeout(() => document.documentElement.classList.remove('skip-intro'), 200);
+        }
         // Entering is pure transform/opacity work for the graphics card: the costly effects (the fire's
         // morphing SVG filters, the CSS flicker) freeze on the click, and once the move is over the start
         // screen is switched off completely so nothing keeps running behind the map.

@@ -7,7 +7,7 @@
 
   const drawer = document.createElement("aside");
   drawer.className = "ds-drawer";
-  drawer.innerHTML = '<div class="dt">Filtry</div>';
+  drawer.innerHTML = `<div class="dt">${t("Filtry", "Filters", "Filtre")}</div>`;
   for (const sel of [".leaflet-control-layers", ".ds-filter", ".ds-select"]) {
     const el = map.getContainer().querySelector(sel);
     if (el) drawer.appendChild(el);
@@ -19,7 +19,9 @@
   // the data credits the licences (CC BY) ask for, here instead of a line across the bottom of the map
   const credits = document.createElement("div");
   credits.className = "ds-credits";
-  credits.textContent = "Data © IPR Praha · © ČÚZK (katastr, ZABAGED) · zastávky © PID, vše CC BY · Leaflet";
+  credits.textContent = t("Data © IPR Praha · © ČÚZK (katastr, ZABAGED) · zastávky © PID, vše CC BY · Leaflet",
+    "Data © IPR Praha · © ČÚZK (cadastre, ZABAGED) · stops © PID, all CC BY · Leaflet",
+    "Dáta © IPR Praha · © ČÚZK (kataster, ZABAGED) · zastávky © PID, všetko CC BY · Leaflet");
   drawer.appendChild(credits);
   document.body.appendChild(drawer);
   L.DomEvent.disableClickPropagation(drawer);
@@ -27,10 +29,21 @@
 
   const button = document.createElement("button");
   button.className = "ds-toggle";
-  button.title = "Filtry";
+  button.title = t("Filtry", "Filters", "Filtre");
   button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/>'
     + '<circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>';
   document.querySelector(".ds-bar .ds-left").prepend(button);  // before the search
+
+  // the language switcher at the far right of the bar: its list opens on a click, a choice reloads the page
+  const lang = document.querySelector(".ds-lang");
+  lang.querySelector(`[data-lang="${window.baldwinLang}"]`).classList.add("on");
+  lang.querySelector(".ds-lang-btn").addEventListener("click", (e) => { e.stopPropagation(); lang.classList.toggle("open"); });
+  lang.querySelector(".ds-lang-menu").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (b) window.baldwinSetLang(b.dataset.lang);
+    lang.classList.remove("open");
+  });
+  document.addEventListener("click", (e) => { if (!lang.contains(e.target)) lang.classList.remove("open"); });
 
   let open = false;
   const toggle = (on) => { open = on; document.body.classList.toggle("drawer-open", on); };
