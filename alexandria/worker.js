@@ -80,7 +80,8 @@ export default {
   async fetch(request, env) {
     const origin = request.headers.get("origin") || "";
     const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : SITE;
-    if (request.method === "OPTIONS") return json({}, 204, allowed);
+    // the browser's "may I?" check before each question: headers only (a 204 must have no body)
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: json({}, 200, allowed).headers });
     if (request.method !== "POST") return json({ error: "POST a question to this address." }, 405, allowed);
     if (!ALLOWED_ORIGINS.includes(origin)) return json({ error: "Not allowed from this site." }, 403, allowed);
     if (!env.GEMINI_API_KEY) return json({ error: "The GEMINI_API_KEY secret is not set." }, 500, allowed);
