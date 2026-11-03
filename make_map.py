@@ -74,7 +74,7 @@ STYLE = f"""
   .ds-menu::before {{ content: ""; position: absolute; inset: 0; pointer-events: none;
                      background: radial-gradient(circle at 50% 50%, rgba(220,70,25,.5) 0%, rgba(170,45,18,.3) 12%,
                                  rgba(110,25,10,.15) 24%, rgba(50,12,5,.06) 38%, rgba(0,0,0,0) 56%);
-                     animation: orb-breathe 6s ease-in-out infinite, orb-flicker-room 3.4s infinite; }}
+                     animation: orb-breathe 6s ease-in-out infinite, orb-flicker-room 11s ease-in-out infinite; }}
   @keyframes orb-breathe {{ 0%, 100% {{ opacity: .75; transform: scale(.96); }} 50% {{ opacity: 1; transform: scale(1.04); }} }}
   .ds-menu.gone {{ opacity: 0; visibility: hidden; }}
   .orb-wrap {{ position: relative; }}
@@ -97,7 +97,7 @@ STYLE = f"""
      room moves wherever the flames inside are */
   .orb-halo {{ position: absolute; left: 0; top: 0; width: 240px; height: 240px; pointer-events: none;
               transform: scale(2.3); filter: blur(34px) saturate(1.3); opacity: .8; transition: opacity .6s ease;
-              animation: orb-flicker 2.7s infinite; }}
+              animation: orb-flicker 8s ease-in-out infinite; }}
   /* uneven steps, like a flame catching and dropping; the room glow below runs on a different beat */
   @keyframes orb-flicker {{
     0% {{ opacity: .78; transform: scale(2.3); }}    9% {{ opacity: .95; transform: scale(2.38); }}
@@ -361,9 +361,9 @@ STYLE = f"""
   <div class="orb"><svg class="orb-layer orb-smoke" viewBox="0 0 200 200"><defs>
     <filter id="orb-smoke-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.014 0.022" numOctaves="4" seed="5"/>
       <feColorMatrix type="matrix" values="0 0 0 0 .2  0 0 0 0 .25  0 0 0 0 .4  2.2 0 0 0 -.95"/></filter>
-    <filter id="orb-fire-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="4" seed="11"><animate attributeName="baseFrequency" dur="5.3s" repeatCount="indefinite" values="0.02 0.03;0.023 0.036;0.019 0.032;0.022 0.027;0.02 0.03"/></feTurbulence>
+    <filter id="orb-fire-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.02 0.03" numOctaves="4" seed="11"><animate attributeName="baseFrequency" dur="16s" repeatCount="indefinite" values="0.02 0.03;0.023 0.036;0.019 0.032;0.022 0.027;0.02 0.03"/></feTurbulence>
       <feColorMatrix type="matrix" values="0 0 0 0 .9  0 0 0 0 .12  0 0 0 0 .04  3 0 0 0 -1.45"/></filter>
-    <filter id="orb-core-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="2"><animate attributeName="baseFrequency" dur="3.1s" repeatCount="indefinite" values="0.035;0.041;0.032;0.038;0.035"/></feTurbulence>
+    <filter id="orb-core-f" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="2"><animate attributeName="baseFrequency" dur="10s" repeatCount="indefinite" values="0.035;0.041;0.032;0.038;0.035"/></feTurbulence>
       <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 .5  0 0 0 0 .08  3.4 0 0 0 -1.5"/></filter>
     <radialGradient id="orb-m-all"><stop offset=".55" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
     <radialGradient id="orb-m-core"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
