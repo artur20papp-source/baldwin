@@ -186,14 +186,18 @@ GROUPS = [
 
 # Panels: dark frosted glass in the manner of Rockaway Capital's site: smoky and half see-through, the
 # map strongly blurred behind it, no border and no shadow
-GLASS = ("background: rgba(16,16,16,.5); backdrop-filter: blur(14px) saturate(1); -webkit-backdrop-filter: blur(14px) saturate(1);"
-         "border: none; box-shadow: none;")
+# lifted off the map: a touch lighter than the background, a hairline light edge and a soft shadow under it
+GLASS = ("background: rgba(24,24,24,.62); backdrop-filter: blur(14px) saturate(1); -webkit-backdrop-filter: blur(14px) saturate(1);"
+         "border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 36px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);")
 
 I18N = I18N_JS.read_text(encoding="utf-8")  # inlined at the top of the page, before every other script
 STYLE = f"""
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   .leaflet-container {{ background: {BACKGROUND}; font-family: 'Hanken Grotesk', Arial, sans-serif; }}
+  /* a faint dot grid behind the city, like a drawing board; it stays still while Prague moves over it */
+  .leaflet-container {{ background-image: radial-gradient(circle, #3a3a3a 1px, transparent 1.4px);
+                        background-size: 24px 24px; background-position: 12px 12px; }}
   .leaflet-interactive:focus {{ outline: none; }}
 
   /* start screen: a black palantír in the middle; click it to enter the map */
