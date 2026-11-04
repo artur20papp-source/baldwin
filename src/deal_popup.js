@@ -225,6 +225,8 @@
 
   async function open(layer) {
     close();
+    // one window at a time on the left: an opened area closes the filter window (the map then flies to the area)
+    if (window.baldwinCloseDrawer) window.baldwinCloseDrawer();
     const p = layer.feature.properties;
     const mine = (current = { layer, parcels: null });
     layer.setStyle({ weight: 2.5 });
@@ -247,6 +249,7 @@
 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
   window.baldwinOpenArea = open;  // used by the search box
+  window.baldwinClosePanel = close;  // used by the filter window, which closes the panel when it opens
   window.baldwinCadastre = { getParcels, inside, LAND, FARMLAND, KN_PARCEL };  // used by the selection
 
   // Every folium GeoJson is a global geo_json_*; bind the areas (they carry an area_code).

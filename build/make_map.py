@@ -708,6 +708,7 @@ STYLE = f"""
     .ds-bar, .ds-mbrand, .ds-drawer, .ds-panel, .ds-results, .ds-lang-menu button {{
       backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(13,13,13,.92) !important; }}
   }}
+  .ds-drawer, .ds-panel {{ will-change: transform, opacity; }}  /* their own layer, ready before they move */
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
   .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity .8s ease 2.1s; }}
 </style>
@@ -1187,8 +1188,8 @@ def build_map():
     # decimals (~1 m) keeps the page well under 10 MB
     html = OUT.read_text(encoding="utf-8")
     html = re.sub(r'(?<=[\d\]}"]), (?=[\[{"\-\d])', ",", html)
-    # phones draw the map's thousands of shapes on one canvas instead of as SVG elements: much smoother panning
-    html = re.sub(r'"preferCanvas":\s*false', '"preferCanvas":window.matchMedia("(max-width: 700px)").matches', html, count=1)
+    # the map's thousands of shapes on one canvas instead of as SVG elements: much smoother zooming and panning
+    html = re.sub(r'"preferCanvas":\s*false', '"preferCanvas":true', html, count=1)
     html = re.sub(r'(?<=")\: (?=[\[{"\-\dtfn])', ":", html)
     html = re.sub(r'(?<=[\[,])(-?\d{1,3}\.\d{5})\d+', r"\1", html)
     # IPR's bookkeeping fields and empty values are never shown; Czech letters as text, not á

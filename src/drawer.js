@@ -54,15 +54,19 @@
   // middle of the free part; on a phone the window comes up from the bottom and the map stays
   const phone = window.matchMedia("(max-width: 700px)");
   let open = false, shifted = 0;
-  const toggle = (on) => {
+  // stay: close without moving the map back (an area panel is opening and the map flies to it anyway)
+  const toggle = (on, stay) => {
     open = on;
     document.body.classList.toggle("drawer-open", on);
+    if (on && window.baldwinClosePanel) window.baldwinClosePanel();  // one window at a time on the left
     const want = on && !phone.matches ? Math.round((drawer.offsetWidth + 8) / 2) : 0;
     if (want !== shifted) {
-      map.panBy([shifted - want, 0], { duration: 0.55, easeLinearity: 0.2 });
+      if (!stay) map.panBy([shifted - want, 0], { duration: 0.55, easeLinearity: 0.2 });
       shifted = want;
     }
   };
+  // an area opening closes the window, except while picking areas or parcels for a selection (which lives in it)
+  window.baldwinCloseDrawer = () => { if (open && !window.baldwinSelectMode) toggle(false, true); };
   button.addEventListener("click", () => toggle(!open));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && open && !window.baldwinSelectMode) toggle(false);
