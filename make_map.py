@@ -673,6 +673,23 @@ STYLE = f"""
   .ds-lang-menu button:hover {{ background: rgba(255,255,255,.07); color: {TEXT}; }}
   .ds-lang-menu button.on {{ color: {TEXT}; font-weight: 500; }}
   .ds-lang-menu button small {{ font-size: 10px; letter-spacing: .08em; color: {MUTED}; }}
+  /* phones: the name alone at the top, every button in one bar along the bottom where the thumbs are;
+     the search results, the filter window, the deal sheet and the language list open above that bar */
+  .ds-mbrand {{ display: none; }}
+  @media (max-width: 700px) {{
+    .ds-bar {{ top: auto; bottom: 8px; }}
+    .ds-mbrand {{ display: block; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 9999;
+                 padding: 9px 12px 9px 17px; border-radius: 8px; white-space: nowrap;
+                 font: 400 13px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .34em; {GLASS} }}
+    .ds-mbrand b {{ font-weight: 600; color: {TEXT}; }}
+    .ds-mbrand span {{ color: {MUTED}; }}
+    .ds-results {{ top: auto; bottom: 72px; }}
+    .ds-drawer {{ bottom: 72px; max-height: calc(100vh - 140px); transform-origin: bottom left; }}
+    .ds-panel {{ left: 8px; right: 8px; bottom: 72px; max-height: calc(100vh - 140px); border-radius: 10px; }}
+    .ds-lang-menu {{ top: auto; bottom: calc(100% + 22px); transform-origin: bottom right; transform: translateY(6px) scale(.96); }}
+  }}
+  .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
+  .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity .8s ease 2.1s; }}
 </style>
 <script>{I18N}</script>
 <div class="ds-menu">
@@ -754,6 +771,7 @@ STYLE = f"""
     <ellipse cx="100" cy="182" rx="34" ry="6" fill="url(#glass-c)"/></svg>
   </div><div class="orb-shadow"></div></div>
 </div>
+<div class="ds-mbrand"><b>BALDWIN</b> <span>PALANTIR</span></div>
 <div class="ds-title ds-bar">
   <div class="ds-left">
     <div class="ds-search">
