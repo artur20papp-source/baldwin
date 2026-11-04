@@ -717,20 +717,23 @@ STYLE = f"""
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
   .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity 1s ease 3.1s; }}
   /* the short guide on a first visit: it appears only once the map has unfolded, never during the zoom */
-  .ds-guide {{ position: fixed; z-index: 1500; left: 50%; top: 50%; width: min(330px, calc(100vw - 32px));
-              padding: 18px 20px 16px; border-radius: 10px; {GLASS} color: {TEXT}; font: 12px 'Hanken Grotesk', Arial, sans-serif;
-              opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.98); pointer-events: none;
-              transition: opacity 1.2s cubic-bezier(.16,1,.3,1), transform 1.2s cubic-bezier(.16,1,.3,1); }}
+  .ds-guide {{ position: fixed; z-index: 1500; left: 50%; top: 50%; width: min(340px, calc(100vw - 32px));
+              padding: 22px 24px 22px; border-radius: 20px; color: {TEXT}; font: 13px 'Hanken Grotesk', Arial, sans-serif;
+              background: rgba(28,28,30,.55); backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6);
+              border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.45);
+              opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.97); pointer-events: none;
+              transition: opacity 1.1s cubic-bezier(.16,1,.3,1), transform 1.1s cubic-bezier(.16,1,.3,1); }}
   .ds-guide.on {{ opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }}
-  .ds-guide h4 {{ margin: 0 0 12px; font-size: 11px; font-weight: 600; letter-spacing: .3em; color: {MUTED}; }}
-  .ds-guide ul {{ margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }}
-  .ds-guide li {{ display: grid; grid-template-columns: 14px 1fr; gap: 8px; line-height: 1.35; }}
-  .ds-guide li::before {{ content: "–"; color: {MUTED}; }}
-  .ds-guide li b {{ font-weight: 600; }}
-  .ds-guide button {{ margin-top: 16px; width: 100%; height: 32px; border: none; border-radius: 6px; cursor: pointer;
-                     background: rgba(255,255,255,.08); color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif;
-                     letter-spacing: .08em; transition: transform .5s cubic-bezier(.16,1,.3,1), background .3s; }}
-  .ds-guide button:hover {{ transform: scale(1.03); background: rgba(255,255,255,.12); }}
+  .ds-guide h4 {{ margin: 0 32px 14px 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }}
+  .ds-guide ul {{ margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }}
+  .ds-guide li {{ display: grid; grid-template-columns: 12px 1fr; gap: 8px; line-height: 1.4; color: rgba(236,236,236,.82); }}
+  .ds-guide li::before {{ content: ""; width: 4px; height: 4px; margin-top: 7px; border-radius: 50%; background: rgba(236,236,236,.45); }}
+  /* a small round close button, top right */
+  .ds-guide .x {{ position: absolute; top: 16px; right: 16px; width: 24px; height: 24px; padding: 0; border: none; border-radius: 50%;
+                 display: grid; place-items: center; cursor: pointer; background: rgba(255,255,255,.1); color: rgba(236,236,236,.7);
+                 transition: transform .5s cubic-bezier(.16,1,.3,1), background .3s; }}
+  .ds-guide .x:hover {{ transform: scale(1.08); background: rgba(255,255,255,.16); }}
+  .ds-guide .x svg {{ width: 10px; height: 10px; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }}
 </style>
 <script>{I18N}</script>
 <div class="ds-menu">
@@ -814,16 +817,14 @@ STYLE = f"""
 </div>
 <div class="ds-mbrand"><b>BALDWIN</b> <span>PALANTIR</span></div>
 <div class="ds-guide" role="dialog">
-  <h4><span class="l-cs">JAK NA TO</span><span class="l-en">HOW TO USE</span><span class="l-sk">AKO NA TO</span></h4>
+  <button class="x" aria-label="Close"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+  <h4><span class="l-cs">Co tato mapa umí</span><span class="l-en">What this map does</span><span class="l-sk">Čo táto mapa dokáže</span></h4>
   <ul>
-    <li><span><span class="l-cs"><b>Klik na plochu</b> → údaje a parcely</span><span class="l-en"><b>Click an area</b> → figures and parcels</span><span class="l-sk"><b>Klik na plochu</b> → údaje a parcely</span></span></li>
-    <li><span><span class="l-cs"><b>Filtry</b> vlevo nahoře → vrstvy, cena pozemku</span><span class="l-en"><b>Filters</b> top left → layers, land price</span><span class="l-sk"><b>Filtre</b> vľavo hore → vrstvy, cena pozemku</span></span></li>
-    <li><span><span class="l-cs"><b>Výběr</b> → více ploch nebo parcel jako jeden pozemek</span><span class="l-en"><b>Selection</b> → several areas or parcels as one site</span><span class="l-sk"><b>Výber</b> → viac plôch alebo parciel ako jeden pozemok</span></span></li>
-    <li><span><span class="l-cs"><b>Hledání</b> → plochy, lokality, metro, adresy</span><span class="l-en"><b>Search</b> → areas, localities, metro, addresses</span><span class="l-sk"><b>Hľadanie</b> → plochy, lokality, metro, adresy</span></span></li>
-    <li><span><span class="l-cs"><b>Export</b> → model v Baldwin Acre (Excel)</span><span class="l-en"><b>Export</b> → a model in Baldwin Acre (Excel)</span><span class="l-sk"><b>Export</b> → model v Baldwin Acre (Excel)</span></span></li>
-    <li><span><span class="l-cs"><b>Pozemek</b> → model · <b>maják</b> → zdroje</span><span class="l-en"><b>Plot</b> → the model · <b>lighthouse</b> → the sources</span><span class="l-sk"><b>Pozemok</b> → model · <b>maják</b> → zdroje</span></span></li>
+    <li><span><span class="l-cs">Všechny rozvojové obytné plochy Prahy</span><span class="l-en">Every residential development area in Prague</span><span class="l-sk">Všetky rozvojové obytné plochy Prahy</span></span></li>
+    <li><span><span class="l-cs">Co se smí postavit · cena pozemku · doprava · záplavy</span><span class="l-en">What may be built · land price · transport · flood risk</span><span class="l-sk">Čo sa smie postaviť · cena pozemku · doprava · záplavy</span></span></li>
+    <li><span><span class="l-cs">Klik na plochu → parcely a vlastníci</span><span class="l-en">Click an area → its parcels and owners</span><span class="l-sk">Klik na plochu → parcely a vlastníci</span></span></li>
+    <li><span><span class="l-cs">Export → celý model v Baldwin Acre</span><span class="l-en">Export → a full appraisal in Baldwin Acre</span><span class="l-sk">Export → celý model v Baldwin Acre</span></span></li>
   </ul>
-  <button><span class="l-cs">Rozumím</span><span class="l-en">Got it</span><span class="l-sk">Rozumiem</span></button>
 </div>
 <div class="ds-title ds-bar">
   <div class="ds-left">
@@ -1162,7 +1163,7 @@ def build_map():
           }));
         };
         const guide = document.querySelector('.ds-guide');
-        guide.querySelector('button').addEventListener('click', () => {
+        guide.querySelector('.x').addEventListener('click', () => {
           guide.classList.remove('on');
           try { localStorage.setItem('baldwin-guide', '1'); } catch (e) {}
         });
