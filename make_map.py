@@ -196,7 +196,7 @@ STYLE = f"""
 <style>
   .leaflet-container {{ background: {BACKGROUND}; font-family: 'Hanken Grotesk', Arial, sans-serif; }}
   /* a faint dot grid behind the city, like a drawing board; it stays still while Prague moves over it */
-  .leaflet-container {{ background-image: radial-gradient(circle, #3a3a3a 1px, transparent 1.4px);
+  .leaflet-container {{ background-image: radial-gradient(circle, #1f1f1f 1px, transparent 1.3px);
                         background-size: 24px 24px; background-position: 12px 12px; }}
   .leaflet-interactive:focus {{ outline: none; }}
 
