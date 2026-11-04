@@ -866,6 +866,17 @@ def _add_buses(m, stops, routes):
     return group, zoomed
 
 
+def _clip_lines(geo, inside):
+    """A line GeoJSON cut to the parts inside a shape (here Prague's outline)."""
+    from shapely.geometry import mapping, shape
+    parts = []
+    for f in geo["features"]:
+        cut = shape(f["geometry"]).intersection(inside)
+        parts += [g for g in getattr(cut, "geoms", [cut]) if g.geom_type == "LineString" and not g.is_empty]
+    return {"type": "FeatureCollection",
+            "features": [{"type": "Feature", "properties": {}, "geometry": mapping(g)} for g in parts]}
+
+
 def _km(geo):
     """Total length of a line GeoJSON in whole km (equirectangular, plenty for a label)."""
     import math
@@ -898,6 +909,8 @@ def build_map():
     prague = unary_union([shape(f["geometry"]).buffer(0) for f in localities["features"]])
     rivers = _optional(lambda: load_rivers(prague), "river (ZABAGED)")
     lines = _optional(load_motorways_rail, "motorways and railways (ZABAGED)")
+    if lines:  # only inside Prague, like the rest of the map
+        lines = tuple(_clip_lines(geo, prague) for geo in lines)
     trams, buses = _optional(load_trams, "trams"), _optional(load_bus_stops, "bus stops")
     bus_routes = _optional(load_bus_routes, "bus routes")
 
@@ -1049,7 +1062,7 @@ def build_map():
                 (lines[0], "motorways.geojson", tr("Dálnice", "Motorways", "Diaľnice"),
                  {"color": "#9a9a9a", "weight": 1.8, "opacity": 0.85}),
                 (lines[1], "rail.geojson", tr("Železnice", "Railways", "Železnice"),
-                 {"color": "#2f4f9e", "weight": 1.1, "dashArray": "2 3"})):  # dark blue, dashed like a track
+                 {"color": "#2f4f9e", "weight": 1.2})):  # dark blue
             OUT.with_name(file).write_text(json.dumps(geo, separators=(",", ":")), encoding="utf-8")
             v = hashlib.sha1(OUT.with_name(file).read_bytes()).hexdigest()[:10]
             key = "motorway" if file.startswith("motorways") else "rail"

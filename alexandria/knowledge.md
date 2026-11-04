@@ -76,12 +76,12 @@ The project has two parts:
   stojvoda = N), https://ags.cuzk.cz/arcgis/rest/services/ZABAGED_POLOHOPIS/MapServer/132, open data CC BY 4.0.
 - **Effect:** fills gaps in IPR's river drawing inside Prague. Visual only.
 
-### A6b. Motorways and railways around Prague (ZABAGED)
+### A6b. Motorways and railways in Prague (ZABAGED)
 - **Source:** ČÚZK ZABAGED, layers "Silnice, dálnice" (only motorways: dálnice I. and II. třídy, incl. the
   Prague ring road D0; ramps left out) https://ags.cuzk.cz/arcgis/rest/services/ZABAGED_POLOHOPIS/MapServer/79
-  and "Železniční trať" .../MapServer/75, open data CC BY 4.0, for Prague and about 25 km around it.
-- **How it is used:** two switches in the filter window, Motorways (grey, ~791 km) and Railways (dark
-  blue dashed, ~1,442 km), to show how each area connects beyond the city.
+  and "Železniční trať" .../MapServer/75, open data CC BY 4.0, cut to Prague's city limits.
+- **How it is used:** two switches in the filter window, Motorways (grey, ~78 km) and Railways (dark
+  blue, ~218 km), to show which areas lie close to them.
 - **Effect:** context only; not an input of the appraisal.
 
 ### A7. Public transport: PID stops, metro stations, bus routes

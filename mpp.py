@@ -159,10 +159,9 @@ def load_rivers(inside):
     return {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": mapping(rivers)}]}
 
 
-# ČÚZK ZABAGED motorways and railways (open data, CC BY 4.0), for Prague and about 25 km around it
+# ČÚZK ZABAGED motorways and railways (open data, CC BY 4.0) in Prague's box; make_map.py cuts them to the city
 ZABAGED_ROADS_URL = "https://ags.cuzk.cz/arcgis/rest/services/ZABAGED_POLOHOPIS/MapServer/79"
 ZABAGED_RAIL_URL = "https://ags.cuzk.cz/arcgis/rest/services/ZABAGED_POLOHOPIS/MapServer/75"
-REGION_BBOX = (13.85, 49.72, 15.05, 50.40)
 # motorways only (dálnice I. and II. třídy, incl. the Prague ring road D0); ramps ("větev") are left out
 MOTORWAYS = ("D1", "D2", "D1p", "D2p")
 
@@ -170,7 +169,7 @@ MOTORWAYS = ("D1", "D2", "D1p", "D2p")
 def _lines(url, where, fields):
     features, offset = [], 0
     while True:
-        page = _query(url, where=where, geometry=",".join(map(str, REGION_BBOX)), geometryType="esriGeometryEnvelope",
+        page = _query(url, where=where, geometry=",".join(map(str, PRAGUE_BBOX)), geometryType="esriGeometryEnvelope",
                       inSR=WGS84, spatialRel="esriSpatialRelIntersects", outFields=fields, orderByFields="OBJECTID",
                       resultOffset=offset, outSR=WGS84, geometryPrecision=5, maxAllowableOffset=0.0002, f="geojson")
         features += [f for f in page["features"] if f.get("geometry")]
@@ -181,7 +180,7 @@ def _lines(url, where, fields):
 
 
 def load_motorways_rail():
-    """Motorways and railway lines around Prague, as two GeoJSONs (geometry only)."""
+    """Motorways and railway lines in Prague's box, as two GeoJSONs (geometry only)."""
     roads = [{"type": "Feature", "properties": {}, "geometry": f["geometry"]}
              for f in _lines(ZABAGED_ROADS_URL, "typsil_k IN (" + ",".join(f"'{c}'" for c in MOTORWAYS) + ")", "OBJECTID")]
     rail = [{"type": "Feature", "properties": {}, "geometry": f["geometry"]}
