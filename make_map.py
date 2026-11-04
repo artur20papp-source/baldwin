@@ -21,6 +21,7 @@ SEARCH_JS = Path(__file__).with_name("search.js")
 SKY_JS = Path(__file__).with_name("sky.js")
 I18N_JS = Path(__file__).with_name("i18n.js")
 LINES_JS = Path(__file__).with_name("lines.js")
+ACRE_WEB_DIR = Path(__file__).resolve().parent.parent / "Baldwin Acre" / "web"  # the Baldwin Acre page (read-only model viewer), copied to acre/
 SELECT_JS = Path(__file__).with_name("selection.js")
 DRAWER_JS = Path(__file__).with_name("drawer.js")
 LIGHTNING_JS = Path(__file__).with_name("lightning.js")
@@ -760,6 +761,13 @@ STYLE = f"""
   </div>
   <div class="ds-brand"><b>BALDWIN</b><span>PALANTIR</span></div>
   <div class="ds-right">
+    <a class="ds-lighthouse" href="acre/" target="_blank" rel="noopener" aria-label="Baldwin Acre">
+      <span class="lh-icon"><svg viewBox="0 0 24 24"><path d="M2.5 15.5l9.5-5.2 9.5 5.2-9.5 5.2z"/>
+        <path d="M7.2 12.9l9.5 5.2" stroke-dasharray="1.6 1.6"/><path d="M12 10.3V3.6l3.6 1.4-3.6 1.4"/>
+        <circle cx="2.5" cy="15.5" r=".9" class="fire"/><circle cx="21.5" cy="15.5" r=".9" class="fire"/>
+        <circle cx="12" cy="20.7" r=".9" class="fire"/></svg></span>
+      <span class="lh-text"><b>BALDWIN</b> <span>ACRE</span></span>
+    </a>
     <a class="ds-lighthouse" href="alexandria/" target="_blank" rel="noopener" aria-label="Baldwin Alexandria">
       <span class="lh-icon"><svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>
         <path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg></span>
@@ -1051,6 +1059,12 @@ def build_map():
     shutil.copy2(acre_copy(), OUT.with_name(ACRE_EXAMPLE))
     # the link carries the file's fingerprint, so a browser never hands out an older copy of the model
     example_v = hashlib.sha1(OUT.with_name(ACRE_EXAMPLE).read_bytes()).hexdigest()[:10]
+    # the Baldwin Acre page, its own folder of the site like Alexandria; it shows that same example
+    site_acre = OUT.with_name("acre")
+    site_acre.mkdir(exist_ok=True)
+    (site_acre / "index.html").write_text((ACRE_WEB_DIR / "index.html").read_text(encoding="utf-8")
+                                          .replace("__MODEL__", f"../{ACRE_EXAMPLE}?v={example_v}"), encoding="utf-8")
+    shutil.copy2(ACRE_WEB_DIR / "viewer.js", site_acre / "viewer.js")
     site_alexandria = OUT.with_name("alexandria")
     site_alexandria.mkdir(exist_ok=True)
     for file in ALEXANDRIA_FILES:

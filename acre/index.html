@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baldwin Acre</title>
+<script src="../i18n.js"></script>  <!-- the language shared with the map: t(cs, en, sk) -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.MODEL = "../baldwin-acre-seberov.xlsx?v=0917162c6d";  // the worked example, filled in by make_map.py with its fingerprint</script>
+<style>
+  /* Baldwin Acre: the appraisal model, read-only, in the look of the map and Baldwin Alexandria */
+  :root { --bg: #0d0d0d; --text: #ececec; --muted: #8a8a8a; --edge: #222; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: Inter, Arial, sans-serif; }
+  .wrap { height: 100%; display: flex; flex-direction: column; padding: 20px 16px 12px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 4px 4px 16px; }
+  .brand { font-size: 15px; letter-spacing: .34em; }
+  .brand b { font-weight: 600; } .brand span { color: var(--muted); font-weight: 400; }
+  .sub { font-size: 11px; color: var(--muted); letter-spacing: .04em; margin-top: 6px; }
+  /* the buttons to the other two parts, the same as on the map and in Alexandria; the name slides out on hover */
+  .hr { align-self: center; display: flex; align-items: center; gap: 8px; }
+  .go, .dl { flex-shrink: 0; display: flex; align-items: center; height: 34px; border-radius: 6px; background: rgba(255,255,255,.07);
+             color: var(--text); text-decoration: none; overflow: hidden; transition: transform 1.2s cubic-bezier(.16,1,.3,1); }
+  .go:hover, .dl:hover { transform: scale(1.03); }
+  .go .ic { display: grid; place-items: center; width: 40px; height: 34px; flex-shrink: 0; }
+  .go svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  .go svg .fire { fill: currentColor; stroke: none; }
+  .go .tx { max-width: 0; opacity: 0; transform: translateX(-24px); white-space: nowrap; font-size: 11px; letter-spacing: .3em;
+            transition: max-width 3.2s cubic-bezier(.16,1,.3,1), opacity 2.2s ease .3s, transform 3.2s cubic-bezier(.16,1,.3,1),
+                        padding 3.2s cubic-bezier(.16,1,.3,1); }
+  .go .tx b { font-weight: 600; } .go .tx span { font-weight: 400; color: var(--muted); }
+  .go:hover .tx { max-width: 260px; opacity: 1; transform: none; padding-right: 16px; }
+  @media (hover: none) { .go:hover .tx { max-width: 0; opacity: 0; padding-right: 0; } }
+  .dl { padding: 0 12px; font: 500 11px Inter, Arial, sans-serif; letter-spacing: .04em; }
+  .l-cs, .l-en, .l-sk { display: none; }
+  html[lang=cs] .l-cs, html[lang=en] .l-en, html[lang=sk] .l-sk { display: inline; }
+  .lang { position: relative; }
+  .lang-btn { width: 34px; height: 34px; padding: 0; border: none; border-radius: 6px; cursor: pointer; background: rgba(255,255,255,.07);
+              color: var(--text); font: 500 11px Inter, Arial, sans-serif; letter-spacing: .08em; transition: transform .5s cubic-bezier(.16,1,.3,1); }
+  .lang-btn:hover { transform: scale(1.03); }
+  .lang-menu { position: absolute; z-index: 5; top: calc(100% + 12px); right: 0; min-width: 150px; padding: 6px; border-radius: 10px;
+               background: rgba(16,16,16,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transform-origin: top right;
+               opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.96);
+               transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s linear .45s; }
+  .lang.open .lang-menu { opacity: 1; visibility: visible; transform: none; transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s; }
+  .lang-menu button { display: flex; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; border-radius: 6px;
+                      background: none; color: var(--muted); font: 400 12px Inter, Arial, sans-serif; cursor: pointer; }
+  .lang-menu button:hover { background: rgba(255,255,255,.07); color: var(--text); }
+  .lang-menu button.on { color: var(--text); font-weight: 500; }
+  .lang-menu small { font-size: 10px; letter-spacing: .08em; color: var(--muted); }
+  /* the sheet: formula bar, grid, tabs */
+  .sheet { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); }
+  .bar { display: flex; gap: 10px; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--edge);
+         font: 12px Consolas, "SF Mono", monospace; color: var(--muted); min-height: 30px; }
+  .bar #ref { width: 56px; color: var(--text); }
+  .bar #formula { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+  #grid { flex: 1; overflow: auto; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+  #grid table { border-collapse: collapse; table-layout: fixed; }
+  #grid td { padding: 0 4px; overflow: hidden; white-space: nowrap; line-height: 1; user-select: none; cursor: default; }
+  #grid td.sel { outline: 2px solid #8fe3a0; outline-offset: -2px; }
+  #grid .hc, #grid .hr { position: sticky; background: #141414; color: #5a5a5a; font: 10px Inter, Arial; text-align: center;
+                         z-index: 1; border: 1px solid #1f1f1f; }
+  #grid .hc { top: 0; height: 18px; }
+  #grid .hr { left: 0; width: 34px; }
+  #grid .corner { top: 0; left: 0; z-index: 2; }
+  #tabs { display: flex; gap: 2px; padding: 6px 8px; border-top: 1px solid var(--edge); overflow-x: auto; }
+  #tabs button { flex-shrink: 0; height: 28px; padding: 0 12px; border: none; border-radius: 6px; cursor: pointer; background: none;
+                 color: var(--muted); font: 500 11px Inter, Arial, sans-serif; }
+  #tabs button.on { background: rgba(255,255,255,.08); color: var(--text); }
+  .msg { padding: 40px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 600px) { .brand { font-size: 12px; } .sub { display: none; } .dl { display: none; } .wrap { padding: 12px 8px 8px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand"><b>BALDWIN</b> <span>ACRE</span></div>
+      <div class="sub"><span class="l-cs">Šeberov 414/267/5033 · vzorový model · jen ke čtení</span><span
+        class="l-en">Šeberov 414/267/5033 · worked example · view only</span><span
+        class="l-sk">Šeberov 414/267/5033 · vzorový model · len na čítanie</span></div>
+    </div>
+    <div class="hr">
+      <a class="dl" id="download" download="Baldwin Acre - Šeberov 414-267-5033 (example).xlsx"><span class="l-cs">Stáhnout .xlsx</span><span
+        class="l-en">Download .xlsx</span><span class="l-sk">Stiahnuť .xlsx</span></a>
+      <a class="go" href="../alexandria/" aria-label="Baldwin Alexandria">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>
+          <path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg></span>
+        <span class="tx"><b>BALDWIN</b> <span>ALEXANDRIA</span></span>
+      </a>
+      <a class="go to-map" href="../" aria-label="Baldwin Palantir">
+        <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8.2 9.2a4.6 4.6 0 0 1 3.4-2.3"/></svg></span>
+        <span class="tx"><b>BALDWIN</b> <span>PALANTIR</span></span>
+      </a>
+      <div class="lang">
+        <button class="lang-btn" aria-label="Language"><span class="l-cs">CS</span><span class="l-en">EN</span><span class="l-sk">SK</span></button>
+        <div class="lang-menu">
+          <button data-lang="en">English <small>EN</small></button>
+          <button data-lang="cs">Čeština <small>CS</small></button>
+          <button data-lang="sk">Slovenčina <small>SK</small></button>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="sheet">
+    <div class="bar"><span id="ref"></span><span id="formula"></span></div>
+    <div id="grid"><div class="msg"><span class="l-cs">Načítám model…</span><span class="l-en">Loading the model…</span><span
+      class="l-sk">Načítavam model…</span></div></div>
+    <div id="tabs"></div>
+  </div>
+</div>
+<script>
+  document.getElementById("download").href = window.MODEL;
+  // back to the map without its start screen
+  document.querySelector(".to-map").addEventListener("click", () => {
+    try { sessionStorage.setItem("baldwin-skip-intro", "1"); } catch (e) {}
+  });
+  // the language switcher: a choice reloads the page (the map and Alexandria follow it too)
+  const lang = document.querySelector(".lang");
+  lang.querySelector(`[data-lang="${window.baldwinLang}"]`).classList.add("on");
+  lang.querySelector(".lang-btn").addEventListener("click", (e) => { e.stopPropagation(); lang.classList.toggle("open"); });
+  lang.querySelector(".lang-menu").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (b) window.baldwinSetLang(b.dataset.lang);
+  });
+  document.addEventListener("click", (e) => { if (!lang.contains(e.target)) lang.classList.remove("open"); });
+</script>
+<script src="viewer.js"></script>
+</body>
+</html>
