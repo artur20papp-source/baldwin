@@ -204,7 +204,7 @@
   }
 
   function render(p, parcelsBody) {
-    panel.innerHTML = `<button class="ds-close" title="${t("Zavřít", "Close", "Zavrieť")}">×</button>` + sheet(p, parcelsBody);
+    panel.innerHTML = `<button class="ds-close" title="${t("Zavřít", "Close", "Zavrieť")}"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>` + sheet(p, parcelsBody);
     panel.querySelector(".ds-close").addEventListener("click", close);
     panel.querySelector(".acre").addEventListener("click", (e) => exportAcre(p, e.currentTarget));
   }

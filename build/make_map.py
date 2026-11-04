@@ -512,9 +512,14 @@ STYLE = f"""
   .ds-panel.open {{ transform: none; }}
   .ds-panel::-webkit-scrollbar {{ width: 6px; }}
   .ds-panel::-webkit-scrollbar-thumb {{ background: #333333; border-radius: 3px; }}
-  .ds-close {{ position: absolute; top: 12px; right: 14px; background: none; border: none; color: {MUTED};
-              font-size: 22px; line-height: 1; cursor: pointer; }}
-  .ds-close:hover {{ color: {TEXT}; }}
+  /* the close button of every window (the area panel, the guide): a small round x tucked into the top
+     right corner, like Apple's */
+  .ds-close {{ position: absolute; z-index: 2; top: 8px; right: 8px; width: 16px; height: 16px; padding: 0; border: none;
+              border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+              background: rgba(255,255,255,.1); color: rgba(236,236,236,.6);
+              transition: transform .5s cubic-bezier(.16,1,.3,1), background .3s, color .3s; }}
+  .ds-close:hover {{ transform: scale(1.1); background: rgba(255,255,255,.18); color: {TEXT}; }}
+  .ds-close svg {{ width: 6px; height: 6px; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; fill: none; }}
   .ds-panel .deal .parcels {{ max-height: none; overflow: visible; margin-right: 0; padding-right: 0; }}
   .deal {{ font-size: 12px; color: {TEXT}; }}
   .deal .code {{ color: {UI}; font-size: 17px; font-weight: 600; letter-spacing: .03em; }}
@@ -724,16 +729,10 @@ STYLE = f"""
               opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.97); pointer-events: none;
               transition: opacity 1.1s cubic-bezier(.16,1,.3,1), transform 1.1s cubic-bezier(.16,1,.3,1); }}
   .ds-guide.on {{ opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }}
-  .ds-guide h4 {{ margin: 0 32px 14px 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }}
+  .ds-guide h4 {{ margin: 0 20px 14px 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }}
   .ds-guide ul {{ margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }}
   .ds-guide li {{ display: grid; grid-template-columns: 12px 1fr; gap: 8px; line-height: 1.4; color: rgba(236,236,236,.82); }}
   .ds-guide li::before {{ content: ""; width: 4px; height: 4px; margin-top: 7px; border-radius: 50%; background: rgba(236,236,236,.45); }}
-  /* a small round close button, top right */
-  .ds-guide .x {{ position: absolute; top: 16px; right: 16px; width: 24px; height: 24px; padding: 0; border: none; border-radius: 50%;
-                 display: grid; place-items: center; cursor: pointer; background: rgba(255,255,255,.1); color: rgba(236,236,236,.7);
-                 transition: transform .5s cubic-bezier(.16,1,.3,1), background .3s; }}
-  .ds-guide .x:hover {{ transform: scale(1.08); background: rgba(255,255,255,.16); }}
-  .ds-guide .x svg {{ width: 10px; height: 10px; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }}
 </style>
 <script>{I18N}</script>
 <div class="ds-menu">
@@ -817,13 +816,12 @@ STYLE = f"""
 </div>
 <div class="ds-mbrand"><b>BALDWIN</b> <span>PALANTIR</span></div>
 <div class="ds-guide" role="dialog">
-  <button class="x" aria-label="Close"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
-  <h4><span class="l-cs">Co tato mapa umí</span><span class="l-en">What this map does</span><span class="l-sk">Čo táto mapa dokáže</span></h4>
+  <button class="ds-close" aria-label="Close"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+  <h4><span class="l-cs">Co tato mapa přináší</span><span class="l-en">What this map brings</span><span class="l-sk">Čo táto mapa prináša</span></h4>
   <ul>
-    <li><span><span class="l-cs">Všechny rozvojové obytné plochy Prahy</span><span class="l-en">Every residential development area in Prague</span><span class="l-sk">Všetky rozvojové obytné plochy Prahy</span></span></li>
-    <li><span><span class="l-cs">Co se smí postavit · cena pozemku · doprava · záplavy</span><span class="l-en">What may be built · land price · transport · flood risk</span><span class="l-sk">Čo sa smie postaviť · cena pozemku · doprava · záplavy</span></span></li>
-    <li><span><span class="l-cs">Klik na plochu → parcely a vlastníci</span><span class="l-en">Click an area → its parcels and owners</span><span class="l-sk">Klik na plochu → parcely a vlastníci</span></span></li>
-    <li><span><span class="l-cs">Export → celý model v Baldwin Acre</span><span class="l-en">Export → a full appraisal in Baldwin Acre</span><span class="l-sk">Export → celý model v Baldwin Acre</span></span></li>
+    <li><span><span class="l-cs">Jasnější obraz dnešní Prahy: územní plán, ceny pozemků, doprava, záplavy</span><span class="l-en">A clearer picture of Prague today: zoning, land prices, transport, flood risk</span><span class="l-sk">Jasnejší obraz dnešnej Prahy: územný plán, ceny pozemkov, doprava, záplavy</span></span></li>
+    <li><span><span class="l-cs">Kde může město růst: každá rozvojová a transformační obytná plocha</span><span class="l-en">Where the city can grow: every residential development and transformation area</span><span class="l-sk">Kde môže mesto rásť: každá rozvojová a transformačná obytná plocha</span></span></li>
+    <li><span><span class="l-cs">Od plochy k prvnímu ocenění na pár kliknutí</span><span class="l-en">From an area to a first appraisal in a few clicks</span><span class="l-sk">Od plochy k prvému oceneniu na pár kliknutí</span></span></li>
   </ul>
 </div>
 <div class="ds-title ds-bar">
@@ -1163,7 +1161,7 @@ def build_map():
           }));
         };
         const guide = document.querySelector('.ds-guide');
-        guide.querySelector('.x').addEventListener('click', () => {
+        guide.querySelector('.ds-close').addEventListener('click', () => {
           guide.classList.remove('on');
           try { localStorage.setItem('baldwin-guide', '1'); } catch (e) {}
         });
