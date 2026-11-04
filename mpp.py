@@ -226,6 +226,10 @@ def load_bus_stops():
     return _pid_stations("bus")
 
 
+def load_train_stations():
+    return _pid_stations("train")
+
+
 def _gtfs_zip(max_age_days=7):
     """PID GTFS zip, downloaded into the cache and refreshed weekly (kept if a refresh fails)."""
     path = CACHE / "PID_GTFS.zip"

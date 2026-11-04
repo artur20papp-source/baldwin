@@ -74,14 +74,16 @@ The project has two parts:
 ### A6. River surfaces (Vltava) from ZABAGED
 - **Source:** ČÚZK ZABAGED (Základní báze geografických dat), layer "Vodní plocha" (flowing water,
   stojvoda = N), https://ags.cuzk.cz/arcgis/rest/services/ZABAGED_POLOHOPIS/MapServer/132, open data CC BY 4.0.
-- **Effect:** fills gaps in IPR's river drawing inside Prague. Visual only.
+- **How it is used:** the map draws only the Vltava, taken as the biggest connected piece of ZABAGED's
+  river surfaces in Prague (95 % of their area); small streams and ponds are left out. Visual only.
 
 ### A6b. Motorways and railways in Prague (ZABAGED)
 - **Source:** ČÚZK ZABAGED, layers "Silnice, dálnice" (only motorways: dálnice I. and II. třídy, incl. the
   Prague ring road D0; ramps left out) https://ags.cuzk.cz/arcgis/rest/services/ZABAGED_POLOHOPIS/MapServer/79
   and "Železniční trať" .../MapServer/75, open data CC BY 4.0, cut to Prague's city limits.
-- **How it is used:** two switches in the filter window, Motorways (grey, ~78 km) and Railways (dark
-  blue, ~218 km), to show which areas lie close to them.
+- **How it is used:** two switches in the filter window, Motorways (grey, ~78 km) and Railways (pink,
+  ~218 km), to show which areas lie close to them. The Railways switch also shows Prague's 42 train
+  stations from PID's stop list (A7), as small dots named with their lines on hover, from zoom 12.
 - **Effect:** context only; not an input of the appraisal.
 
 ### A7. Public transport: PID stops, metro stations, bus routes

@@ -11,7 +11,7 @@ from pathlib import Path
 import folium
 
 from mpp import (load_areas, load_bus_routes, load_bus_stops, load_localities, load_metro, load_motorways_rail,
-                 load_parks, load_rivers, load_trams, load_water)
+                 load_parks, load_rivers, load_train_stations, load_trams, load_water)
 from screening import add_screening
 
 OUT = Path(__file__).with_name("index.html")  # index.html so GitHub Pages serves it at the site root
@@ -171,6 +171,7 @@ STOP_COLORS = {"A": "#7fd8a2", "B": "#fbe07f", "C": "#f2918a"}  # same, lighter,
 TRAM, TRAM_STOP = "#ff9b2f", "#ffc98a"
 BUS, BUS_STOP = "#3d8bff", "#9cc4ff"
 TRAM_STOPS_FROM_ZOOM, BUS_STOPS_FROM_ZOOM = 13, 14  # stops only appear zoomed in, so they don't clutter
+METRO_STOPS_FROM_ZOOM = TRAIN_STOPS_FROM_ZOOM = 12  # metro and train stations a step earlier
 
 def tr(cs, en, sk):
     """A text in all three languages; the page's CSS shows the one chosen in the switcher (i18n.js)."""
@@ -792,8 +793,10 @@ def _dash_empty(features):
 
 
 def _add_metro(m, metro):
-    """One layer: lines A/B/C (glow on hover), the planned line D dashed, and one named dot per station."""
+    """One layer: lines A/B/C (glow on hover), the planned line D dashed, and one named dot per station.
+    The stations are their own sub-layer, shown only zoomed in. Returns (group, [(sub-layer, min zoom)])."""
     layer = folium.FeatureGroup(name=_label("Metro", "#e5352b", "A–D", "metro"), show=True)
+    dots = folium.FeatureGroup(control=False)
     folium.GeoJson(
         metro["planned"],
         style_function=lambda _: {"color": METRO_COLORS["D"], "weight": 3, "opacity": 0.95, "dashArray": "6 6"},
@@ -818,14 +821,16 @@ def _add_metro(m, metro):
                 icon=folium.DivIcon(
                     html=f'<div class="transfer" style="background:{rim}"><i style="background:{fill}"></i></div>',
                     icon_size=(12, 12), icon_anchor=(6, 6), class_name="transfer-icon"),
-            ).add_to(layer)
+            ).add_to(dots)
         else:
             line = s["lines"][0]
             folium.CircleMarker(
                 (s["lat"], s["lon"]), radius=4, weight=2, fill=True, fill_opacity=1,
                 color=METRO_COLORS[line], fill_color=STOP_COLORS[line], tooltip=tooltip,
-            ).add_to(layer)
+            ).add_to(dots)
+    dots.add_to(layer)
     layer.add_to(m)
+    return layer, [(dots, METRO_STOPS_FROM_ZOOM)]
 
 
 def _stop_dots(parent, stops, rim, fill, kind):
@@ -883,6 +888,8 @@ def _km(geo):
     total = 0.0
     for f in geo["features"]:
         g = f["geometry"]
+        if g["type"] not in ("LineString", "MultiLineString"):
+            continue  # stations
         for line in (g["coordinates"] if g["type"] == "MultiLineString" else [g["coordinates"]]):
             for (x1, y1), (x2, y2) in zip(line, line[1:]):
                 kx = 111.32 * math.cos(math.radians((y1 + y2) / 2))
@@ -911,6 +918,11 @@ def build_map():
     lines = _optional(load_motorways_rail, "motorways and railways (ZABAGED)")
     if lines:  # only inside Prague, like the rest of the map
         lines = tuple(_clip_lines(geo, prague) for geo in lines)
+        # the train stations (PID) ride along with the railways: small dots with the name and lines on hover
+        for st in _optional(load_train_stations, "train stations (PID)") or []:
+            more = "…" if len(st["lines"]) > 12 else ""
+            lines[1]["features"].append({"type": "Feature", "geometry": {"type": "Point", "coordinates": [st["lon"], st["lat"]]},
+                                         "properties": {"n": f'{st["name"]} · {", ".join(st["lines"][:12])}{more}'}})
     trams, buses = _optional(load_trams, "trams"), _optional(load_bus_stops, "bus stops")
     bus_routes = _optional(load_bus_routes, "bus routes")
 
@@ -934,20 +946,18 @@ def build_map():
         ).add_to(park_layer)
         park_layer.add_to(m)
 
-    # Water in blue so the Vltava stands out; not interactive, so hovering shows the locality under it.
-    # All 3,500 water shapes merged into one: the browser redraws every shape at the end of each zoom
-    # step, and thousands of tiny ponds made that redraw the jerk in zooming.
-    if water:
+    # Only the Vltava, in blue; the small streams and ponds were a distraction. ZABAGED's river surfaces
+    # carry no names in Prague, but the Vltava is by far their biggest connected piece (95 % of the area,
+    # 22 km through the city). IPR's water breaks the river into pieces, so it only stands in when ZABAGED
+    # is unavailable. Not interactive, so hovering shows the locality under it.
+    source = rivers or water
+    if source:
         from shapely.geometry import mapping
-        merged = unary_union([shape(f["geometry"]) for f in water["features"]])
-        water = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": mapping(merged)}]}
-        if rivers:  # under IPR's water, no outline: only shows where IPR's river has a gap
-            folium.GeoJson(
-                rivers, name="Řeky", control=False, interactive=False, smooth_factor=SMOOTH,
-                style_function=lambda _: {"weight": 0, "fillColor": WATER_FILL, "fillOpacity": 1},
-            ).add_to(m)
+        merged = unary_union([shape(f["geometry"]) for f in source["features"]])
+        vltava = max(getattr(merged, "geoms", [merged]), key=lambda part: part.area)
         folium.GeoJson(
-            water, name="Voda", control=False, interactive=False, smooth_factor=SMOOTH,
+            {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": mapping(vltava)}]},
+            name="Vltava", control=False, interactive=False, smooth_factor=SMOOTH,
             style_function=lambda _: {"color": WATER_EDGE, "weight": 0.8, "fillColor": WATER_FILL, "fillOpacity": 1},
         ).add_to(m)
 
@@ -971,7 +981,8 @@ def build_map():
         group, subs = _add_trams(m, trams)
         zoom_layers += [(group, sub, z) for sub, z in subs]
     if metro:
-        _add_metro(m, metro)
+        group, subs = _add_metro(m, metro)
+        zoom_layers += [(group, sub, z) for sub, z in subs]
 
     # RSJ headquarters as an easter egg: a barely visible dot that reveals a card with the logo on hover.
     # Straight on the map, so there's no layer toggle and the filter never touches it.
@@ -1062,7 +1073,7 @@ def build_map():
                 (lines[0], "motorways.geojson", tr("Dálnice", "Motorways", "Diaľnice"),
                  {"color": "#9a9a9a", "weight": 1.8, "opacity": 0.85}),
                 (lines[1], "rail.geojson", tr("Železnice", "Railways", "Železnice"),
-                 {"color": "#2f4f9e", "weight": 1.2})):  # dark blue
+                 {"color": "#e87ab4", "weight": 1.2, "stop": "#f6bcd9", "stopsFrom": TRAIN_STOPS_FROM_ZOOM})):  # pink: the one colour no other layer uses
             OUT.with_name(file).write_text(json.dumps(geo, separators=(",", ":")), encoding="utf-8")
             v = hashlib.sha1(OUT.with_name(file).read_bytes()).hexdigest()[:10]
             key = "motorway" if file.startswith("motorways") else "rail"
