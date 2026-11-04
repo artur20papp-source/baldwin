@@ -32,7 +32,10 @@
   .go .tx b { font-weight: 600; } .go .tx span { font-weight: 400; color: var(--muted); }
   .go:hover .tx { max-width: 260px; opacity: 1; transform: none; padding-right: 16px; }
   @media (hover: none) { .go:hover .tx { max-width: 0; opacity: 0; padding-right: 0; } }
-  .dl { padding: 0 12px; font: 500 11px Inter, Arial, sans-serif; letter-spacing: .04em; }
+  /* the download, at the bottom right beside the sheet tabs */
+  .foot { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--edge); }
+  .dl { gap: 8px; height: 28px; padding: 0 12px; font: 500 11px Inter, Arial, sans-serif; letter-spacing: .04em; }
+  .dl svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .l-cs, .l-en, .l-sk { display: none; }
   html[lang=cs] .l-cs, html[lang=en] .l-en, html[lang=sk] .l-sk { display: inline; }
   .lang { position: relative; }
@@ -64,12 +67,12 @@
   #grid .hc { top: 0; height: 18px; }
   #grid .hr { left: 0; width: 34px; }
   #grid .corner { top: 0; left: 0; z-index: 2; }
-  #tabs { display: flex; gap: 2px; padding: 6px 8px; border-top: 1px solid var(--edge); overflow-x: auto; }
+  #tabs { flex: 1; min-width: 0; display: flex; gap: 2px; overflow-x: auto; }
   #tabs button { flex-shrink: 0; height: 28px; padding: 0 12px; border: none; border-radius: 6px; cursor: pointer; background: none;
                  color: var(--muted); font: 500 11px Inter, Arial, sans-serif; }
   #tabs button.on { background: rgba(255,255,255,.08); color: var(--text); }
   .msg { padding: 40px; color: var(--muted); font-size: 12px; }
-  @media (max-width: 600px) { .brand { font-size: 12px; } .sub { display: none; } .dl { display: none; } .wrap { padding: 12px 8px 8px; } }
+  @media (max-width: 600px) { .brand { font-size: 12px; } .sub { display: none; } .dl span { display: none; } .dl { padding: 0 8px; } .wrap { padding: 12px 8px 8px; } }
 </style>
 </head>
 <body>
@@ -82,8 +85,6 @@
         class="l-sk">Šeberov 414/267/5033 · vzorový model · len na čítanie</span></div>
     </div>
     <div class="hr">
-      <a class="dl" id="download" download="Baldwin Acre - Šeberov 414-267-5033 (example).xlsx"><span class="l-cs">Stáhnout .xlsx</span><span
-        class="l-en">Download .xlsx</span><span class="l-sk">Stiahnuť .xlsx</span></a>
       <a class="go" href="../alexandria/" aria-label="Baldwin Alexandria">
         <span class="ic"><svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>
           <path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg></span>
@@ -107,7 +108,12 @@
     <div class="bar"><span id="ref"></span><span id="formula"></span></div>
     <div id="grid"><div class="msg"><span class="l-cs">Načítám model…</span><span class="l-en">Loading the model…</span><span
       class="l-sk">Načítavam model…</span></div></div>
-    <div id="tabs"></div>
+    <div class="foot">
+      <div id="tabs"></div>
+      <a class="dl" id="download" download="Baldwin Acre - Šeberov 414-267-5033 (example).xlsx">
+        <svg viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></svg>
+        <span class="l-cs">Stáhnout .xlsx</span><span class="l-en">Download .xlsx</span><span class="l-sk">Stiahnuť .xlsx</span></a>
+    </div>
   </div>
 </div>
 <script>
