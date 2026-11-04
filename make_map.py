@@ -10,8 +10,8 @@ from pathlib import Path
 
 import folium
 
-from mpp import (load_areas, load_bus_routes, load_bus_stops, load_localities, load_metro, load_parks,
-                 load_rivers, load_trams, load_water)
+from mpp import (load_areas, load_bus_routes, load_bus_stops, load_localities, load_metro, load_motorways_rail,
+                 load_parks, load_rivers, load_trams, load_water)
 from screening import add_screening
 
 OUT = Path(__file__).with_name("index.html")  # index.html so GitHub Pages serves it at the site root
@@ -20,6 +20,7 @@ FILTER_JS = Path(__file__).with_name("price_filter.js")
 SEARCH_JS = Path(__file__).with_name("search.js")
 SKY_JS = Path(__file__).with_name("sky.js")
 I18N_JS = Path(__file__).with_name("i18n.js")
+LINES_JS = Path(__file__).with_name("lines.js")
 SELECT_JS = Path(__file__).with_name("selection.js")
 DRAWER_JS = Path(__file__).with_name("drawer.js")
 LIGHTNING_JS = Path(__file__).with_name("lightning.js")
@@ -776,8 +777,10 @@ STYLE = f"""
 """
 
 
-def _label(name, color, count):
-    return f'<span class="swatch" style="background:{color}"></span>{name}<span class="count">{count}</span>'
+def _label(name, color, count, key=""):
+    """A layer switch's label; the key (metro, tram …) lets the filter window put the switches in order."""
+    return (f'<span class="swatch" data-k="{key}" style="background:{color}"></span>{name}'
+            f'<span class="count">{count}</span>')
 
 
 def _dash_empty(features):
@@ -790,7 +793,7 @@ def _dash_empty(features):
 
 def _add_metro(m, metro):
     """One layer: lines A/B/C (glow on hover), the planned line D dashed, and one named dot per station."""
-    layer = folium.FeatureGroup(name=_label("Metro", "#e5352b", "A–D"), show=True)
+    layer = folium.FeatureGroup(name=_label("Metro", "#e5352b", "A–D", "metro"), show=True)
     folium.GeoJson(
         metro["planned"],
         style_function=lambda _: {"color": METRO_COLORS["D"], "weight": 3, "opacity": 0.95, "dashArray": "6 6"},
@@ -839,7 +842,7 @@ def _stop_dots(parent, stops, rim, fill, kind):
 
 def _add_trams(m, trams):
     """Tram tracks in orange, with tram stops. Returns (group, [(sub-layer, min zoom)])."""
-    group = folium.FeatureGroup(name=_label(tr("Tramvaje", "Trams", "Električky"), TRAM, len(trams["stops"])), show=True)
+    group = folium.FeatureGroup(name=_label(tr("Tramvaje", "Trams", "Električky"), TRAM, len(trams["stops"]), "tram"), show=True)
     folium.GeoJson(
         trams["tracks"], interactive=False, smooth_factor=SMOOTH,
         style_function=lambda _: {"color": TRAM, "weight": 1.6, "opacity": 0.85},
@@ -851,7 +854,7 @@ def _add_trams(m, trams):
 
 def _add_buses(m, stops, routes):
     """Bus routes and stops in blue, both only when zoomed in. Returns (group, [(sub-layer, min zoom)])."""
-    group = folium.FeatureGroup(name=_label(tr("Autobusy", "Buses", "Autobusy"), BUS, len(stops)), show=True)
+    group = folium.FeatureGroup(name=_label(tr("Autobusy", "Buses", "Autobusy"), BUS, len(stops), "bus"), show=True)
     zoomed = []
     if routes:
         lines = folium.GeoJson(
@@ -861,6 +864,19 @@ def _add_buses(m, stops, routes):
     zoomed.append((_stop_dots(group, stops, BUS, BUS_STOP, "bus"), BUS_STOPS_FROM_ZOOM))
     group.add_to(m)
     return group, zoomed
+
+
+def _km(geo):
+    """Total length of a line GeoJSON in whole km (equirectangular, plenty for a label)."""
+    import math
+    total = 0.0
+    for f in geo["features"]:
+        g = f["geometry"]
+        for line in (g["coordinates"] if g["type"] == "MultiLineString" else [g["coordinates"]]):
+            for (x1, y1), (x2, y2) in zip(line, line[1:]):
+                kx = 111.32 * math.cos(math.radians((y1 + y2) / 2))
+                total += math.hypot((x2 - x1) * kx, (y2 - y1) * 110.57)
+    return round(total)
 
 
 def _optional(load, what):
@@ -881,6 +897,7 @@ def build_map():
     from shapely.ops import unary_union
     prague = unary_union([shape(f["geometry"]).buffer(0) for f in localities["features"]])
     rivers = _optional(lambda: load_rivers(prague), "river (ZABAGED)")
+    lines = _optional(load_motorways_rail, "motorways and railways (ZABAGED)")
     trams, buses = _optional(load_trams, "trams"), _optional(load_bus_stops, "bus stops")
     bus_routes = _optional(load_bus_routes, "bus routes")
 
@@ -896,7 +913,7 @@ def build_map():
     # Parks before the water: some park outlines reach over the Vltava and would cover it.
     park_geo = None
     if parks:
-        park_layer = folium.FeatureGroup(name=_label(tr("Parky", "Parks", "Parky"), "#33363d", len(parks["features"])), show=True)
+        park_layer = folium.FeatureGroup(name=_label(tr("Parky", "Parks", "Parky"), "#33363d", len(parks["features"]), "parks"), show=True)
         park_geo = folium.GeoJson(
             parks, smooth_factor=SMOOTH,
             style_function=lambda _: {"color": PARK, "weight": 0, "fillColor": PARK, "fillOpacity": 1},
@@ -965,7 +982,8 @@ def build_map():
         name="Parcely", attr="© ČÚZK", overlay=True, control=False, opacity=0.55, min_zoom=17, max_zoom=21,
     ).add_to(m)
 
-    folium.LayerControl(collapsed=False).add_to(m)
+    control = folium.LayerControl(collapsed=False)
+    control.add_to(m)
     m.get_root().header.add_child(folium.Element("<title>Baldwin Palantir</title>"))
     m.get_root().html.add_child(folium.Element(STYLE))
     # start screen: clicking the orb (or pressing Enter) fades it away into the map
@@ -1024,6 +1042,21 @@ def build_map():
               .replace("__AIRPORT__", json.dumps(AIRPORT)).replace("__PLANE__", json.dumps(PLANE))
               .replace("__FLIGHTS__", json.dumps(FLIGHTS)).replace("__SKY_ZOOM__", str(SKY_ZOOM)))
     park_js = f"{park_geo.get_name()}.bringToBack();" if park_geo else ""
+    # motorways and railways: written as their own files beside the page, loaded by lines.js
+    line_layers = []
+    if lines:
+        for geo, file, label, style in (
+                (lines[0], "motorways.geojson", tr("Dálnice", "Motorways", "Diaľnice"),
+                 {"color": "#9a9a9a", "weight": 1.8, "opacity": 0.85}),
+                (lines[1], "rail.geojson", tr("Železnice", "Railways", "Železnice"),
+                 {"color": "#2f4f9e", "weight": 1.1, "dashArray": "2 3"})):  # dark blue, dashed like a track
+            OUT.with_name(file).write_text(json.dumps(geo, separators=(",", ":")), encoding="utf-8")
+            v = hashlib.sha1(OUT.with_name(file).read_bytes()).hexdigest()[:10]
+            key = "motorway" if file.startswith("motorways") else "rail"
+            line_layers.append({"file": f"{file}?v={v}", "style": style,
+                                "label": _label(label, style["color"], f"{_km(geo):,} km".replace(",", " "), key)})
+    lines_js = (LINES_JS.read_text(encoding="utf-8").replace("__MAP__", name).replace("__CONTROL__", control.get_name())
+                .replace("__LAYERS__", json.dumps(line_layers, ensure_ascii=False))) if line_layers else ""
     zoom_js = "\n".join(
         f"if (z >= {z}) {g.get_name()}.addLayer({s.get_name()}); else {g.get_name()}.removeLayer({s.get_name()});"
         for g, s, z in zoom_layers)
@@ -1044,7 +1077,8 @@ def build_map():
         {name}.on('zoomend', byZoom);
         byZoom();
         // a layer switched back on is drawn on top; keep parks and the city under the water and the rest
-        {name}.on('overlayadd', () => {{ {park_js} {city.get_name()}.bringToBack(); }});
+        window.baldwinCityBack = () => {{ {park_js} {city.get_name()}.bringToBack(); }};
+        {name}.on('overlayadd', () => {{ window.baldwinLinesBack && window.baldwinLinesBack(); window.baldwinCityBack(); }});
         // RSJ card opens to the left when it would run into the panels on the right
         const rightPanels = document.querySelector('.leaflet-top.leaflet-right');
         document.querySelectorAll('.hq').forEach((el) => el.addEventListener('mouseenter', () => {{
@@ -1060,6 +1094,7 @@ def build_map():
         {filter_js}
         {search_js}
         {select_js}
+        {lines_js}
         {drawer_js}
         {sky_js}
     }});"""))

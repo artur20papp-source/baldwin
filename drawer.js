@@ -12,10 +12,15 @@
     const el = map.getContainer().querySelector(sel);
     if (el) drawer.appendChild(el);
   }
-  // parks last among the layer switches (they are drawn first, under everything, but matter least)
+  // the switches in order: the areas first, then transport from metro to rail, parks last
+  const ORDER = ["metro", "tram", "bus", "motorway", "rail", "parks"];
   const overlays = drawer.querySelector(".leaflet-control-layers-overlays");
-  const parks = overlays && [...overlays.children].find((l) => /Parky/.test(l.textContent));
-  if (parks) overlays.appendChild(parks);
+  if (overlays) {
+    for (const key of ORDER) {
+      const row = [...overlays.children].find((l) => l.querySelector(`[data-k="${key}"]`));
+      if (row) overlays.appendChild(row);
+    }
+  }
   // the data credits the licences (CC BY) ask for, here instead of a line across the bottom of the map
   const credits = document.createElement("div");
   credits.className = "ds-credits";
