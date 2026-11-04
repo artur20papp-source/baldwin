@@ -306,9 +306,11 @@ STYLE = f"""
                 filter: blur(5px); transition: opacity .6s ease; }}
   /* entering: we fly into the orb. It swells until it fills the screen while its glass fades, and Prague
      is inside it, small at first, unfolding to full size; then the controls slide in. The slow start of
-     the curve hides the one heavy frame where the browser prepares the big orb */
-  .ds-menu.gone .orb {{ transform: scale(6); opacity: 0;
-                       transition: transform 2.8s cubic-bezier(.55,0,.15,1), opacity 1.1s cubic-bezier(.45,0,.25,1) 1.5s; }}
+     the curve hides the one heavy frame where the browser prepares the big orb. It grows only to about 3×:
+     at 6× the browser had to paint its fire effects 1,440 px wide, piece by piece, which stuttered just
+     before the map appeared */
+  .ds-menu.gone .orb {{ transform: scale(3.2); opacity: 0;
+                       transition: transform 2.6s cubic-bezier(.55,0,.15,1), opacity 1.2s cubic-bezier(.45,0,.25,1) 1s; }}
   .ds-menu.gone .orb-halo {{ opacity: 0; transition: opacity .9s ease; }}
   /* the orb's light floods the screen: a ready-made full-screen glow that only fades in (growing the
      room glow instead made the browser re-render it at four times the size, which stuttered) */
