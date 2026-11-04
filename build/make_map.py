@@ -726,12 +726,19 @@ STYLE = f"""
               padding: 22px 24px 22px; border-radius: 20px; color: {TEXT}; font: 13px 'Hanken Grotesk', Arial, sans-serif;
               background: rgba(28,28,30,.55); backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6);
               border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.45);
-              opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.97); pointer-events: none;
-              transition: opacity 1.1s cubic-bezier(.16,1,.3,1), transform 1.1s cubic-bezier(.16,1,.3,1); }}
+              opacity: 0; transform: translate(-50%, calc(-50% + 28px)) scale(.86); pointer-events: none;
+              transition: opacity .7s ease, transform 1.1s cubic-bezier(.34,1.45,.5,1); }}
   .ds-guide.on {{ opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }}
+  .ds-guide h4, .ds-guide li {{ opacity: 0; transform: translateY(10px); filter: blur(6px);
+                               transition: opacity .8s ease, transform .9s cubic-bezier(.16,1,.3,1), filter .8s ease; }}
+  .ds-guide.on h4, .ds-guide.on li {{ opacity: 1; transform: none; filter: none; }}
+  .ds-guide.on h4 {{ transition-delay: .25s; }}
+  .ds-guide.on li:nth-child(1) {{ transition-delay: .45s; }}
+  .ds-guide.on li:nth-child(2) {{ transition-delay: .6s; }}
+  .ds-guide.on li:nth-child(3) {{ transition-delay: .75s; }}
   .ds-guide h4 {{ margin: 0 20px 14px 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }}
   .ds-guide ul {{ margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }}
-  .ds-guide li {{ display: grid; grid-template-columns: 12px 1fr; gap: 8px; line-height: 1.4; color: rgba(236,236,236,.82); }}
+  .ds-guide li {{ display: grid; grid-template-columns: 4px 1fr; gap: 10px; line-height: 1.4; color: rgba(236,236,236,.82); }}
   .ds-guide li::before {{ content: ""; width: 4px; height: 4px; margin-top: 7px; border-radius: 50%; background: rgba(236,236,236,.45); }}
 </style>
 <script>{I18N}</script>
@@ -817,7 +824,7 @@ STYLE = f"""
 <div class="ds-mbrand"><b>BALDWIN</b> <span>PALANTIR</span></div>
 <div class="ds-guide" role="dialog">
   <button class="ds-close" aria-label="Close"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
-  <h4><span class="l-cs">Co tato mapa přináší</span><span class="l-en">What this map brings</span><span class="l-sk">Čo táto mapa prináša</span></h4>
+  <h4><span class="l-cs">Co přináší Baldwin Palantir</span><span class="l-en">What Baldwin Palantir brings</span><span class="l-sk">Čo prináša Baldwin Palantir</span></h4>
   <ul>
     <li><span><span class="l-cs">Jasnější obraz dnešní Prahy: územní plán, ceny pozemků, doprava, záplavy</span><span class="l-en">A clearer picture of Prague today: zoning, land prices, transport, flood risk</span><span class="l-sk">Jasnejší obraz dnešnej Prahy: územný plán, ceny pozemkov, doprava, záplavy</span></span></li>
     <li><span><span class="l-cs">Kde může město růst: každá rozvojová a transformační obytná plocha</span><span class="l-en">Where the city can grow: every residential development and transformation area</span><span class="l-sk">Kde môže mesto rásť: každá rozvojová a transformačná obytná plocha</span></span></li>
