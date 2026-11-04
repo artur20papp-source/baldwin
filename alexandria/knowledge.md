@@ -51,9 +51,9 @@ The project has two parts:
   Example Šeberov 414/267/5033: 16,670 Kč/m² (in the area).
 - **Effect on calculations:** the export puts it into **Sell price (incl. VAT)** (Inputs C16), the price
   serviced plots sell for. Revenue = plot area × sell price, so it moves revenue, VAT, selling costs,
-  profit and IRR directly; and because the model sets the **land purchase price as 35 % of the sell
-  price**, it also moves the land cost (about 85 % of total cost in the Šeberov example). It is a
-  regulated price of building land, not a transaction price.
+  profit and IRR directly. The land purchase price is a separate input (Inputs C17, 5,950 Kč/m²), so
+  the sell price no longer moves the land cost. It is a regulated price of building land, not a
+  transaction price.
 - **Also used in the map:** the price filter and the value estimates in the selection window
   (výměra × price).
 
@@ -116,7 +116,7 @@ Values are the Šeberov worked example (area 414/267/5033). Cell = Inputs sheet.
 | Plot size (C9) | 700 m² | typical Prague family-house plot | assumption |
 | Max house footprint (C11) | 35 % of plot | design choice; the map's export uses the plan's Zz instead (20 % in Šeberov) | assumption |
 | Sell price incl. VAT (C16) | 17,000 Kč/m² | Prague price map (16,670 Kč/m² in the area) and Sreality listings; MAX Reality puts the average Prague plot at ~20,400 Kč/m² (June 2026) | sourced, verify |
-| Land price as % of sell price (C17) | 35 % | rule of thumb (20–35 %) | **assumption** |
+| Land price (C17) | 5,950 Kč/m² of site | fixed purchase price; set at 35 % of the 17,000 Kč/m² plot price as a rule of thumb (20–35 %) | **assumption** |
 | Purchase costs (C18) | 1 % of land price | | assumption |
 | Infrastructure (C21) | 1,100 Kč per m² of plot | zasitovanipozemku.cz ("průměrně cca 1 100 Kč/m²" for a whole development; it does not say clearly whether per m² of plot or of site); cross-checked with banky.cz mains costs and a ČVUT thesis on servicing costs | sourced, verify |
 | ZPF coefficient (C22) | 11 | zákon č. 334/1992 Sb. (farmland protection), annex: coefficient for soil protection class I; Šeberov's soil assumed class I | sourced (class assumed) |
@@ -154,15 +154,15 @@ Values are the Šeberov worked example (area 414/267/5033). Cell = Inputs sheet.
 **Land subdivision (sheet Analysis), Šeberov results in brackets:**
 - Number of plots = ROUNDDOWN(site area × usable share ÷ plot size) (89 plots)
 - Plot area sold = plots × plot size (62,300 m²)
-- Land price per m² = sell price × land % (5,950 Kč/m²); land price = that × **site area** (≈ 535 M Kč)
+- Land price per m² = Inputs C17 (5,950 Kč/m², a fixed input); land price = that × **site area** (≈ 535 M Kč)
 - Infrastructure = plot area × 1,100 (68.5 M); ZPF levy = plot area × coefficient × base rate (10.3 M)
 - Permits, contingency, surveys = % of infrastructure; management fee = % of the development subtotal;
   holding = per period × periods
 - Revenue = plot area × sell price; VAT = revenue × 21/121; selling costs = 3 % of net revenue
 - Profit = net sale proceeds − total cost (214.4 M; margin 24.5 %; profit on cost 33.8 %)
 - Cash flows by year → **IRR 8.1 %**, **NPV at 12 % = −76.4 M Kč**: profitable, but below the return an
-  investor would require. Land is ~85 % of total cost, so the land price (35 % of sell price) and the
-  sell price are the inputs that matter most.
+  investor would require. Land is ~85 % of total cost, so the land price and the sell price are the
+  inputs that matter most; they are separate inputs and are tested separately.
 - The sensitivity grid shows IRR for sell prices 15,000 / 17,000 / 19,000 Kč/m² against land prices
   4,500 / 5,950 / 7,500 Kč/m².
 
@@ -186,7 +186,7 @@ inputs stay empty, because they are assumptions about the project, not facts abo
 
 ## Part D: known limits
 - The price map is a regulated price of building land; fields are often unpriced, hence the 500 m fallback.
-- The 35 % land share is the weakest assumption and dominates the result.
+- The land price (5,950 Kč/m², set as 35 % of the plot price) is the weakest assumption and dominates the result.
 - ZPF base rate and coefficient are estimates until the parcels' BPEJ codes are read from the cadastre.
 - Distances are straight lines, not walking routes.
 - Owner names are not collected automatically (the cadastre requires a person to look them up).
