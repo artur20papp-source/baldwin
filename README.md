@@ -14,6 +14,7 @@ Available in English, Czech and Slovak.
 
 ### The names
 
+- **Baldwin.** The name of the crusader kings of Jerusalem: five of them ruled between 1100 and 1186. The first, Baldwin I, took the port of Acre in 1104 and built a kingdom along a coast whose harbours traded with Alexandria and the whole eastern Mediterranean. The project takes the name for its three parts: a view over the land, its measure and money, and its library.
 - **Palantir.** In Tolkien's *The Lord of the Rings* the *palantíri* are the seeing-stones: crystal orbs through which their keepers watch distant lands. The map is that stone for Prague: one view over every development area of the city, which is why it opens with an orb.
 - **Acre.** Two meanings at once. The acre is the old measure of land, from the Old English *æcer*, a field. And Acre (Akko) is the ancient port city on the coast of the Holy Land, taken in 1104 by King Baldwin I of Jerusalem and later the capital of the crusader kingdom, the place where its trade and money came ashore. Baldwin Acre is the part that measures land in money: what a site costs, what it earns and whether it pays.
 - **Alexandria.** The Library of Alexandria set out to hold all the knowledge of its time, and the Pharos, the lighthouse of Alexandria, guided ships into its harbour. Baldwin Alexandria is the project's library: every source, every assumption and how it moves the results, behind a lighthouse icon.
