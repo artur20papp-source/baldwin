@@ -191,9 +191,9 @@ GLASS = ("background: rgba(16,16,16,.5); backdrop-filter: blur(14px) saturate(1)
 
 I18N = I18N_JS.read_text(encoding="utf-8")  # inlined at the top of the page, before every other script
 STYLE = f"""
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  .leaflet-container {{ background: {BACKGROUND}; font-family: Inter, Arial, sans-serif; }}
+  .leaflet-container {{ background: {BACKGROUND}; font-family: 'Hanken Grotesk', Arial, sans-serif; }}
   .leaflet-interactive:focus {{ outline: none; }}
 
   /* start screen: a black palantír in the middle; click it to enter the map */
@@ -333,7 +333,7 @@ STYLE = f"""
      (its name slides out to the right from behind it on hover) */
   .ds-bar {{ position: fixed; top: 8px; left: 8px; right: 8px; height: 56px; z-index: 9999; box-sizing: border-box;
             padding: 0 8px; display: flex; align-items: center; gap: 12px;
-            border-radius: 10px; font-family: Inter, Arial, sans-serif; {GLASS} }}
+            border-radius: 10px; font-family: 'Hanken Grotesk', Arial, sans-serif; {GLASS} }}
   .ds-brand {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none;
               display: flex; align-items: baseline; gap: 12px; font-size: 15px; letter-spacing: .42em; white-space: nowrap;
               margin-right: -.42em; }}  /* the last letter's spacing would push the name off centre */
@@ -374,11 +374,11 @@ STYLE = f"""
                    stroke: {MUTED}; fill: none; stroke-width: 2; pointer-events: none; }}
   .ds-search input {{ width: 100%; height: 34px; box-sizing: border-box; padding: 0 34px 0 36px; border-radius: 6px;
                      border: 1px solid transparent; background: rgba(255,255,255,.07); color: {TEXT};
-                     font: 400 12.5px Inter, Arial, sans-serif; outline: none; transition: border-color .2s, background .2s; }}
+                     font: 400 12.5px 'Hanken Grotesk', Arial, sans-serif; outline: none; transition: border-color .2s, background .2s; }}
   .ds-search input::placeholder {{ color: {MUTED}; }}
   .ds-search input:focus {{ border-color: rgba(255,255,255,.4); background: rgba(255,255,255,.1); }}
   .ds-search kbd {{ position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 1px 6px;
-                   border-radius: 4px; border: 1px solid rgba(255,255,255,.14); color: {MUTED}; font: 500 10px Inter, Arial; }}
+                   border-radius: 4px; border: 1px solid rgba(255,255,255,.14); color: {MUTED}; font: 500 10px 'Hanken Grotesk', Arial; }}
   .ds-results {{ display: none; position: absolute; top: calc(100% + 12px); left: 0; width: 380px; max-height: 60vh;
                 padding: 6px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; {GLASS} background: rgba(16,16,16,.72);
                 scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
@@ -438,11 +438,11 @@ STYLE = f"""
              animation: pulse 2.4s ease-in-out infinite; }}
   @keyframes pulse {{ 0%, 100% {{ transform: scale(.75); opacity: 1; }} 50% {{ transform: scale(1.35); opacity: .45; }} }}
   .ap-badge {{ position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); padding: 6px 12px; border-radius: 999px;
-              background: {ACCENT}; color: {BACKGROUND}; font: 800 13px Inter, Arial, sans-serif; letter-spacing: .22em;
+              background: {ACCENT}; color: {BACKGROUND}; font: 800 13px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .22em;
               box-shadow: 0 0 0 3px rgba(255,255,255,.85), 0 0 26px {ACCENT}; }}
   .ap-name {{ position: absolute; left: 0; top: 22px; transform: translateX(-50%); white-space: nowrap; padding: 3px 9px;
              border-radius: 999px; background: rgba(255,255,255,.85); color: #1d2b45;
-             font: 600 9px Inter, Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; }}
+             font: 600 9px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; }}
   .plane {{ position: absolute; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px;
            offset-rotate: auto 90deg; animation: fly 7s ease-in infinite; opacity: 0; }}
   .plane svg {{ width: 22px; height: 22px; fill: #24324a; filter: drop-shadow(0 0 2px #ffffff) drop-shadow(0 4px 6px rgba(0,0,0,.25)); }}
@@ -467,7 +467,7 @@ STYLE = f"""
   .hq.left .hq-card {{ left: auto; right: 30px; transform-origin: right center; }}
   .hq:hover .hq-card {{ opacity: 1; transform: none; }}
   .hq-logo svg {{ display: block; width: 44px; height: 44px; border-radius: 8px; }}
-  .hq-text {{ font-family: Inter, Arial, sans-serif; line-height: 1.35; }}
+  .hq-text {{ font-family: 'Hanken Grotesk', Arial, sans-serif; line-height: 1.35; }}
   .hq-text small {{ display: block; font-size: 9px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase;
                    color: {MUTED}; }}
   .hq-text b {{ display: block; margin-top: 3px; font-size: 13px; font-weight: 600; color: {TEXT}; }}
@@ -475,7 +475,7 @@ STYLE = f"""
 
   /* price filter, stacked under the layer panel */
   .ds-filter {{ width: 240px; padding: 14px 16px; border-radius: 10px; color: {TEXT}; {GLASS}
-               font-family: Inter, Arial, sans-serif; }}
+               font-family: 'Hanken Grotesk', Arial, sans-serif; }}
   .ds-filter .ft {{ font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
   .ds-filter .fv {{ display: block; margin-top: 6px; font-size: 13px; letter-spacing: 0; text-transform: none;
                    color: {UI}; font-variant-numeric: tabular-nums; }}
@@ -497,7 +497,7 @@ STYLE = f"""
   .ds-panel {{ position: fixed; top: 72px; left: 8px; bottom: 8px; width: 390px; z-index: 9998;
               overflow-y: auto; padding: 22px 22px 18px; border-radius: 10px; {GLASS}
               transform: translateX(-120%); transition: transform .55s cubic-bezier(.22,1,.36,1); will-change: transform;
-              font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
+              font-family: 'Hanken Grotesk', Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .ds-panel.open {{ transform: none; }}
   .ds-panel::-webkit-scrollbar {{ width: 6px; }}
   .ds-panel::-webkit-scrollbar-thumb {{ background: #333333; border-radius: 3px; }}
@@ -542,11 +542,11 @@ STYLE = f"""
 
   /* selection window (land assembly), bottom right */
   .ds-select {{ width: 310px; padding: 12px 14px; border-radius: 10px; color: {TEXT}; {GLASS}
-               font-family: Inter, Arial, sans-serif; }}
+               font-family: 'Hanken Grotesk', Arial, sans-serif; }}
   .ds-select .sh {{ display: flex; align-items: center; justify-content: space-between; }}
   .ds-select .ft {{ font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
   .ds-select .seg {{ display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.05); }}
-  .ds-select .seg button {{ border: none; background: none; color: {MUTED}; font: 500 11px Inter, Arial, sans-serif;
+  .ds-select .seg button {{ border: none; background: none; color: {MUTED}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif;
                            padding: 4px 12px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }}
   .ds-select .seg button:hover {{ color: {TEXT}; }}
   .ds-select .seg button.on {{ background: {PURPLE}; color: #0d0d0d; }}
@@ -563,11 +563,11 @@ STYLE = f"""
   .ds-select .x {{ border: none; background: none; color: {MUTED}; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; }}
   .ds-select .x:hover {{ color: {TEXT}; }}
   .ds-select .clear {{ margin-top: 12px; width: 100%; padding: 7px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
-                      background: none; color: {TEXT}; font: 500 11px Inter, Arial, sans-serif; cursor: pointer; }}
+                      background: none; color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif; cursor: pointer; }}
   .ds-select .clear:hover {{ background: rgba(255,255,255,.05); }}
   /* Export to Acre: the one filled button, in the selection window and the deal sheet */
   .ds-select .acre, .deal .acre {{ margin-top: 12px; width: 100%; padding: 8px; border-radius: 8px; border: none;
-                                  background: {UI}; color: #0d0d0d; font: 600 11px Inter, Arial, sans-serif;
+                                  background: {UI}; color: #0d0d0d; font: 600 11px 'Hanken Grotesk', Arial, sans-serif;
                                   letter-spacing: .06em; cursor: pointer; transition: filter .15s; }}
   .ds-select .acre:hover, .deal .acre:hover {{ filter: brightness(1.1); }}
   .ds-select .acre:disabled, .deal .acre:disabled {{ filter: grayscale(.6); cursor: progress; }}
@@ -591,7 +591,7 @@ STYLE = f"""
                border-radius: 10px; transform-origin: top left;
                opacity: 0; visibility: hidden; transform: translateY(-10px) scale(.92);
                transition: opacity .3s ease, transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s;
-               font-family: Inter, Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
+               font-family: 'Hanken Grotesk', Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .drawer-open .ds-drawer {{ opacity: 1; visibility: visible; transform: none;
                             transition: opacity .3s ease, transform .55s cubic-bezier(.22,1,.36,1), visibility 0s; }}
   .ds-drawer > * {{ opacity: 0; transform: translateY(8px);
@@ -642,9 +642,9 @@ STYLE = f"""
 
   .leaflet-control-scale {{ margin: 0 0 14px 16px !important; }}
   .leaflet-control-scale-line {{ background: none; color: {MUTED}; border: 1px solid rgba(255,255,255,.35); border-top: none;
-                                padding: 0 6px 2px; font: 500 10px Inter, Arial, sans-serif; letter-spacing: .08em; text-shadow: none; }}
+                                padding: 0 6px 2px; font: 500 10px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em; text-shadow: none; }}
   .leaflet-control-attribution {{ background: transparent !important; color: #5a5a5a; margin: 0 16px 12px 0 !important;
-                                 font: 400 10px Inter, Arial, sans-serif; letter-spacing: .02em; }}
+                                 font: 400 10px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .02em; }}
   .leaflet-control-attribution a {{ color: #7a7a7a; text-decoration: none; }}
   .leaflet-control-attribution a:hover {{ color: {TEXT}; }}
   /* languages: every static text is there three times, the chosen one shows */
@@ -659,7 +659,7 @@ STYLE = f"""
   /* the language switcher at the far right of the bar; its list unfolds under it */
   .ds-lang {{ position: relative; }}
   .ds-lang-btn {{ width: 34px; height: 34px; padding: 0; border: none; border-radius: 6px; cursor: pointer;
-                 background: rgba(255,255,255,.07); color: {TEXT}; font: 500 11px Inter, Arial, sans-serif; letter-spacing: .08em;
+                 background: rgba(255,255,255,.07); color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em;
                  transition: transform .5s cubic-bezier(.16,1,.3,1); }}
   .ds-lang-btn:hover {{ transform: scale(1.03); }}
   .ds-lang-menu {{ position: absolute; top: calc(100% + 12px); right: 0; min-width: 150px; padding: 6px; box-sizing: border-box;
@@ -669,7 +669,7 @@ STYLE = f"""
   .ds-lang.open .ds-lang-menu {{ opacity: 1; visibility: visible; transform: none;
                                 transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s; }}
   .ds-lang-menu button {{ display: flex; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; border-radius: 6px;
-                         background: none; color: {MUTED}; font: 400 12px Inter, Arial, sans-serif; cursor: pointer; text-align: left; }}
+                         background: none; color: {MUTED}; font: 400 12px 'Hanken Grotesk', Arial, sans-serif; cursor: pointer; text-align: left; }}
   .ds-lang-menu button:hover {{ background: rgba(255,255,255,.07); color: {TEXT}; }}
   .ds-lang-menu button.on {{ color: {TEXT}; font-weight: 500; }}
   .ds-lang-menu button small {{ font-size: 10px; letter-spacing: .08em; color: {MUTED}; }}
