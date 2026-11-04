@@ -170,7 +170,7 @@ FLIGHTS = ["M0,0 C60,-20 140,-60 260,-150", "M0,0 C-70,25 -160,40 -290,10",
            "M0,0 C40,30 120,60 230,170", "M0,0 C-30,-40 -80,-110 -120,-230"]
 
 WATER_FILL, WATER_EDGE = "#2b66a0", "#4a8fd6"
-SMOOTH = 1.5  # Leaflet may simplify outlines by this many screen pixels while drawing: invisible, faster zooms
+SMOOTH = 0  # the shapes are simplified when the site is built, so Leaflet needn't simplify them again at every zoom step
 
 METRO_COLORS = {"A": "#1fa65a", "B": "#f6c21c", "C": "#e5352b", "D": "#3b8ef0"}  # official line colours
 STOP_COLORS = {"A": "#7fd8a2", "B": "#fbe07f", "C": "#f2918a"}  # same, lighter, for the stops
@@ -710,6 +710,9 @@ STYLE = f"""
       backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(13,13,13,.92) !important; }}
   }}
   .ds-drawer, .ds-panel {{ will-change: transform, opacity; }}  /* their own layer, ready before they move */
+  /* during a zoom the glass skips its blur: blurring the moving map underneath costs every frame */
+  .zooming .ds-bar, .zooming .ds-drawer, .zooming .ds-panel, .zooming .ds-results {{
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background-color: rgba(16,16,16,.86) !important; }}
   /* with the filter window open the area panel sits to its right instead of behind it */
   @media (min-width: 701px) {{ .drawer-open .ds-panel {{ left: 336px; }} }}
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
@@ -925,6 +928,23 @@ def _add_buses(m, stops, routes):
     return group, zoomed
 
 
+def _box(feature):
+    """[south, west, north, east] of a feature, rounded to ~1 m, for flying the map to it."""
+    from shapely.geometry import shape
+    w, south, e, north = shape(feature["geometry"]).bounds
+    return [round(south, 5), round(w, 5), round(north, 5), round(e, 5)]
+
+
+def _simplify(geo, tolerance):
+    """A polygon GeoJSON with fewer corner points (tolerance in degrees; 0.00001 ≈ 1 m in Prague)."""
+    from shapely.geometry import mapping, shape
+    out = []
+    for f in geo["features"]:
+        g = shape(f["geometry"]).simplify(tolerance, preserve_topology=True)
+        out.append({**f, "geometry": mapping(g) if not g.is_empty else f["geometry"]})
+    return {**geo, "features": out}
+
+
 def _clip_lines(geo, inside):
     """A line GeoJSON cut to the parts inside a shape (here Prague's outline)."""
     from shapely.geometry import mapping, shape
@@ -979,24 +999,46 @@ def build_map():
                                          "properties": {"n": f'{st["name"]} · {", ".join(st["lines"][:12])}{more}'}})
     trams, buses = _optional(load_trams, "trams"), _optional(load_bus_stops, "bus stops")
     bus_routes = _optional(load_bus_routes, "bus routes")
+    # Fewer corner points, so each zoom step is quick: the browser recomputes every point at every zoom
+    # (263,000 of them froze the page for ~105 ms per step). Corners closer than about 1.5 m on the areas and
+    # 3 m on the background never show at any zoom; measurements (area, prices, distances) are done already.
+    areas = _simplify(areas, 0.00002)
+    localities = _simplify(localities, 0.00004)
+    parks = _simplify(parks, 0.00008) if parks else parks
 
     m = folium.Map(location=[50.075, 14.46], zoom_start=11, tiles=None, zoom_control=False)
 
-    # Prague itself: dark neighbourhoods with faint borders (not a toggleable layer).
+    # The localities and parks the search box finds, as names and boxes: their shapes are merged below
+    places = [{"k": "L", "n": f["properties"]["nazev"], "c": f["properties"]["lokalita"], "b": _box(f)}
+              for f in localities["features"] if f["properties"].get("nazev")]
+    places += [{"k": "P", "n": f["properties"]["nazev"], "b": _box(f)}
+               for f in (parks or {"features": []})["features"] if f["properties"].get("nazev")]
+
+    # Prague itself: dark neighbourhoods with faint borders (not a toggleable layer). One fill and one set of
+    # border lines instead of 743 separate shapes: that alone took ~30 ms of every zoom step.
+    from shapely.geometry import mapping
+    # Prague itself: dark neighbourhoods with faint borders (not a toggleable layer). The localities are
+    # simplified together, so neighbours keep one shared edge, to ~30,000 points in all, and are not
+    # interactive (their names are in the search box): together the cheapest to redo at every zoom step.
+    # (One merged shape is slower: Leaflet re-cuts every shape to the screen at each step.)
+    import shapely
+    from shapely.geometry import mapping
+    cover = shapely.coverage_simplify([shape(f["geometry"]).buffer(0) for f in localities["features"]], 0.0004)
     city = folium.GeoJson(
-        localities, name="Praha", control=False, smooth_factor=SMOOTH,
+        {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": mapping(g)}
+                                                    for g in cover if not g.is_empty]},
+        name="Praha", control=False, interactive=False, smooth_factor=SMOOTH,
         style_function=lambda _: {"color": CITY_BORDER, "weight": 0.8, "fillColor": CITY, "fillOpacity": 1},
-        tooltip=folium.GeoJsonTooltip(fields=["nazev"], labels=False),
     ).add_to(m)
 
     # Parks before the water: some park outlines reach over the Vltava and would cover it.
     park_geo = None
     if parks:
         park_layer = folium.FeatureGroup(name=_label(tr("Parky", "Parks", "Parky"), "#33363d", len(parks["features"]), "parks"), show=True)
+        # not interactive (their names are in the search box), which keeps every zoom step cheaper
         park_geo = folium.GeoJson(
-            parks, smooth_factor=SMOOTH,
+            parks, smooth_factor=SMOOTH, interactive=False,
             style_function=lambda _: {"color": PARK, "weight": 0, "fillColor": PARK, "fillOpacity": 1},
-            tooltip=folium.GeoJsonTooltip(fields=["nazev"], labels=False),
         ).add_to(park_layer)
         park_layer.add_to(m)
 
@@ -1008,7 +1050,7 @@ def build_map():
     if source:
         from shapely.geometry import mapping
         merged = unary_union([shape(f["geometry"]) for f in source["features"]])
-        vltava = max(getattr(merged, "geoms", [merged]), key=lambda part: part.area)
+        vltava = max(getattr(merged, "geoms", [merged]), key=lambda part: part.area).simplify(0.00003, preserve_topology=True)
         folium.GeoJson(
             {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": mapping(vltava)}]},
             name="Vltava", control=False, interactive=False, smooth_factor=SMOOTH,
@@ -1122,7 +1164,8 @@ def build_map():
     drawer_js = DRAWER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     stations = [{k: s[k] for k in ("name", "lines", "lat", "lon")} for s in (metro or {}).get("stations", [])]
     search_js = (SEARCH_JS.read_text(encoding="utf-8").replace("__MAP__", name)
-                 .replace("__STATIONS__", json.dumps(stations, ensure_ascii=False)))
+                 .replace("__STATIONS__", json.dumps(stations, ensure_ascii=False))
+                 .replace("__PLACES__", json.dumps(places, ensure_ascii=False, separators=(",", ":"))))
     sky_js = (SKY_JS.read_text(encoding="utf-8").replace("__MAP__", name)
               .replace("__AIRPORT__", json.dumps(AIRPORT)).replace("__PLANE__", json.dumps(PLANE))
               .replace("__FLIGHTS__", json.dumps(FLIGHTS)).replace("__SKY_ZOOM__", str(SKY_ZOOM)))
@@ -1162,6 +1205,10 @@ def build_map():
             {zoom_js}
         }};
         {name}.on('zoomend', byZoom);
+        // the blur pauses while zooming (see .zooming in the styles) and returns a moment after it ends
+        let zoomTimer = null;
+        {name}.on('zoomstart', () => {{ clearTimeout(zoomTimer); document.body.classList.add('zooming'); }});
+        {name}.on('zoomend', () => {{ clearTimeout(zoomTimer); zoomTimer = setTimeout(() => document.body.classList.remove('zooming'), 250); }});
         byZoom();
         // a layer switched back on is drawn on top; keep parks and the city under the water and the rest
         window.baldwinCityBack = () => {{ {park_js} {city.get_name()}.bringToBack(); }};

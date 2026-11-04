@@ -1,9 +1,10 @@
 ﻿// Search box in the title panel: development areas, localities, parks, metro stations (all local)
-// and addresses (ČÚZK RÚIAN, live). Inlined into map.html by make_map.py; __MAP__ and
-// __STATIONS__ are filled in there.
+// and addresses (ČÚZK RÚIAN, live). Inlined into map.html by make_map.py; __MAP__, __STATIONS__ and
+// __PLACES__ (the localities and parks, as names and boxes) are filled in there.
 (function () {
   const map = __MAP__;
   const STATIONS = __STATIONS__;
+  const PLACES = __PLACES__;  // { k: "L" locality or "P" park, n: name, c: locality code, b: [s, w, n, e] }
   const RUIAN = "https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE";
   const MAX = 8;
 
@@ -22,15 +23,19 @@
         index.push({ type: "Plocha", tag: t("Plocha", "Area", "Plocha"), text: p.area_code,
                      sub: `${p.locality_name} · ${tw(p.stabilita_txt)} ${tw(p.vyuziti_txt)}`,
                      keys: [p.area_code, String(p.id), p.locality_name].map(norm), go: () => window.baldwinOpenArea(l) });
-      } else if (p.lokalita && p.nazev) {
-        index.push({ type: "Lokalita", tag: t("Lokalita", "Locality", "Lokalita"), text: p.nazev,
-                     sub: `${t("lokalita", "locality", "lokalita")} ${p.lokalita}`, keys: [norm(p.nazev), p.lokalita],
-                     go: () => map.flyToBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 16, duration: 0.9 }) });
-      } else if (p.nazev && !p.parametr) {
-        index.push({ type: "Park", text: p.nazev, sub: t("městský park", "city park", "mestský park"), keys: [norm(p.nazev)],
-                     go: () => map.flyToBounds(l.getBounds(), { paddingTopLeft: [40, 140], maxZoom: 17, duration: 0.9 }) });
       }
     });
+  }
+  const box = (b) => L.latLngBounds([b[0], b[1]], [b[2], b[3]]);
+  for (const pl of PLACES) {
+    if (pl.k === "L") {
+      index.push({ type: "Lokalita", tag: t("Lokalita", "Locality", "Lokalita"), text: pl.n,
+                   sub: `${t("lokalita", "locality", "lokalita")} ${pl.c}`, keys: [norm(pl.n), pl.c],
+                   go: () => map.flyToBounds(box(pl.b), { paddingTopLeft: [40, 140], maxZoom: 16, duration: 0.9 }) });
+    } else {
+      index.push({ type: "Park", text: pl.n, sub: t("městský park", "city park", "mestský park"), keys: [norm(pl.n)],
+                   go: () => map.flyToBounds(box(pl.b), { paddingTopLeft: [40, 140], maxZoom: 17, duration: 0.9 }) });
+    }
   }
   for (const s of STATIONS) {
     index.push({ type: "Metro", text: s.name, sub: `${t("linka", "line", "linka")} ${s.lines.join(" · ")}`, keys: [norm(s.name)],
