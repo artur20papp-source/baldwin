@@ -214,7 +214,7 @@ STYLE = f"""
                radial-gradient(circle at 50% 50%, rgba(110,28,12,.12) 0%, rgba(60,14,6,.05) 22%, rgba(0,0,0,0) 48%),
                radial-gradient(ellipse 24% 72% at 50% -12%, rgba(220,226,242,.045) 0%, rgba(220,226,242,.014) 50%, rgba(0,0,0,0) 85%),
                #030303;
-             transition: opacity 1s cubic-bezier(.4,0,.2,1) .6s, visibility 0s linear 1.6s; }}
+             transition: opacity 1.6s cubic-bezier(.45,0,.25,1) 1.1s, visibility 0s linear 2.7s; }}
   @media (max-width: 700px) {{ .ds-menu {{ --s: .72; }} }}
   /* the floor, seen in perspective: its own surface from where it meets the wall (just behind the orb)
      down to the bottom. Light lies on it as flattened ellipses, brightest where the orb touches it:
@@ -308,14 +308,14 @@ STYLE = f"""
      is inside it, small at first, unfolding to full size; then the controls slide in. The slow start of
      the curve hides the one heavy frame where the browser prepares the big orb */
   .ds-menu.gone .orb {{ transform: scale(6); opacity: 0;
-                       transition: transform 1.7s cubic-bezier(.7,0,.2,1), opacity .7s ease .95s; }}
-  .ds-menu.gone .orb-halo {{ opacity: 0; transition: opacity .6s ease; }}
+                       transition: transform 2.8s cubic-bezier(.55,0,.15,1), opacity 1.1s cubic-bezier(.45,0,.25,1) 1.5s; }}
+  .ds-menu.gone .orb-halo {{ opacity: 0; transition: opacity .9s ease; }}
   /* the orb's light floods the screen: a ready-made full-screen glow that only fades in (growing the
      room glow instead made the browser re-render it at four times the size, which stuttered) */
   .orb-flash {{ position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; will-change: opacity;
                background: radial-gradient(circle at 50% 50%, rgba(255,125,55,.6) 0%, rgba(210,70,25,.42) 28%,
                            rgba(130,35,12,.28) 60%, rgba(50,12,5,.18) 100%); }}
-  .ds-menu.gone .orb-flash {{ opacity: .7; transition: opacity 1.1s cubic-bezier(.4,0,.2,1) .3s; }}
+  .ds-menu.gone .orb-flash {{ opacity: .55; transition: opacity 1.6s cubic-bezier(.45,0,.25,1) .4s; }}
   /* no scrollbars while the map is scaled, and the page behind it as dark as the map, so the map's
      edges vanish while it unfolds from inside the orb */
   html, body {{ overflow: hidden; background: {BACKGROUND}; }}
@@ -327,13 +327,13 @@ STYLE = f"""
      costs nothing; it keeps its own layer afterwards, so it never has to be painted again all at once */
   .ds-menu ~ .folium-map {{ opacity: .001; transform: scale(.3); will-change: transform, opacity; }}
   .ds-menu.gone ~ .folium-map {{ opacity: 1; transform: none;
-                                transition: opacity .9s ease .55s, transform 1.9s cubic-bezier(.7,0,.2,1) .1s; }}
+                                transition: opacity 1.4s cubic-bezier(.45,0,.25,1) .9s, transform 3s cubic-bezier(.55,0,.15,1) .15s; }}
   .ds-menu ~ .ds-title {{ opacity: .001; translate: 0 -10px; will-change: opacity, translate; }}  /* painted ahead, like the map */
   .ds-menu.gone ~ .ds-title {{ opacity: 1; translate: none;
-                                transition: opacity .8s ease 2.1s, translate .8s cubic-bezier(.22,1,.36,1) 2.1s; }}  /* after the map has stopped: their glass blur over a moving map is costly */
+                                transition: opacity 1s ease 3.1s, translate 1s cubic-bezier(.22,1,.36,1) 3.1s; }}  /* after the map has stopped: their glass blur over a moving map is costly */
   /* the map's own furniture (zoom buttons, scale bar, credits) waits too, instead of unfolding with it */
   .ds-menu ~ .folium-map .leaflet-control-container {{ opacity: 0; }}
-  .ds-menu.gone ~ .folium-map .leaflet-control-container {{ opacity: 1; transition: opacity .8s ease 2.1s; }}
+  .ds-menu.gone ~ .folium-map .leaflet-control-container {{ opacity: 1; transition: opacity 1s ease 3.1s; }}
   .ds-menu.gone .orb-shadow {{ opacity: 0; }}
 
   /* the top bar, after Rockaway's: one strip of dark frosted glass across the top. Left the lighthouse of
@@ -366,7 +366,7 @@ STYLE = f"""
   .ds-lighthouse .lh-text span {{ font-weight: 400; color: {MUTED}; }}
   .ds-lighthouse:hover {{ transform: scale(1.03); color: {TEXT}; text-decoration: none; }}  /* a slight pop, no colour
                                                                      change (Bootstrap would turn a hovered link blue) */
-  .ds-lighthouse:hover .lh-text {{ max-width: 260px; opacity: 1; transform: none; padding-right: 16px; }}
+  .ds-lighthouse:hover .lh-text {{ max-width: var(--w, 260px); opacity: 1; transform: none; padding-right: 16px; }}
   /* the controls grow a smidge under the mouse */
   .ds-toggle, .ds-search, .ds-select .seg, .ds-select .acre, .ds-select .clear, .deal .acre, .leaflet-bar a,
   .ds-drawer .leaflet-control-layers label {{ transition: transform .5s cubic-bezier(.16,1,.3,1); }}
@@ -710,13 +710,10 @@ STYLE = f"""
       backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(13,13,13,.92) !important; }}
   }}
   .ds-drawer, .ds-panel {{ will-change: transform, opacity; }}  /* their own layer, ready before they move */
-  /* during a zoom the glass skips its blur: blurring the moving map underneath costs every frame */
-  .zooming .ds-bar, .zooming .ds-drawer, .zooming .ds-panel, .zooming .ds-results {{
-    backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background-color: rgba(16,16,16,.86) !important; }}
   /* with the filter window open the area panel sits to its right instead of behind it */
   @media (min-width: 701px) {{ .drawer-open .ds-panel {{ left: 336px; }} }}
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
-  .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity .8s ease 2.1s; }}
+  .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity 1s ease 3.1s; }}
 </style>
 <script>{I18N}</script>
 <div class="ds-menu">
@@ -1128,7 +1125,7 @@ def build_map():
           menu.classList.add('frozen');
           requestAnimationFrame(() => requestAnimationFrame(() => {
             menu.classList.add('gone');
-            setTimeout(() => { menu.style.display = 'none'; }, 2300);
+            setTimeout(() => { menu.style.display = 'none'; }, 3400);
           }));
         };
         menu.querySelector('.orb').addEventListener('pointerdown', enter);
@@ -1191,8 +1188,10 @@ def build_map():
     m.get_root().script.add_child(folium.Element(f"""
     window.addEventListener('load', () => {{
         {name}.setMinZoom({SKY_ZOOM});
-        // smoother wheel zoom: smaller steps that may land between whole zoom levels
-        Object.assign({name}.options, {{ zoomSnap: 0.25, wheelPxPerZoomLevel: 110 }});
+        // smoother movement: wheel zoom in smaller steps that may land between whole zoom levels, and after
+        // a drag the map glides on longer and slows more gently
+        Object.assign({name}.options, {{ zoomSnap: 0.25, wheelPxPerZoomLevel: 140, wheelDebounceTime: 20,
+            inertiaDeceleration: 1600, inertiaMaxSpeed: 2400, easeLinearity: 0.12 }});
         {name}.setMaxZoom(20);
         {name}.setView([50.075, 14.46], 11);
         // the starting view is set: a page that skipped the start screen may show the map now
@@ -1205,10 +1204,6 @@ def build_map():
             {zoom_js}
         }};
         {name}.on('zoomend', byZoom);
-        // the blur pauses while zooming (see .zooming in the styles) and returns a moment after it ends
-        let zoomTimer = null;
-        {name}.on('zoomstart', () => {{ clearTimeout(zoomTimer); document.body.classList.add('zooming'); }});
-        {name}.on('zoomend', () => {{ clearTimeout(zoomTimer); zoomTimer = setTimeout(() => document.body.classList.remove('zooming'), 250); }});
         byZoom();
         // a layer switched back on is drawn on top; keep parks and the city under the water and the rest
         window.baldwinCityBack = () => {{ {park_js} {city.get_name()}.bringToBack(); }};
@@ -1238,8 +1233,9 @@ def build_map():
     # decimals (~1 m) keeps the page well under 10 MB
     html = OUT.read_text(encoding="utf-8")
     html = re.sub(r'(?<=[\d\]}"]), (?=[\[{"\-\d])', ",", html)
-    # the map's thousands of shapes on one canvas instead of as SVG elements: much smoother zooming and panning
-    html = re.sub(r'"preferCanvas":\s*false', '"preferCanvas":true', html, count=1)
+    # the map's thousands of shapes on one canvas instead of as SVG elements: much smoother zooming and panning;
+    # the canvas reaches 15 % past each edge (more made every redraw far slower), so a drag doesn't uncover undrawn map before it is redrawn
+    html = re.sub(r'"preferCanvas":\s*false', '"preferCanvas":true, "renderer": L.canvas({padding: 0.15})', html, count=1)
     html = re.sub(r'(?<=")\: (?=[\[{"\-\dtfn])', ":", html)
     html = re.sub(r'(?<=[\[,])(-?\d{1,3}\.\d{5})\d+', r"\1", html)
     # IPR's bookkeeping fields and empty values are never shown; Czech letters as text, not á

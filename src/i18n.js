@@ -38,3 +38,11 @@
   try { skip = sessionStorage.getItem("baldwin-skip-intro") === "1"; sessionStorage.removeItem("baldwin-skip-intro"); } catch (e) {}
   if (skip) document.documentElement.classList.add("skip-intro");
 })();
+
+// The buttons to the three parts (map, Acre, Alexandria) slide their name out to its own width, not to a
+// fixed one: with a fixed width a short name ("ACRE") would finish early and a long one look slower
+document.addEventListener("mouseover", (e) => {
+  const link = e.target.closest && e.target.closest(".ds-lighthouse, .go, .orb-link");
+  const text = link && link.querySelector(".lh-text, .tx");
+  if (text) text.style.setProperty("--w", text.scrollWidth + 18 + "px");
+});

@@ -30,7 +30,7 @@
             transition: max-width 3.2s cubic-bezier(.16,1,.3,1), opacity 2.2s ease .3s, transform 3.2s cubic-bezier(.16,1,.3,1),
                         padding 3.2s cubic-bezier(.16,1,.3,1); }
   .go .tx b { font-weight: 600; } .go .tx span { font-weight: 400; color: var(--muted); }
-  .go:hover .tx { max-width: 260px; opacity: 1; transform: none; padding-right: 16px; }
+  .go:hover .tx { max-width: var(--w, 260px); opacity: 1; transform: none; padding-right: 16px; }
   @media (hover: none) { .go:hover .tx { max-width: 0; opacity: 0; padding-right: 0; } }
   /* the download, at the bottom right beside the sheet tabs */
   .foot { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--edge); }
