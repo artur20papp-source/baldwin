@@ -26,6 +26,9 @@
   function sheet(wb, s) {
     const ws = wb.addWorksheet(s.name, { views: [{ showGridLines: false }] });
     for (const [col, w] of Object.entries(s.widths)) ws.getColumn(col).width = w;
+    if (s.rowH) {  // one height for every row, the titles and section headers their own
+      for (let r = 1; r <= s.size[0] + 30; r++) ws.getRow(r).height = s.rows[r] || s.rowH;
+    }
     // the sheet's own look first (dark background, usual font) a little beyond the used area; cells that
     // differ carry their own values
     const L = s.look;

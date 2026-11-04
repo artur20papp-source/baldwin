@@ -76,6 +76,15 @@ def acre_template():
         return keep
 
     from collections import Counter
+
+    def row_heights(ws):
+        """The sheet's usual row height once, and the rows that differ (titles, section headers)."""
+        hs = {r: ws.row_dimensions[r].height for r in range(1, ws.max_row + 1) if ws.row_dimensions[r].height}
+        if not hs:
+            return {}
+        usual = Counter(hs.values()).most_common(1)[0][0]
+        return {"rowH": usual, "rows": {r: h for r, h in hs.items() if h != usual}}
+
     sheets = []
     for ws in openpyxl.load_workbook(acre_copy()).worksheets:
         if ws.max_row <= 1 and ws.max_column <= 1 and ws["A1"].value is None:
@@ -120,7 +129,8 @@ def acre_template():
                 cells.append(item)
         sheets.append({"name": ws.title, "cells": cells, "merged": [str(r) for r in ws.merged_cells.ranges],
                        "widths": {k: round(d.width, 1) for k, d in ws.column_dimensions.items() if d.width},
-                       "look": {"bg": d_bg, "n": d_n, "sz": d_sz, "c": d_c}, "size": [ws.max_row, ws.max_column]})
+                       "look": {"bg": d_bg, "n": d_n, "sz": d_sz, "c": d_c}, "size": [ws.max_row, ws.max_column],
+                       **row_heights(ws)})
     return {"sheets": sheets}
 CUZK_WMS = "https://services.cuzk.cz/wms/wms.asp"
 
