@@ -3,6 +3,7 @@
 No street base map: Prague is drawn from its own plan data (neighbourhoods, parks, areas).
 Clicking an area opens a deal sheet (deal_popup.js) that also lists its parcels live from ČÚZK.
 """
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -1006,12 +1007,14 @@ def build_map():
     filter_js = FILTER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     import shutil
     shutil.copy2(acre_copy(), OUT.with_name(ACRE_EXAMPLE))
+    # the link carries the file's fingerprint, so a browser never hands out an older copy of the model
+    example_v = hashlib.sha1(OUT.with_name(ACRE_EXAMPLE).read_bytes()).hexdigest()[:10]
     site_alexandria = OUT.with_name("alexandria")
     site_alexandria.mkdir(exist_ok=True)
     for file in ALEXANDRIA_FILES:
         shutil.copy2(ALEXANDRIA_DIR / file, site_alexandria / file)
     export_js = (EXPORT_JS.read_text(encoding="utf-8").replace("__ACRE__", json.dumps(acre_template(), ensure_ascii=False))
-                 .replace("__EXAMPLE__", json.dumps({"area": ACRE_EXAMPLE_AREA, "file": ACRE_EXAMPLE})))
+                 .replace("__EXAMPLE__", json.dumps({"area": ACRE_EXAMPLE_AREA, "file": f"{ACRE_EXAMPLE}?v={example_v}"})))
     select_js = SELECT_JS.read_text(encoding="utf-8").replace("__MAP__", name).replace("__PURPLE__", json.dumps(PURPLE))
     drawer_js = DRAWER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     stations = [{k: s[k] for k in ("name", "lines", "lat", "lon")} for s in (metro or {}).get("stations", [])]
