@@ -652,6 +652,10 @@ STYLE = f"""
   html[lang=cs] .l-cs, html[lang=en] .l-en, html[lang=sk] .l-sk {{ display: inline; }}
   .skip-intro .ds-menu {{ display: none; }}
   .skip-intro .ds-menu ~ *, .skip-intro .ds-menu ~ * * {{ transition: none !important; }}
+  /* without the start screen in front, the map stays hidden until it has its starting view, then fades in
+     (otherwise its first drawn frame, a close-up, flashes up for a moment) */
+  .skip-intro .ds-menu ~ .folium-map {{ opacity: 0 !important; }}
+  .ds-menu.skipped ~ .folium-map {{ transition: opacity .45s ease !important; }}
   /* the language switcher at the far right of the bar; its list unfolds under it */
   .ds-lang {{ position: relative; }}
   .ds-lang-btn {{ width: 34px; height: 34px; padding: 0; border: none; border-radius: 6px; cursor: pointer;
@@ -761,14 +765,14 @@ STYLE = f"""
   </div>
   <div class="ds-brand"><b>BALDWIN</b><span>PALANTIR</span></div>
   <div class="ds-right">
-    <a class="ds-lighthouse" href="acre/" target="_blank" rel="noopener" aria-label="Baldwin Acre">
+    <a class="ds-lighthouse" href="acre/" aria-label="Baldwin Acre">
       <span class="lh-icon"><svg viewBox="0 0 24 24"><path d="M2.5 15.5l9.5-5.2 9.5 5.2-9.5 5.2z"/>
         <path d="M7.2 12.9l9.5 5.2" stroke-dasharray="1.6 1.6"/><path d="M12 10.3V3.6l3.6 1.4-3.6 1.4"/>
         <circle cx="2.5" cy="15.5" r=".9" class="fire"/><circle cx="21.5" cy="15.5" r=".9" class="fire"/>
         <circle cx="12" cy="20.7" r=".9" class="fire"/></svg></span>
       <span class="lh-text"><b>BALDWIN</b> <span>ACRE</span></span>
     </a>
-    <a class="ds-lighthouse" href="alexandria/" target="_blank" rel="noopener" aria-label="Baldwin Alexandria">
+    <a class="ds-lighthouse" href="alexandria/" aria-label="Baldwin Alexandria">
       <span class="lh-icon"><svg viewBox="0 0 24 24"><path d="M6 22h12M7 22V15h10v7M8.5 15l1-6h5l1 6M10.5 9V6h3v3M11 22v-3h2v3"/>
         <path d="M12 2.2v1.6M8.6 3.2l1.6.9M15.4 3.2l-1.6.9"/><circle cx="12" cy="5" r=".9" class="fire"/></svg></span>
       <span class="lh-text"><b>BALDWIN</b> <span>ALEXANDRIA</span></span>
@@ -1023,11 +1027,11 @@ def build_map():
       (function () {
         const menu = document.querySelector('.ds-menu');
         menu.title = t('Vstoupit', 'Enter', 'Vstúpiť');
-        // after a language switch the page comes back straight to the map
+        // after a language switch, or coming back from Alexandria or Acre, the page goes straight to the map;
+        // the map script shows it once its starting view is set (below, on load)
         if (document.documentElement.classList.contains('skip-intro')) {
-          menu.classList.add('frozen', 'gone');
+          menu.classList.add('frozen', 'gone', 'skipped');
           menu.style.display = 'none';
-          setTimeout(() => document.documentElement.classList.remove('skip-intro'), 200);
         }
         // Entering is pure transform/opacity work for the graphics card: the costly effects (the fire's
         // morphing SVG filters, the CSS flicker) freeze on the click, and once the move is over the start
@@ -1105,6 +1109,8 @@ def build_map():
         Object.assign({name}.options, {{ zoomSnap: 0.25, wheelPxPerZoomLevel: 110 }});
         {name}.setMaxZoom(20);
         {name}.setView([50.075, 14.46], 11);
+        // the starting view is set: a page that skipped the start screen may show the map now
+        setTimeout(() => document.documentElement.classList.remove('skip-intro'), 60);  // a timer, not a frame: also runs in a background tab
         // no line of credits on the map: the CC BY credits sit at the foot of the filter window (drawer.js)
         {name}.attributionControl.remove();
         // tram stops, bus stops and bus routes only once zoomed in
