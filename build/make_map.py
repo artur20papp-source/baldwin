@@ -390,7 +390,7 @@ STYLE = f"""
   .ds-search kbd {{ position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 1px 6px;
                    border-radius: 4px; border: 1px solid rgba(255,255,255,.14); color: {MUTED}; font: 500 10px 'Hanken Grotesk', Arial; }}
   .ds-results {{ display: none; position: absolute; top: calc(100% + 12px); left: 0; width: 380px; max-height: 60vh;
-                padding: 6px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; {GLASS} background: rgba(16,16,16,.72);
+                padding: 6px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; {GLASS}
                 scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .ds-results.open {{ display: block; }}
   .ds-hit {{ display: grid; grid-template-columns: 62px 1fr; column-gap: 10px; padding: 7px 8px; border-radius: 8px;
@@ -400,7 +400,7 @@ STYLE = f"""
             border: 1px solid rgba(255,255,255,.1); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
             color: {MUTED}; }}
   .ds-main {{ font-size: 12px; color: {TEXT}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
-  .ds-sub {{ font-size: 10px; color: #5c6068; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+  .ds-sub {{ font-size: 10px; color: {MUTED}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 
   /* layer panel with toggle switches */
   .leaflet-control-layers {{ border-radius: 10px !important; padding: 12px 16px; {GLASS} border: none !important; }}
@@ -412,7 +412,7 @@ STYLE = f"""
       width: 26px; height: 14px; margin: 0 12px 0 0; border-radius: 7px; background: #2e2e2e;
       cursor: pointer; flex-shrink: 0; transition: background .2s; }}
   .leaflet-control-layers-selector::after {{ content: ""; position: absolute; top: 2px; left: 2px;
-      width: 10px; height: 10px; border-radius: 50%; background: #5c6068; transition: transform .2s, background .2s; }}
+      width: 10px; height: 10px; border-radius: 50%; background: #5a5a5a; transition: transform .2s, background .2s; }}
   .leaflet-control-layers-selector:checked {{ background: rgba(255,255,255,.28); }}
   .leaflet-control-layers-selector:checked::after {{ transform: translateX(12px); background: {UI}; }}
   .swatch {{ display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; }}
@@ -488,7 +488,7 @@ STYLE = f"""
                font-family: 'Hanken Grotesk', Arial, sans-serif; }}
   .ds-filter .ft {{ font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
   .ds-filter .fv {{ display: block; margin-top: 6px; font-size: 13px; letter-spacing: 0; text-transform: none;
-                   color: {UI}; font-variant-numeric: tabular-nums; }}
+                   color: {TEXT}; font-variant-numeric: tabular-nums; }}
   .ds-filter label {{ display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 11px;
                      letter-spacing: .1em; text-transform: uppercase; color: {MUTED}; }}
   /* slim price sliders: a hairline track and a small white knob */
@@ -501,7 +501,7 @@ STYLE = f"""
   .ds-filter label.chk {{ text-transform: none; letter-spacing: 0; font-size: 12px; }}
   .ds-filter input[type=checkbox] {{ accent-color: {UI}; }}
   .ds-filter .fc {{ margin-top: 10px; font-size: 12px; color: {TEXT}; }}
-  .ds-filter .fs {{ margin-top: 4px; font-size: 9px; color: #5c6068; }}
+  .ds-filter .fs {{ margin-top: 4px; font-size: 9px; color: {MUTED}; }}
 
   /* deal sheet in a side panel */
   .ds-panel {{ position: fixed; top: 72px; left: 8px; bottom: 8px; width: 390px; z-index: 9998;
@@ -603,7 +603,7 @@ STYLE = f"""
   .drawer-open .ds-toggle svg circle:last-of-type {{ transform: translateX(6px); }}
   .ds-toggle:hover, .drawer-open .ds-toggle {{ color: {UI}; }}
   .ds-drawer {{ position: fixed; top: 72px; left: 8px; width: 320px; max-height: calc(100vh - 84px); z-index: 10000;
-               box-sizing: border-box; padding: 2px 18px 14px; overflow-y: auto; {GLASS} background: rgba(16,16,16,.55);
+               box-sizing: border-box; padding: 2px 18px 14px; overflow-y: auto; {GLASS}
                border-radius: 10px; transform-origin: top left;
                opacity: 0; visibility: hidden; transform: translateY(-10px) scale(.92);
                transition: opacity .3s ease, transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s;
@@ -684,7 +684,7 @@ STYLE = f"""
                transition: max-height 1.6s cubic-bezier(.16,1,.3,1), opacity 1.1s ease .1s, transform 1.6s cubic-bezier(.16,1,.3,1); }}
   .ds-lang:hover .ds-lang-menu, .ds-lang.open .ds-lang-menu {{ max-height: 120px; opacity: 1; transform: none; pointer-events: auto; }}
   .ds-lang-menu button {{ width: 34px; height: 34px; flex-shrink: 0; padding: 0; border: none; border-radius: 6px; cursor: pointer;
-                      {GLASS} background: rgba(16,16,16,.72); color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em;
+                      {GLASS} color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em;
                       transition: transform .5s cubic-bezier(.16,1,.3,1); }}
   .ds-lang-menu button:hover {{ transform: scale(1.03); }}
   .ds-lang-menu button.on {{ display: none; }}  /* only the languages you can switch to */
@@ -723,9 +723,8 @@ STYLE = f"""
   .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity 1s ease 3.1s; }}
   /* the short guide on a first visit: it appears only once the map has unfolded, never during the zoom */
   .ds-guide {{ position: fixed; z-index: 1500; left: 50%; top: 50%; width: min(340px, calc(100vw - 32px));
-              padding: 22px 24px 22px; border-radius: 20px; color: {TEXT}; font: 12px 'Hanken Grotesk', Arial, sans-serif;
-              background: rgba(22,22,24,.38); backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6);
-              border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.45);
+              padding: 22px 24px 22px; border-radius: 10px; color: {TEXT}; font: 12px 'Hanken Grotesk', Arial, sans-serif;
+              {GLASS}  /* the same glass as the top bar and every window */
               opacity: 0; transform: translate(-50%, calc(-50% + 28px)) scale(.86); pointer-events: none;
               transition: opacity .7s ease, transform 1.1s cubic-bezier(.34,1.45,.5,1); }}
   .ds-guide.on {{ opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }}
@@ -738,7 +737,7 @@ STYLE = f"""
   .ds-guide.on li:nth-child(3) {{ transition-delay: .75s; }}
   .ds-guide h4 {{ margin: 0 20px 14px 0; font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }}
   .ds-guide ul {{ margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }}
-  .ds-guide li {{ display: grid; grid-template-columns: 4px 1fr; gap: 10px; line-height: 1.4; color: rgba(236,236,236,.82); }}
+  .ds-guide li {{ display: grid; grid-template-columns: 4px 1fr; gap: 10px; line-height: 1.4; color: {TEXT}; }}
   .ds-guide li::before {{ content: ""; width: 4px; height: 4px; margin-top: 7px; border-radius: 50%; background: rgba(236,236,236,.45); }}
 </style>
 <script>{I18N}</script>
