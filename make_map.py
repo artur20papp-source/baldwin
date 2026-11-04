@@ -75,11 +75,16 @@ def acre_template():
                     keep.add(c.coordinate)
         return keep
 
+    from collections import Counter
     sheets = []
     for ws in openpyxl.load_workbook(acre_copy()).worksheets:
         if ws.max_row <= 1 and ws.max_column <= 1 and ws["A1"].value is None:
             continue  # an empty sheet
         keep, cells = timeline(ws), []
+        # the sheet's own look (the dark background and the usual font) is stored once, not per cell
+        looks = Counter((rgb(c.fill.fgColor) if c.fill is not None and c.fill.fill_type == "solid" else None,
+                         c.font.name, c.font.sz, rgb(c.font.color)) for row in ws.iter_rows() for c in row)
+        d_bg, d_n, d_sz, d_c = looks.most_common(1)[0][0]
         for row in ws.iter_rows():
             for c in row:
                 v = c.value
@@ -96,8 +101,10 @@ def acre_template():
                 elif v is not None:
                     item["v"] = v
                 font, fill, b = c.font, c.fill, c.border
-                style = {"b": bool(font.b), "i": bool(font.i), "sz": font.sz, "n": font.name, "c": rgb(font.color)}
-                if fill is not None and fill.fill_type == "solid" and rgb(fill.fgColor):
+                style = {k: x for k, x in (("b", bool(font.b)), ("i", bool(font.i))) if x}
+                style.update({k: x for k, x, d in (("sz", font.sz, d_sz), ("n", font.name, d_n),
+                                                   ("c", rgb(font.color), d_c)) if x != d})
+                if fill is not None and fill.fill_type == "solid" and rgb(fill.fgColor) and rgb(fill.fgColor) != d_bg:
                     style["bg"] = rgb(fill.fgColor)
                 edges = {side: [getattr(b, side).style, rgb(getattr(b, side).color)]
                          for side in ("top", "bottom", "left", "right") if getattr(b, side) is not None and getattr(b, side).style}
@@ -112,7 +119,8 @@ def acre_template():
                 item.update(style)
                 cells.append(item)
         sheets.append({"name": ws.title, "cells": cells, "merged": [str(r) for r in ws.merged_cells.ranges],
-                       "widths": {k: round(d.width, 1) for k, d in ws.column_dimensions.items() if d.width}})
+                       "widths": {k: round(d.width, 1) for k, d in ws.column_dimensions.items() if d.width},
+                       "look": {"bg": d_bg, "n": d_n, "sz": d_sz, "c": d_c}, "size": [ws.max_row, ws.max_column]})
     return {"sheets": sheets}
 CUZK_WMS = "https://services.cuzk.cz/wms/wms.asp"
 

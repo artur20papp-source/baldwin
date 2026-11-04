@@ -9,8 +9,9 @@ The project has two parts:
 - **Baldwin Palantir**: an interactive map of Prague's development and transformation areas
   (https://artur20papp-source.github.io/baldwin/). For each area it shows size, regulated
   floor area (HPP), an official land price, metro access, flood risk and the cadastral parcels inside.
-- **Baldwin Acre**: an Excel development appraisal (land subdivision into plots, an optional phase 2
-  building houses, and a version with a bank loan). Its worked example is area 414/267/5033 in
+- **Baldwin Acre**: an Excel development appraisal with four calculation sheets: selling serviced plots
+  (Analysis), the same with a land loan (Analysis (Loan)), building and selling houses (Analysis H), and
+  houses financed with a land loan and a construction loan (Analysis H (Loan)). Its worked example is area 414/267/5033 in
   Šeberov. The map's "Export to Baldwin Acre" button writes the model as a template with the map's
   facts filled in (for Šeberov it hands out the filled model itself).
 
@@ -142,10 +143,13 @@ Values are the Šeberov worked example (area 414/267/5033). Cell = Inputs sheet.
 | Property tax base rate (C62) | 3.50 Kč/m² | building land, zákon č. 338/1992 Sb. | sourced |
 | Prague coefficient (C63, "Šeberov coefficient") | 4.5 (from 2026) | zákon č. 338/1992 Sb. | sourced, verify |
 | Local coefficient (C64) | 2 | Prague's local coefficient; check on financnisprava.cz | verify |
-| Loan as % of land price (Loan C36) | 60 % | banks lend roughly 50–70 % | assumption |
+| Loan as % of land price (Loan C36) | 60 % | banks lend roughly 50–70 %; on land without a building permit 50 % is more usual | assumption |
 | 3M PRIBOR (Loan C38) | 3.94 % | ČNB fixing of 21. 10. 2026 (cnb.cz) | sourced, dated |
-| Spread over PRIBOR (Loan C39) | 4 % | typical bank margin 2.5–4 % for development loans | assumption |
-| Timing (C40–C48, C67–C70) | land year 0, permits & surveys year 1, infrastructure/ZPF/contingency/fee year 2, sale of plots year 4; houses designed year 3, built years 4–5, sold year 5 | year 3 is a permitting delay | assumption |
+| Land loan spread over PRIBOR (Loan C39) | 4 % | ≈ 1.6 % market base (ČNB: average rate on new loans over 30 mil. Kč to firms 5.53 % in September 2026, minus 3M PRIBOR 3.94 %) + ≈ 2.4 % premium for unpermitted land, the riskiest collateral; no published Czech figure for the premium | base sourced, premium **assumption** |
+| Construction loan LTC (H Loan C51) | 60 % of each year's Phase 2 costs | drawn step by step against verified construction progress (Czech banks finance "prostavěnost": arws.cz, hyponamiru.cz) | practice sourced, share assumption |
+| Construction loan spread (H Loan C54) | 2.5 % | ≈ 1.6 % ČNB market base (as above) + ≈ 1 % development premium; lower than the land loan because a permit exists and money is released only against built work | base sourced, premium **assumption** |
+| Arrangement fee (H Loan C56) | 0 % | no bank offer to quote yet | assumption |
+| Timing (C40–C48, C67–C70) | land year 0, permits & surveys year 1, infrastructure/ZPF/contingency/fee year 2, sale of plots year 4; houses designed year 3, built years 4–5, sold year 5 | year 3 is a permitting delay; all houses are sold in one bulk sale to an investment fund in year 5 (funds buying in bulk usually expect a discount on the price per m²) | assumption |
 
 ---
 
@@ -171,12 +175,30 @@ Values are the Šeberov worked example (area 414/267/5033). Cell = Inputs sheet.
 peak equity 390 M (vs 635 M without a loan). The IRR sensitivity table varies the loan share
 (50/60/70 %) and the spread (3/4/5 %).
 
-**Phase 2, building houses (sheet Analysis (Houses)):** floor plan = plot × footprint (245 m²), living
+**Phase 2, building houses (sheet Analysis H):** floor plan = plot × footprint (245 m²), living
 area = 85 % (208 m²), sale at 115,000 Kč/m² incl. 12 % VAT, build cost 50,000 Kč/m², plus design,
 connections, contingency, overhead, the municipality contribution (700 Kč/m² of floor area) and
 property tax. Results: profit 131.6 M, IRR 3.5 %, 82.8 M less profit than selling the plots. Its
 sensitivity grid shows IRR for house sale prices 105,000 / 115,000 / 125,000 Kč/m² against build costs
 45,000 / 50,000 / 55,000 Kč/m².
+
+**Houses with both loans (sheet Analysis H (Loan)):** one cash flow table, Value | Change (vs. Analysis H) | Unit.
+- **Land loan:** taken from Analysis (Loan): 60 % of the land price (321.0 M) drawn in year 0, interest
+  3.94 % + 4 % = 7.94 % paid every year (25.5 M a year), repaid in **year 5 from the house sales** (not
+  in the plot-sale year, since no plots are sold). Total land-loan interest 127.4 M.
+- **Construction loan:** each year the bank pays 60 % of that year's Phase 2 costs (25.8 M in year 3,
+  311.0 M in years 4 and 5; 647.8 M in total). Interest = 6.44 % × (everything drawn in earlier years +
+  half of this year's drawdown, because money arrives through the year), paid every year (0.8 M, 11.7 M,
+  31.7 M; 44.2 M in total). The whole amount is repaid in year 5 from the sales. Interest is paid, not
+  added to the debt, so there is no interest on interest.
+- **Results:** total cost 1,886.0 M incl. 171.7 M of financing costs; profit **−40.1 M**, IRR **−2.2 %**,
+  NPV at 15 % −196.4 M, equity multiple 0.94x, peak own money 652.7 M (vs 1,196.1 M without loans).
+- **Why it loses money (negative leverage):** the houses earn about 3.5 % a year without loans, while the
+  loans cost 6.44–7.94 %. Borrowing at a rate above the project's return lowers the result with every
+  crown borrowed; the loans only reduce how much own money is needed. The sensitivity grid (LTC 50/60/70 %
+  across, construction spread 1.5/2.5/3.5 % down) is negative everywhere and worse with more debt
+  (from −1.4 % at 50 % / 1.5 % to −3.2 % at 70 % / 3.5 %). The project needs a return above about 6.5 %
+  before the construction loan starts to help.
 
 **What the map changes when exporting:** site area (výměra) → Inputs C7; Zz → Max house footprint C11;
 price map → Sell price C16 (area-weighted when several areas are picked); ZPF share as a note. All other
@@ -190,5 +212,7 @@ inputs stay empty, because they are assumptions about the project, not facts abo
 - ZPF base rate and coefficient are estimates until the parcels' BPEJ codes are read from the cadastre.
 - Distances are straight lines, not walking routes.
 - Owner names are not collected automatically (the cadastre requires a person to look them up).
-- Yearly cash flows; all plots are assumed sold in one year; no profit tax.
+- Yearly cash flows; all plots (year 4) or all houses (year 5, bulk sale to a fund) are sold in one year; no profit tax.
+- With gradual sales a bank would take a release price per house sold (often 110–120 % of that house's share of the loan), so the loan would be repaid before the last houses sell; the model does not need this while the sale is one bulk deal.
+- The loan spreads' premiums over the ČNB market base are assumptions; the sensitivity grids show their effect.
 - Sources marked "verify" may have changed (contribution methodology 2021–22, tax coefficients, PRIBOR date).

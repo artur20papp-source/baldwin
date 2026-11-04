@@ -4,7 +4,8 @@
 // into Inputs: the site area (with its farmland share as a note), the max building footprint
 // (Metropolitní plán Zz) and the sell price (the city's price map), each with its source beside it.
 // Every other input is an assumption about the project and stays empty for the analyst. Inlined into
-// map.html by make_map.py; __ACRE__ is filled in there. ExcelJS loads on first use.
+// map.html by make_map.py, which fills in the template (T) and the example (EXAMPLE). ExcelJS loads on
+// first use.
 (function () {
   const T = __ACRE__;
   const EXAMPLE = __EXAMPLE__;  // the area the model is built on: there the filled model itself is handed out
@@ -25,13 +26,27 @@
   function sheet(wb, s) {
     const ws = wb.addWorksheet(s.name, { views: [{ showGridLines: false }] });
     for (const [col, w] of Object.entries(s.widths)) ws.getColumn(col).width = w;
+    // the sheet's own look first (dark background, usual font) a little beyond the used area; cells that
+    // differ carry their own values
+    const L = s.look;
+    const font = (c) => ({ name: c.n || L.n, size: c.sz || L.sz, bold: !!c.b, italic: !!c.i,
+                           color: (c.c || L.c) ? { argb: c.c || L.c } : undefined });
+    if (L.bg) {
+      for (let r = 1; r <= s.size[0] + 30; r++) {
+        for (let k = 1; k <= s.size[1] + 6; k++) {
+          const cell = ws.getCell(r, k);
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: L.bg } };
+          cell.font = font({});
+        }
+      }
+    }
     for (const c of s.cells) {
       const cell = ws.getCell(c.a);
       if (c.f) cell.value = { formula: c.f };
       else if (c.v !== undefined) cell.value = c.v;
-      cell.font = { name: c.n, size: c.sz, bold: c.b, italic: c.i, color: c.c ? { argb: c.c } : undefined };
+      cell.font = font(c);
       if (c.fmt) cell.numFmt = c.fmt;
-      if (c.bg) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: c.bg } };
+      if (c.bg || L.bg) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: c.bg || L.bg } };
       if (c.bd) cell.border = Object.fromEntries(Object.entries(c.bd).map(([side, [style, color]]) =>
         [side, { style, color: color ? { argb: color } : undefined }]));
       if (c.al) cell.alignment = { horizontal: c.al[0] || undefined, indent: c.al[1] || undefined };
