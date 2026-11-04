@@ -716,6 +716,21 @@ STYLE = f"""
   @media (min-width: 701px) {{ .drawer-open .ds-panel {{ left: 336px; }} }}
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
   .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity 1s ease 3.1s; }}
+  /* the short guide on a first visit: it appears only once the map has unfolded, never during the zoom */
+  .ds-guide {{ position: fixed; z-index: 1500; left: 50%; top: 50%; width: min(330px, calc(100vw - 32px));
+              padding: 18px 20px 16px; border-radius: 10px; {GLASS} color: {TEXT}; font: 12px 'Hanken Grotesk', Arial, sans-serif;
+              opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.98); pointer-events: none;
+              transition: opacity 1.2s cubic-bezier(.16,1,.3,1), transform 1.2s cubic-bezier(.16,1,.3,1); }}
+  .ds-guide.on {{ opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }}
+  .ds-guide h4 {{ margin: 0 0 12px; font-size: 11px; font-weight: 600; letter-spacing: .3em; color: {MUTED}; }}
+  .ds-guide ul {{ margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }}
+  .ds-guide li {{ display: grid; grid-template-columns: 14px 1fr; gap: 8px; line-height: 1.35; }}
+  .ds-guide li::before {{ content: "–"; color: {MUTED}; }}
+  .ds-guide li b {{ font-weight: 600; }}
+  .ds-guide button {{ margin-top: 16px; width: 100%; height: 32px; border: none; border-radius: 6px; cursor: pointer;
+                     background: rgba(255,255,255,.08); color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif;
+                     letter-spacing: .08em; transition: transform .5s cubic-bezier(.16,1,.3,1), background .3s; }}
+  .ds-guide button:hover {{ transform: scale(1.03); background: rgba(255,255,255,.12); }}
 </style>
 <script>{I18N}</script>
 <div class="ds-menu">
@@ -798,6 +813,18 @@ STYLE = f"""
   </div><div class="orb-shadow"></div></div>
 </div>
 <div class="ds-mbrand"><b>BALDWIN</b> <span>PALANTIR</span></div>
+<div class="ds-guide" role="dialog">
+  <h4><span class="l-cs">JAK NA TO</span><span class="l-en">HOW TO USE</span><span class="l-sk">AKO NA TO</span></h4>
+  <ul>
+    <li><span><span class="l-cs"><b>Klik na plochu</b> → údaje a parcely</span><span class="l-en"><b>Click an area</b> → figures and parcels</span><span class="l-sk"><b>Klik na plochu</b> → údaje a parcely</span></span></li>
+    <li><span><span class="l-cs"><b>Filtry</b> vlevo nahoře → vrstvy, cena pozemku</span><span class="l-en"><b>Filters</b> top left → layers, land price</span><span class="l-sk"><b>Filtre</b> vľavo hore → vrstvy, cena pozemku</span></span></li>
+    <li><span><span class="l-cs"><b>Výběr</b> → více ploch nebo parcel jako jeden pozemek</span><span class="l-en"><b>Selection</b> → several areas or parcels as one site</span><span class="l-sk"><b>Výber</b> → viac plôch alebo parciel ako jeden pozemok</span></span></li>
+    <li><span><span class="l-cs"><b>Hledání</b> → plochy, lokality, metro, adresy</span><span class="l-en"><b>Search</b> → areas, localities, metro, addresses</span><span class="l-sk"><b>Hľadanie</b> → plochy, lokality, metro, adresy</span></span></li>
+    <li><span><span class="l-cs"><b>Export</b> → model v Baldwin Acre (Excel)</span><span class="l-en"><b>Export</b> → a model in Baldwin Acre (Excel)</span><span class="l-sk"><b>Export</b> → model v Baldwin Acre (Excel)</span></span></li>
+    <li><span><span class="l-cs"><b>Pozemek</b> → model · <b>maják</b> → zdroje</span><span class="l-en"><b>Plot</b> → the model · <b>lighthouse</b> → the sources</span><span class="l-sk"><b>Pozemok</b> → model · <b>maják</b> → zdroje</span></span></li>
+  </ul>
+  <button><span class="l-cs">Rozumím</span><span class="l-en">Got it</span><span class="l-sk">Rozumiem</span></button>
+</div>
 <div class="ds-title ds-bar">
   <div class="ds-left">
     <div class="ds-search">
@@ -1128,8 +1155,17 @@ def build_map():
           requestAnimationFrame(() => requestAnimationFrame(() => {
             menu.classList.add('gone');
             setTimeout(() => { menu.style.display = 'none'; }, 3400);
+            // a first visit gets the short guide, once the map has settled
+            let seen = false;
+            try { seen = localStorage.getItem('baldwin-guide') === '1'; } catch (e) {}
+            if (!seen) setTimeout(() => document.querySelector('.ds-guide').classList.add('on'), 3600);
           }));
         };
+        const guide = document.querySelector('.ds-guide');
+        guide.querySelector('button').addEventListener('click', () => {
+          guide.classList.remove('on');
+          try { localStorage.setItem('baldwin-guide', '1'); } catch (e) {}
+        });
         menu.querySelector('.orb').addEventListener('pointerdown', enter);
         document.addEventListener('keydown', (e) => { if (e.key === 'Enter') enter(); });
       })();
