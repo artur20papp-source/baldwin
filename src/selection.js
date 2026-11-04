@@ -188,11 +188,20 @@
   // ---- clicks on the map while selecting
   for (const l of areaLayers) l.on("click", () => { if (mode === "areas") toggleArea(l); });
 
-  let busy = false;
-  map.on("click", async (e) => {
-    if (mode !== "parcels" || busy) return;
-    if (map.getZoom() < PARCEL_ZOOM) { map.setView(e.latlng, PARCEL_ZOOM); return; }
-    const { lat, lng } = e.latlng, d = 0.00002;
+  // Parcels are picked from clicks on the map element itself: the map is drawn on a canvas, where a click
+  // on an area or on the city's outline stays with that shape and never reaches Leaflet's own map click.
+  // A press that moved (a drag of the map) is not a click.
+  let busy = false, down = null;
+  const box = map.getContainer();
+  box.addEventListener("pointerdown", (e) => { down = [e.clientX, e.clientY]; });
+  box.addEventListener("click", (e) => {
+    if (mode !== "parcels" || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+    pickParcel(map.mouseEventToLatLng(e));
+  });
+  async function pickParcel(latlng) {
+    if (busy) return;
+    if (map.getZoom() < PARCEL_ZOOM) { map.setView(latlng, PARCEL_ZOOM); return; }
+    const { lat, lng } = latlng, d = 0.00002;
     busy = true;
     el.classList.add("busy");
     try {
@@ -205,7 +214,7 @@
       busy = false;
       el.classList.remove("busy");
     }
-  });
+  }
   map.on("zoomend", () => { if (mode === "parcels" && !areas.size && !parcels.size) render(); });
   render();  // the explanation, before anything is picked
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && mode) setMode(null); });
