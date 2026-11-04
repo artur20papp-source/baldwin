@@ -14,26 +14,31 @@ from mpp import (load_areas, load_bus_routes, load_bus_stops, load_localities, l
                  load_parks, load_rivers, load_train_stations, load_trams, load_water)
 from screening import add_screening
 
-OUT = Path(__file__).with_name("index.html")  # index.html so GitHub Pages serves it at the site root
-DEAL_JS = Path(__file__).with_name("deal_popup.js")
-FILTER_JS = Path(__file__).with_name("price_filter.js")
-SEARCH_JS = Path(__file__).with_name("search.js")
-SKY_JS = Path(__file__).with_name("sky.js")
-I18N_JS = Path(__file__).with_name("i18n.js")
-LINES_JS = Path(__file__).with_name("lines.js")
-ACRE_WEB_DIR = Path(__file__).resolve().parent.parent / "Baldwin Acre" / "web"  # the Baldwin Acre page (read-only model viewer), copied to acre/
-SELECT_JS = Path(__file__).with_name("selection.js")
-DRAWER_JS = Path(__file__).with_name("drawer.js")
-LIGHTNING_JS = Path(__file__).with_name("lightning.js")
-CLOUDS_JS = Path(__file__).with_name("clouds.js")
-EXPORT_JS = Path(__file__).with_name("export.js")
-ACRE_XLSX = Path(__file__).resolve().parent.parent / "Baldwin Acre" / "Baldwin Acre.xlsx"  # the appraisal model, in its own folder
+ROOT = Path(__file__).resolve().parent.parent  # the repository
+WORKSPACE = ROOT.parent                          # beside it: Baldwin Alexandria and Baldwin Acre
+SRC = ROOT / "src"                               # the map's browser scripts
+DOCS = ROOT / "docs"                             # the website, exactly as GitHub Pages serves it (from /docs)
+DATA = DOCS / "data"                             # the files the pages load
+OUT = DOCS / "index.html"
+DEAL_JS = SRC / "deal_popup.js"
+FILTER_JS = SRC / "price_filter.js"
+SEARCH_JS = SRC / "search.js"
+SKY_JS = SRC / "sky.js"
+I18N_JS = SRC / "i18n.js"  # shared by all three pages: inlined into the map, copied to docs/ for the other two
+LINES_JS = SRC / "lines.js"
+ACRE_WEB_DIR = WORKSPACE / "Baldwin Acre" / "web"  # the Baldwin Acre page (read-only model viewer), copied to acre/
+SELECT_JS = SRC / "selection.js"
+DRAWER_JS = SRC / "drawer.js"
+LIGHTNING_JS = SRC / "lightning.js"
+CLOUDS_JS = SRC / "clouds.js"
+EXPORT_JS = SRC / "export.js"
+ACRE_XLSX = WORKSPACE / "Baldwin Acre" / "Baldwin Acre.xlsx"  # the appraisal model, in its own folder
 # The model is built on this area, so for it the export hands out the filled model itself as a worked
 # example (copied next to the page on every build, so it follows the model)
 ACRE_EXAMPLE_AREA, ACRE_EXAMPLE = "414/267/5033", "baldwin-acre-seberov.xlsx"
 # Baldwin Alexandria (the source-library chatbot) is kept in its own folder and published as part of this
 # site: every build copies its page, library and worker code into alexandria/ here
-ALEXANDRIA_DIR = Path(__file__).resolve().parent.parent / "Baldwin Alexandria"
+ALEXANDRIA_DIR = WORKSPACE / "Baldwin Alexandria"
 ALEXANDRIA_FILES = ("index.html", "knowledge.md", "worker.js")
 
 
@@ -153,7 +158,7 @@ TRACK = ("linear-gradient(90deg, transparent var(--a, 0%), #f2f2f2 var(--a, 0%),
 # the price sliders: the track up to the knob thick and white, the rest a thin grey line
 
 RSJ_HQ = (50.08915565, 14.43531183)  # Na Florenci 2116/15, Praha 1 (RÚIAN geocode)
-RSJ_LOGO = Path(__file__).with_name("rsj-logo.svg")  # from rsj.com/layout/rsj-logo.svg
+RSJ_LOGO = SRC / "rsj-logo.svg"  # from rsj.com/layout/rsj-logo.svg
 AIRPORT = (50.1008, 14.2632)  # Letiště Václava Havla, Praha-Ruzyně
 SKY_ZOOM = 10  # zooming out to this (one step out from the start view) brings the clouds and the airport
 
@@ -1093,21 +1098,22 @@ def build_map():
                .replace("__ACCENT__", json.dumps(ACCENT)).replace("__ORANGE__", json.dumps(ORANGE)))
     filter_js = FILTER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     import shutil
-    shutil.copy2(acre_copy(), OUT.with_name(ACRE_EXAMPLE))
+    shutil.copy2(acre_copy(), DATA / ACRE_EXAMPLE)
     # the link carries the file's fingerprint, so a browser never hands out an older copy of the model
-    example_v = hashlib.sha1(OUT.with_name(ACRE_EXAMPLE).read_bytes()).hexdigest()[:10]
+    example_v = hashlib.sha1((DATA / ACRE_EXAMPLE).read_bytes()).hexdigest()[:10]
     # the Baldwin Acre page, its own folder of the site like Alexandria; it shows that same example
+    shutil.copy2(I18N_JS, DOCS / "i18n.js")  # Alexandria and Acre load it from the site
     site_acre = OUT.with_name("acre")
     site_acre.mkdir(exist_ok=True)
     (site_acre / "index.html").write_text((ACRE_WEB_DIR / "index.html").read_text(encoding="utf-8")
-                                          .replace("__MODEL__", f"../{ACRE_EXAMPLE}?v={example_v}"), encoding="utf-8")
+                                          .replace("__MODEL__", f"../data/{ACRE_EXAMPLE}?v={example_v}"), encoding="utf-8")
     shutil.copy2(ACRE_WEB_DIR / "viewer.js", site_acre / "viewer.js")
     site_alexandria = OUT.with_name("alexandria")
     site_alexandria.mkdir(exist_ok=True)
     for file in ALEXANDRIA_FILES:
         shutil.copy2(ALEXANDRIA_DIR / file, site_alexandria / file)
     export_js = (EXPORT_JS.read_text(encoding="utf-8").replace("__ACRE__", json.dumps(acre_template(), ensure_ascii=False))
-                 .replace("__EXAMPLE__", json.dumps({"area": ACRE_EXAMPLE_AREA, "file": f"{ACRE_EXAMPLE}?v={example_v}"})))
+                 .replace("__EXAMPLE__", json.dumps({"area": ACRE_EXAMPLE_AREA, "file": f"data/{ACRE_EXAMPLE}?v={example_v}"})))
     select_js = SELECT_JS.read_text(encoding="utf-8").replace("__MAP__", name).replace("__PURPLE__", json.dumps(PURPLE))
     drawer_js = DRAWER_JS.read_text(encoding="utf-8").replace("__MAP__", name)
     stations = [{k: s[k] for k in ("name", "lines", "lat", "lon")} for s in (metro or {}).get("stations", [])]
@@ -1125,10 +1131,10 @@ def build_map():
                  {"color": "#9a9a9a", "weight": 1.8, "opacity": 0.85}),
                 (lines[1], "rail.geojson", tr("Železnice", "Railways", "Železnice"),
                  {"color": "#e87ab4", "weight": 1.2, "stop": "#f6bcd9", "stopsFrom": TRAIN_STOPS_FROM_ZOOM})):  # pink: the one colour no other layer uses
-            OUT.with_name(file).write_text(json.dumps(geo, separators=(",", ":")), encoding="utf-8")
-            v = hashlib.sha1(OUT.with_name(file).read_bytes()).hexdigest()[:10]
+            (DATA / file).write_text(json.dumps(geo, separators=(",", ":")), encoding="utf-8")
+            v = hashlib.sha1((DATA / file).read_bytes()).hexdigest()[:10]
             key = "motorway" if file.startswith("motorways") else "rail"
-            line_layers.append({"file": f"{file}?v={v}", "style": style,
+            line_layers.append({"file": f"data/{file}?v={v}", "style": style,
                                 "label": _label(label, style["color"], f"{_km(geo):,} km".replace(",", " "), key)})
     lines_js = (LINES_JS.read_text(encoding="utf-8").replace("__MAP__", name).replace("__CONTROL__", control.get_name())
                 .replace("__LAYERS__", json.dumps(line_layers, ensure_ascii=False))) if line_layers else ""

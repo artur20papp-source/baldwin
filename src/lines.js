@@ -1,5 +1,5 @@
 // Motorways and railways in Prague (ČÚZK ZABAGED, with PID's train stations) as two switches in the layer list. Their lines sit
-// in their own files next to the page (motorways.geojson, rail.geojson), fetched once the map is up, so
+// in their own files in data/ (motorways.geojson, rail.geojson), fetched once the map is up, so
 // they don't weigh on the page. Drawn just above the city's fill, under everything else. Inlined into
 // map.html by make_map.py before the filter window is built; the tokens are filled in there.
 (function () {
