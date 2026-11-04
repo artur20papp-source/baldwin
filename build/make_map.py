@@ -504,7 +504,8 @@ STYLE = f"""
   /* deal sheet in a side panel */
   .ds-panel {{ position: fixed; top: 72px; left: 8px; bottom: 8px; width: 390px; z-index: 9998;
               overflow-y: auto; padding: 22px 22px 18px; border-radius: 10px; {GLASS}
-              transform: translateX(-120%); transition: transform .55s cubic-bezier(.22,1,.36,1); will-change: transform;
+              transform: translateX(-200%); transition: transform .55s cubic-bezier(.22,1,.36,1), left .55s cubic-bezier(.22,1,.36,1);
+              will-change: transform;  /* -200%: fully out of sight even from beside the filter window */
               font-family: 'Hanken Grotesk', Arial, sans-serif; scrollbar-width: thin; scrollbar-color: #333333 transparent; }}
   .ds-panel.open {{ transform: none; }}
   .ds-panel::-webkit-scrollbar {{ width: 6px; }}
@@ -709,6 +710,8 @@ STYLE = f"""
       backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(13,13,13,.92) !important; }}
   }}
   .ds-drawer, .ds-panel {{ will-change: transform, opacity; }}  /* their own layer, ready before they move */
+  /* with the filter window open the area panel sits to its right instead of behind it */
+  @media (min-width: 701px) {{ .drawer-open .ds-panel {{ left: 336px; }} }}
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
   .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity .8s ease 2.1s; }}
 </style>

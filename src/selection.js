@@ -21,6 +21,7 @@
   }
 
   map.createPane("selection").style.zIndex = 465;
+  const svg = L.svg({ pane: "selection" });  // SVG, not canvas: lets clicks through to the map (see deal_popup.js)
   const areas = new Map();    // area_code -> { layer, outline }
   const parcels = new Map();  // parcel id -> { r, shape, price }
   let mode = null;            // null, "areas" or "parcels"
@@ -31,7 +32,7 @@
       map.removeLayer(areas.get(code).outline);
       areas.delete(code);
     } else {
-      const outline = L.geoJSON(layer.feature, { pane: "selection", interactive: false,
+      const outline = L.geoJSON(layer.feature, { pane: "selection", renderer: svg, interactive: false,
         style: { color: PURPLE, weight: 2.5, fillColor: PURPLE, fillOpacity: 0.5 } }).addTo(map);
       areas.set(code, { layer, outline });
     }
@@ -52,7 +53,7 @@
       map.removeLayer(parcels.get(r.id).shape);
       parcels.delete(r.id);
     } else {
-      const shape = L.polygon(r.rings.map((rg) => rg.map(([lon, lat]) => [lat, lon])), { pane: "selection",
+      const shape = L.polygon(r.rings.map((rg) => rg.map(([lon, lat]) => [lat, lon])), { pane: "selection", renderer: svg,
         interactive: false, color: PURPLE, weight: 2, fillColor: PURPLE, fillOpacity: 0.35 }).addTo(map);
       parcels.set(r.id, { r, shape, price: priceAt(r.ref) });
     }

@@ -58,14 +58,14 @@
   const toggle = (on, stay) => {
     open = on;
     document.body.classList.toggle("drawer-open", on);
-    if (on && window.baldwinClosePanel) window.baldwinClosePanel();  // one window at a time on the left
+    if (on && phone.matches && window.baldwinClosePanel) window.baldwinClosePanel();  // phone: one sheet at a time
     const want = on && !phone.matches ? Math.round((drawer.offsetWidth + 8) / 2) : 0;
     if (want !== shifted) {
       if (!stay) map.panBy([shifted - want, 0], { duration: 0.55, easeLinearity: 0.2 });
       shifted = want;
     }
   };
-  // an area opening closes the window, except while picking areas or parcels for a selection (which lives in it)
+  // on a phone an area opening closes the window, except while picking areas or parcels (the selection lives in it)
   window.baldwinCloseDrawer = () => { if (open && !window.baldwinSelectMode) toggle(false, true); };
   button.addEventListener("click", () => toggle(!open));
   document.addEventListener("keydown", (e) => {

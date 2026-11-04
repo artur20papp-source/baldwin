@@ -145,9 +145,12 @@
   }
 
   // Parcel outlines on the map: farmland tinted orange, partial parcels dashed.
+  // drawn as SVG, not on the map's canvas: a canvas in a pane of its own would cover the whole map and take
+  // every click, while SVG lets clicks pass between its shapes to the map below
   map.createPane("selected-parcels").style.zIndex = 460;
+  const parcelRenderer = L.svg({ pane: "selected-parcels" });
   const baseStyle = (r) => ({
-    pane: "selected-parcels", color: "#ffffff", weight: 1.2, opacity: 0.9, dashArray: r.partial ? "4 4" : null,
+    pane: "selected-parcels", renderer: parcelRenderer, color: "#ffffff", weight: 1.2, opacity: 0.9, dashArray: r.partial ? "4 4" : null,
     fillColor: FARMLAND.has(r.type) ? __ORANGE__ : "#ffffff", fillOpacity: FARMLAND.has(r.type) ? 0.22 : 0.06,
   });
   const hotStyle = { color: __ACCENT__, weight: 2.5, fillOpacity: 0.45 };
@@ -174,7 +177,7 @@
       const i = Number(el.dataset.i);
       el.addEventListener("mouseenter", () => hot(i, true));
       el.addEventListener("mouseleave", () => hot(i, false));
-      el.querySelector(".pnum").addEventListener("click", () => map.fitBounds(shapes[i].getBounds(), FIT));
+      el.querySelector(".pnum").addEventListener("click", () => map.fitBounds(shapes[i].getBounds(), fit()));
     }
     return group;
   }
@@ -183,10 +186,13 @@
   const panel = document.createElement("aside");
   panel.className = "ds-panel";
   document.body.appendChild(panel);
-  // keep the area clear of the panel: beside it on a desktop, above the bottom sheet on a phone
-  const FIT = window.matchMedia("(max-width: 700px)").matches
+  // keep the area clear of the panel: beside it on a desktop (and of the filter window too when that is open,
+  // the panel then sitting to its right), above the bottom sheet on a phone
+  const phone = window.matchMedia("(max-width: 700px)");
+  const fit = () => phone.matches
     ? { paddingTopLeft: [20, 130], paddingBottomRight: [20, Math.round(window.innerHeight * 0.62) + 20], maxZoom: 18 }
-    : { paddingTopLeft: [430, 60], paddingBottomRight: [40, 40], maxZoom: 18 };
+    : { paddingTopLeft: [430 + (document.body.classList.contains("drawer-open") ? 328 : 0), 60],
+        paddingBottomRight: [40, 40], maxZoom: 18 };
   let current = null;  // { layer, parcels } of the open area
 
   function close() {
@@ -225,15 +231,15 @@
 
   async function open(layer) {
     close();
-    // one window at a time on the left: an opened area closes the filter window (the map then flies to the area)
-    if (window.baldwinCloseDrawer) window.baldwinCloseDrawer();
+    // on a phone both are sheets at the bottom, so an opened area closes the filter window there
+    if (phone.matches && window.baldwinCloseDrawer) window.baldwinCloseDrawer();
     const p = layer.feature.properties;
     const mine = (current = { layer, parcels: null });
     layer.setStyle({ weight: 2.5 });
     render(p, `<div class="muted">${t("Načítám z katastru…", "Loading from the cadastre…", "Načítavam z katastra…")}</div>`);
     panel.classList.add("open");
     panel.scrollTop = 0;
-    map.flyToBounds(layer.getBounds(), { ...FIT, duration: 0.9 });
+    map.flyToBounds(layer.getBounds(), { ...fit(), duration: 0.9 });
     let result;
     try {
       result = await fetchParcels(layer);
@@ -249,7 +255,7 @@
 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
   window.baldwinOpenArea = open;  // used by the search box
-  window.baldwinClosePanel = close;  // used by the filter window, which closes the panel when it opens
+  window.baldwinClosePanel = close;  // used by the filter window on a phone, which closes the panel when it opens
   window.baldwinCadastre = { getParcels, inside, LAND, FARMLAND, KN_PARCEL };  // used by the selection
 
   // Every folium GeoJson is a global geo_json_*; bind the areas (they carry an area_code).

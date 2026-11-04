@@ -9,6 +9,7 @@
 
   window.baldwinLines = [];
   map.createPane("line-stops").style.zIndex = 455;  // stations above the areas, so their names show on hover
+  const stopRenderer = L.svg({ pane: "line-stops" });  // SVG: a canvas up here would take every click on the map
   for (const def of LAYERS) {
     const group = L.featureGroup();
     window.baldwinLines.push(group);
@@ -20,7 +21,7 @@
                        smoothFactor: 1.5 }).addTo(group);
       const stops = L.geoJSON(geo, {
         filter: (f) => f.geometry.type === "Point",
-        pointToLayer: (f, ll) => L.circleMarker(ll, { pane: "line-stops", radius: 2.5, weight: 1.5, color: def.style.color,
+        pointToLayer: (f, ll) => L.circleMarker(ll, { pane: "line-stops", renderer: stopRenderer, radius: 2.5, weight: 1.5, color: def.style.color,
                                                       fillColor: def.style.stop, fillOpacity: 1 }).bindTooltip(f.properties.n),
       });
       // the stations only zoomed in, like the metro's
