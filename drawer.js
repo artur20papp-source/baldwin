@@ -1,7 +1,7 @@
 // The filter window (layer switches, price filter, selection) under the button at the left of the top
-// bar. The window unfolds out of the button (see the CSS)
-// and floats over the map, so the map itself stays still. Inlined into map.html by make_map.py after the
-// controls exist; __MAP__ is filled in there.
+// bar. The window unfolds out of the button (see the CSS) and the map glides to the right to make room for
+// it, back again when it closes. Inlined into map.html by make_map.py after the controls exist; __MAP__ is
+// filled in there.
 (function () {
   const map = __MAP__;
 
@@ -50,8 +50,19 @@
   });
   document.addEventListener("click", (e) => { if (!lang.contains(e.target)) lang.classList.remove("open"); });
 
-  let open = false;
-  const toggle = (on) => { open = on; document.body.classList.toggle("drawer-open", on); };
+  // on a computer the map moves over by half the window's width, so what was in the middle stays in the
+  // middle of the free part; on a phone the window comes up from the bottom and the map stays
+  const phone = window.matchMedia("(max-width: 700px)");
+  let open = false, shifted = 0;
+  const toggle = (on) => {
+    open = on;
+    document.body.classList.toggle("drawer-open", on);
+    const want = on && !phone.matches ? Math.round((drawer.offsetWidth + 8) / 2) : 0;
+    if (want !== shifted) {
+      map.panBy([shifted - want, 0], { duration: 0.55, easeLinearity: 0.2 });
+      shifted = want;
+    }
+  };
   button.addEventListener("click", () => toggle(!open));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && open && !window.baldwinSelectMode) toggle(false);
