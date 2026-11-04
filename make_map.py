@@ -684,9 +684,22 @@ STYLE = f"""
     .ds-mbrand b {{ font-weight: 600; color: {TEXT}; }}
     .ds-mbrand span {{ color: {MUTED}; }}
     .ds-results {{ top: auto; bottom: 72px; }}
-    .ds-drawer {{ bottom: 72px; max-height: calc(100vh - 140px); transform-origin: bottom left; }}
+    .ds-drawer {{ bottom: 72px; max-height: calc(100vh - 128px); max-height: calc(100dvh - 128px);  /* dvh: the screen the
+                 phone's browser bars leave, not the full height */
+                 padding: 0 14px 10px; transform-origin: bottom left; }}
+    /* tighter on a phone so the whole window fits: smaller gaps between switches and sections */
+    .ds-drawer .dt {{ padding-top: 12px; }}
+    .ds-drawer > .leaflet-control {{ padding: 9px 0; }}
+    .ds-drawer .leaflet-control-layers label {{ margin: 4px 0; }}
+    .ds-drawer .ds-filter label {{ margin-top: 6px; }}
+    .ds-drawer .ds-filter .fc, .ds-drawer .ds-select .hint {{ margin-top: 6px; }}
+    .ds-drawer .ds-credits {{ padding-top: 6px; font-size: 9px; }}
+    .ds-panel {{ max-height: calc(100dvh - 140px); }}
     .ds-panel {{ left: 8px; right: 8px; bottom: 72px; max-height: calc(100vh - 140px); border-radius: 10px; }}
     .ds-lang-menu {{ top: auto; bottom: calc(100% + 22px); transform-origin: bottom right; transform: translateY(6px) scale(.96); }}
+    /* smooth panning: no frosted-glass blur over the moving map on a phone, a near-solid dark glass instead */
+    .ds-bar, .ds-mbrand, .ds-drawer, .ds-panel, .ds-results, .ds-lang-menu {{
+      backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(13,13,13,.92) !important; }}
   }}
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
   .ds-menu.gone ~ .ds-mbrand {{ opacity: 1; transition: opacity .8s ease 2.1s; }}
@@ -1166,6 +1179,8 @@ def build_map():
     # decimals (~1 m) keeps the page well under 10 MB
     html = OUT.read_text(encoding="utf-8")
     html = re.sub(r'(?<=[\d\]}"]), (?=[\[{"\-\d])', ",", html)
+    # phones draw the map's thousands of shapes on one canvas instead of as SVG elements: much smoother panning
+    html = re.sub(r'"preferCanvas":\s*false', '"preferCanvas":window.matchMedia("(max-width: 700px)").matches', html, count=1)
     html = re.sub(r'(?<=")\: (?=[\[{"\-\dtfn])', ":", html)
     html = re.sub(r'(?<=[\[,])(-?\d{1,3}\.\d{5})\d+', r"\1", html)
     # IPR's bookkeeping fields and empty values are never shown; Czech letters as text, not á
