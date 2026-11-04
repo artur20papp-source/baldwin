@@ -665,17 +665,16 @@ STYLE = f"""
                  background: rgba(255,255,255,.07); color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em;
                  transition: transform .5s cubic-bezier(.16,1,.3,1); }}
   .ds-lang-btn:hover {{ transform: scale(1.03); }}
-  .ds-lang-menu {{ position: absolute; top: calc(100% + 12px); right: 0; min-width: 150px; padding: 6px; box-sizing: border-box;
-                  border-radius: 10px; {GLASS} background: rgba(16,16,16,.72); transform-origin: top right;
-                  opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.96);
-                  transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s linear .45s; }}
-  .ds-lang.open .ds-lang-menu {{ opacity: 1; visibility: visible; transform: none;
-                                transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s; }}
-  .ds-lang-menu button {{ display: flex; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; border-radius: 6px;
-                         background: none; color: {MUTED}; font: 400 12px 'Hanken Grotesk', Arial, sans-serif; cursor: pointer; text-align: left; }}
-  .ds-lang-menu button:hover {{ background: rgba(255,255,255,.07); color: {TEXT}; }}
-  .ds-lang-menu button.on {{ color: {TEXT}; font-weight: 500; }}
-  .ds-lang-menu button small {{ font-size: 10px; letter-spacing: .08em; color: {MUTED}; }}
+  /* the other languages slide out downwards from behind the button, slowly, like the lighthouse's name */
+  .ds-lang-menu {{ position: absolute; z-index: 5; top: 100%; right: 0; padding-top: 6px; display: flex; flex-direction: column;
+               gap: 6px; overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-18px); pointer-events: none;
+               transition: max-height 1.6s cubic-bezier(.16,1,.3,1), opacity 1.1s ease .1s, transform 1.6s cubic-bezier(.16,1,.3,1); }}
+  .ds-lang:hover .ds-lang-menu, .ds-lang.open .ds-lang-menu {{ max-height: 120px; opacity: 1; transform: none; pointer-events: auto; }}
+  .ds-lang-menu button {{ width: 34px; height: 34px; flex-shrink: 0; padding: 0; border: none; border-radius: 6px; cursor: pointer;
+                      {GLASS} background: rgba(16,16,16,.72); color: {TEXT}; font: 500 11px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em;
+                      transition: transform .5s cubic-bezier(.16,1,.3,1); }}
+  .ds-lang-menu button:hover {{ transform: scale(1.03); }}
+  .ds-lang-menu button.on {{ display: none; }}  /* only the languages you can switch to */
   /* phones: the name alone at the top, every button in one bar along the bottom where the thumbs are;
      the search results, the filter window, the deal sheet and the language list open above that bar */
   .ds-mbrand {{ display: none; }}
@@ -699,9 +698,9 @@ STYLE = f"""
     .ds-drawer .ds-credits {{ padding-top: 6px; font-size: 9px; }}
     .ds-panel {{ max-height: calc(100dvh - 140px); }}
     .ds-panel {{ left: 8px; right: 8px; bottom: 72px; max-height: calc(100vh - 140px); border-radius: 10px; }}
-    .ds-lang-menu {{ top: auto; bottom: calc(100% + 22px); transform-origin: bottom right; transform: translateY(6px) scale(.96); }}
+    .ds-lang-menu {{ top: auto; bottom: 100%; padding: 0 0 17px; flex-direction: column-reverse; transform: translateY(18px); }}  /* upwards from the bottom bar */
     /* smooth panning: no frosted-glass blur over the moving map on a phone, a near-solid dark glass instead */
-    .ds-bar, .ds-mbrand, .ds-drawer, .ds-panel, .ds-results, .ds-lang-menu {{
+    .ds-bar, .ds-mbrand, .ds-drawer, .ds-panel, .ds-results, .ds-lang-menu button {{
       backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(13,13,13,.92) !important; }}
   }}
   .ds-menu ~ .ds-mbrand {{ opacity: .001; }}
@@ -814,9 +813,9 @@ STYLE = f"""
     <div class="ds-lang">
       <button class="ds-lang-btn" aria-label="Language"><span class="l-cs">CS</span><span class="l-en">EN</span><span class="l-sk">SK</span></button>
       <div class="ds-lang-menu">
-        <button data-lang="en">English <small>EN</small></button>
-        <button data-lang="cs">Čeština <small>CS</small></button>
-        <button data-lang="sk">Slovenčina <small>SK</small></button>
+        <button data-lang="en" title="English">EN</button>
+        <button data-lang="cs" title="Čeština">CS</button>
+        <button data-lang="sk" title="Slovenčina">SK</button>
       </div>
     </div>
   </div>

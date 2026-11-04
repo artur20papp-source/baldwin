@@ -42,16 +42,16 @@
   .lang-btn { width: 34px; height: 34px; padding: 0; border: none; border-radius: 6px; cursor: pointer; background: rgba(255,255,255,.07);
               color: var(--text); font: 500 11px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em; transition: transform .5s cubic-bezier(.16,1,.3,1); }
   .lang-btn:hover { transform: scale(1.03); }
-  .lang-menu { position: absolute; z-index: 5; top: calc(100% + 12px); right: 0; min-width: 150px; padding: 6px; border-radius: 10px;
-               background: rgba(16,16,16,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transform-origin: top right;
-               opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.96);
-               transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s linear .45s; }
-  .lang.open .lang-menu { opacity: 1; visibility: visible; transform: none; transition: opacity .3s ease, transform .45s cubic-bezier(.16,1,.3,1), visibility 0s; }
-  .lang-menu button { display: flex; justify-content: space-between; width: 100%; padding: 8px 10px; border: none; border-radius: 6px;
-                      background: none; color: var(--muted); font: 400 12px 'Hanken Grotesk', Arial, sans-serif; cursor: pointer; }
-  .lang-menu button:hover { background: rgba(255,255,255,.07); color: var(--text); }
-  .lang-menu button.on { color: var(--text); font-weight: 500; }
-  .lang-menu small { font-size: 10px; letter-spacing: .08em; color: var(--muted); }
+  /* the other languages slide out downwards from behind the button, slowly, like the lighthouse's name */
+  .lang-menu { position: absolute; z-index: 5; top: 100%; right: 0; padding-top: 6px; display: flex; flex-direction: column;
+               gap: 6px; overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-18px); pointer-events: none;
+               transition: max-height 1.6s cubic-bezier(.16,1,.3,1), opacity 1.1s ease .1s, transform 1.6s cubic-bezier(.16,1,.3,1); }
+  .lang:hover .lang-menu, .lang.open .lang-menu { max-height: 120px; opacity: 1; transform: none; pointer-events: auto; }
+  .lang-menu button { width: 34px; height: 34px; flex-shrink: 0; padding: 0; border: none; border-radius: 6px; cursor: pointer;
+                      background: rgba(255,255,255,.07); color: var(--text); font: 500 11px 'Hanken Grotesk', Arial, sans-serif; letter-spacing: .08em;
+                      transition: transform .5s cubic-bezier(.16,1,.3,1); }
+  .lang-menu button:hover { transform: scale(1.03); }
+  .lang-menu button.on { display: none; }  /* only the languages you can switch to */
   /* the sheet: formula bar, grid, tabs */
   .sheet { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); }
   .bar { display: flex; gap: 10px; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--edge);
@@ -97,9 +97,9 @@
       <div class="lang">
         <button class="lang-btn" aria-label="Language"><span class="l-cs">CS</span><span class="l-en">EN</span><span class="l-sk">SK</span></button>
         <div class="lang-menu">
-          <button data-lang="en">English <small>EN</small></button>
-          <button data-lang="cs">Čeština <small>CS</small></button>
-          <button data-lang="sk">Slovenčina <small>SK</small></button>
+          <button data-lang="en" title="English">EN</button>
+          <button data-lang="cs" title="Čeština">CS</button>
+          <button data-lang="sk" title="Slovenčina">SK</button>
         </div>
       </div>
     </div>
