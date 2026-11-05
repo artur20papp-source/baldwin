@@ -3,6 +3,7 @@
 No street base map: Prague is drawn from its own plan data (neighbourhoods, parks, areas).
 Clicking an area opens a deal sheet (deal_popup.js) that also lists its parcels live from ČÚZK.
 """
+from urllib.parse import quote
 import hashlib
 import json
 import re
@@ -195,13 +196,19 @@ GLASS = ("background: rgba(16,16,16,.5); backdrop-filter: blur(14px) saturate(1)
          "border: none; box-shadow: none;")
 
 I18N = I18N_JS.read_text(encoding="utf-8")  # inlined at the top of the page, before every other script
+# the empty space around the map: the letters AP, repeated in rows like the anthem on Slovakia's jersey,
+# barely darker than the background (an SVG tile; every second row is shifted by half)
+AP_PATTERN = "data:image/svg+xml," + quote(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="32">'
+    '<g font-family="Arial, sans-serif" font-size="8" font-weight="700" letter-spacing="1" fill="#171717">'
+    '<text x="4" y="12">AP</text><text x="32" y="28">AP</text></g></svg>')
+
 STYLE = f"""
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   .leaflet-container {{ background: {BACKGROUND}; font-family: 'Hanken Grotesk', Arial, sans-serif; }}
   /* a faint dot grid behind the city, like a drawing board; it stays still while Prague moves over it */
-  .leaflet-container {{ background-image: radial-gradient(circle, #171717 1px, transparent 1.3px);
-                        background-size: 24px 24px; background-position: 12px 12px; }}
+  .leaflet-container {{ background-image: url("{AP_PATTERN}"); background-size: 56px 32px; }}
   .leaflet-interactive:focus {{ outline: none; }}
 
   /* start screen: a black palantír in the middle; click it to enter the map */
@@ -728,6 +735,15 @@ STYLE = f"""
               opacity: 0; transform: translate(-50%, calc(-50% + 28px)) scale(.86); pointer-events: none;
               transition: opacity .7s ease, transform 1.1s cubic-bezier(.34,1.45,.5,1); }}
   .ds-guide.on {{ opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }}
+  /* closing: the card floats away upwards like a balloon, swaying gently, shrinking and fading */
+  .ds-guide.away {{ pointer-events: none; animation: guide-away 1.6s cubic-bezier(.45,0,.55,1) forwards; }}
+  @keyframes guide-away {{
+    0%   {{ opacity: 1; transform: translate(-50%, -50%); }}
+    15%  {{ opacity: 1; transform: translate(-50%, calc(-50% + 6px)) scale(1.01); }}
+    45%  {{ opacity: .9; transform: translate(calc(-50% - 10px), calc(-50% - 90px)) rotate(-2deg) scale(.96); }}
+    75%  {{ opacity: .5; transform: translate(calc(-50% + 8px), calc(-50% - 220px)) rotate(1.5deg) scale(.9); }}
+    100% {{ opacity: 0; transform: translate(calc(-50% - 4px), calc(-50% - 380px)) rotate(-1deg) scale(.84); }}
+  }}
   .ds-guide h4, .ds-guide li {{ opacity: 0; transform: translateY(10px); filter: blur(6px);
                                transition: opacity .8s ease, transform .9s cubic-bezier(.16,1,.3,1), filter .8s ease; }}
   .ds-guide.on h4, .ds-guide.on li {{ opacity: 1; transform: none; filter: none; }}
@@ -1168,7 +1184,8 @@ def build_map():
         };
         const guide = document.querySelector('.ds-guide');
         guide.querySelector('.ds-close').addEventListener('click', () => {
-          guide.classList.remove('on');
+          guide.classList.add('away');  // floats off (see .ds-guide.away), then is gone
+          setTimeout(() => { guide.style.display = 'none'; }, 1650);
           try { localStorage.setItem('baldwin-guide', '1'); } catch (e) {}
         });
         menu.querySelector('.orb').addEventListener('pointerdown', enter);
