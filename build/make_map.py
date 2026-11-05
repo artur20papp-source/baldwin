@@ -3,6 +3,7 @@
 No street base map: Prague is drawn from its own plan data (neighbourhoods, parks, areas).
 Clicking an area opens a deal sheet (deal_popup.js) that also lists its parcels live from ČÚZK.
 """
+from urllib.parse import quote
 import hashlib
 import json
 import re
@@ -195,14 +196,19 @@ GLASS = ("background: rgba(16,16,16,.5); backdrop-filter: blur(14px) saturate(1)
          "border: none; box-shadow: none;")
 
 I18N = I18N_JS.read_text(encoding="utf-8")  # inlined at the top of the page, before every other script
+# the empty space around the map: the letters AP, repeated in rows like the anthem on Slovakia's jersey,
+# barely darker than the background (an SVG tile; every second row is shifted by half)
+AP_PATTERN = "data:image/svg+xml," + quote(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="32">'
+    '<g font-family="Arial, sans-serif" font-size="8" font-weight="700" letter-spacing="1" fill="#171717">'
+    '<text x="4" y="12">AP</text><text x="32" y="28">AP</text></g></svg>')
+
 STYLE = f"""
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   .leaflet-container {{ background: {BACKGROUND}; font-family: 'Hanken Grotesk', Arial, sans-serif; }}
   /* a faint dot grid behind the city, like a drawing board; it stays still while Prague moves over it */
-  /* the empty space around the map: the letters AP in rows, like the anthem on Slovakia's jersey, barely
-     darker than the background (drawn in the site's font once it has loaded: see the load script) */
-  .leaflet-container {{ background-size: 44px 26px; }}
+  .leaflet-container {{ background-image: url("{AP_PATTERN}"); background-size: 56px 32px; }}
   .leaflet-interactive:focus {{ outline: none; }}
 
   /* start screen: a black palantír in the middle; click it to enter the map */
@@ -729,18 +735,14 @@ STYLE = f"""
               opacity: 0; transform: translate(-50%, calc(-50% + 28px)) scale(.86); pointer-events: none;
               transition: opacity .7s ease, transform 1.1s cubic-bezier(.34,1.45,.5,1); }}
   .ds-guide.on {{ opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }}
-  /* closing: like a balloon let go untied: it swells, pops, and zips off in a loose zigzag, spinning and
-     shrinking as the air runs out */
-  .ds-guide.away {{ pointer-events: none; animation: guide-away 1.3s linear forwards; }}
+  /* closing: the card floats away upwards like a balloon, swaying gently, shrinking and fading */
+  .ds-guide.away {{ pointer-events: none; animation: guide-away 1.6s cubic-bezier(.45,0,.55,1) forwards; }}
   @keyframes guide-away {{
-    0%   {{ opacity: 1; transform: translate(-50%, -50%); animation-timing-function: cubic-bezier(.3,0,.5,1); }}
-    14%  {{ opacity: 1; transform: translate(-50%, -50%) scale(1.07); animation-timing-function: cubic-bezier(.5,0,.7,.4); }}
-    22%  {{ opacity: 1; transform: translate(-50%, -50%) scale(.9, .95); animation-timing-function: cubic-bezier(.2,.6,.4,1); }}
-    40%  {{ opacity: .95; transform: translate(calc(-50% + 60px), calc(-50% - 90px)) rotate(14deg) scale(.7); }}
-    56%  {{ opacity: .85; transform: translate(calc(-50% - 50px), calc(-50% - 200px)) rotate(-22deg) scale(.5); }}
-    72%  {{ opacity: .7; transform: translate(calc(-50% + 90px), calc(-50% - 300px)) rotate(30deg) scale(.34); }}
-    86%  {{ opacity: .4; transform: translate(calc(-50% + 20px), calc(-50% - 400px)) rotate(-18deg) scale(.22); }}
-    100% {{ opacity: 0; transform: translate(calc(-50% + 140px), calc(-50% - 520px)) rotate(40deg) scale(.12); }}
+    0%   {{ opacity: 1; transform: translate(-50%, -50%); }}
+    15%  {{ opacity: 1; transform: translate(-50%, calc(-50% + 6px)) scale(1.01); }}
+    45%  {{ opacity: .9; transform: translate(calc(-50% - 10px), calc(-50% - 90px)) rotate(-2deg) scale(.96); }}
+    75%  {{ opacity: .5; transform: translate(calc(-50% + 8px), calc(-50% - 220px)) rotate(1.5deg) scale(.9); }}
+    100% {{ opacity: 0; transform: translate(calc(-50% - 4px), calc(-50% - 380px)) rotate(-1deg) scale(.84); }}
   }}
   .ds-guide h4, .ds-guide li {{ opacity: 0; transform: translateY(10px); filter: blur(6px);
                                transition: opacity .8s ease, transform .9s cubic-bezier(.16,1,.3,1), filter .8s ease; }}
@@ -1183,7 +1185,7 @@ def build_map():
         const guide = document.querySelector('.ds-guide');
         guide.querySelector('.ds-close').addEventListener('click', () => {
           guide.classList.add('away');  // floats off (see .ds-guide.away), then is gone
-          setTimeout(() => { guide.style.display = 'none'; }, 1350);
+          setTimeout(() => { guide.style.display = 'none'; }, 1650);
           try { localStorage.setItem('baldwin-guide', '1'); } catch (e) {}
         });
         menu.querySelector('.orb').addEventListener('pointerdown', enter);
@@ -1256,17 +1258,6 @@ def build_map():
         setTimeout(() => document.documentElement.classList.remove('skip-intro'), 60);  // a timer, not a frame: also runs in a background tab
         // no line of credits on the map: the CC BY credits sit at the foot of the filter window (drawer.js)
         {name}.attributionControl.remove();
-        // the AP pattern: one tile drawn on a canvas in Hanken Grotesk (a background image can't use web
-        // fonts), every second row shifted by half, then repeated by the map's background
-        document.fonts.load("600 6px 'Hanken Grotesk'").then(() => {{
-            const r = window.devicePixelRatio || 1, c = document.createElement('canvas');
-            c.width = 44 * r; c.height = 26 * r;
-            const g = c.getContext('2d'); g.scale(r, r);
-            g.font = "600 6px 'Hanken Grotesk'"; g.fillStyle = '#171717';
-            if ('letterSpacing' in g) g.letterSpacing = '1px';
-            g.fillText('AP', 4, 10); g.fillText('AP', 26, 23);
-            {name}.getContainer().style.backgroundImage = 'url(' + c.toDataURL() + ')';
-        }});
         // tram stops, bus stops and bus routes only once zoomed in
         const byZoom = () => {{
             const z = {name}.getZoom();
