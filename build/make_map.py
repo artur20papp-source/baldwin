@@ -195,6 +195,21 @@ GLASS = ("background: rgba(16,16,16,.5); backdrop-filter: blur(14px) saturate(1)
          "border: none; box-shadow: none;")
 
 I18N = I18N_JS.read_text(encoding="utf-8")  # inlined at the top of the page, before every other script
+SITE_URL = "https://artur20papp-source.github.io/baldwin/"
+PREVIEW_TITLE = "Baldwin · Prague land-development screening"
+PREVIEW_TEXT = ("An interactive map of every residential development area in Prague: zoning, land prices, "
+                "transport and risks from open public data, linked to a development appraisal.")
+LINK_PREVIEW = f"""    <meta name="description" content="{PREVIEW_TEXT}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{SITE_URL}">
+    <meta property="og:title" content="{PREVIEW_TITLE}">
+    <meta property="og:description" content="{PREVIEW_TEXT}">
+    <meta property="og:image" content="{SITE_URL}preview.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{SITE_URL}preview.jpg">"""
+
 STYLE = f"""
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1189,6 +1204,7 @@ def build_map():
     example_v = hashlib.sha1((DATA / ACRE_EXAMPLE).read_bytes()).hexdigest()[:10]
     # the Baldwin Acre page, its own folder of the site like Alexandria; it shows that same example
     shutil.copy2(I18N_JS, DOCS / "i18n.js")  # Alexandria and Acre load it from the site
+    shutil.copy2(SRC / "preview.jpg", DOCS / "preview.jpg")  # the picture in link previews (LinkedIn, WhatsApp...)
     site_acre = OUT.with_name("acre")
     site_acre.mkdir(exist_ok=True)
     (site_acre / "index.html").write_text((ACRE_WEB_DIR / "index.html").read_text(encoding="utf-8")
@@ -1279,6 +1295,9 @@ def build_map():
     # the map's thousands of shapes on one canvas instead of as SVG elements: much smoother zooming and panning;
     # the canvas reaches 15 % past each edge (more made every redraw far slower), so a drag doesn't uncover undrawn map before it is redrawn
     html = re.sub(r'"preferCanvas":\s*false', '"preferCanvas":true, "renderer": L.canvas({padding: 0.15})', html, count=1)
+    # link previews: LinkedIn, WhatsApp and others read these first lines of the page to show a card with a
+    # title, a description and a picture instead of a bare link
+    html = html.replace("</title>", "</title>" + chr(10) + LINK_PREVIEW, 1)  # after the charset line
     html = re.sub(r'(?<=")\: (?=[\[{"\-\dtfn])', ":", html)
     html = re.sub(r'(?<=[\[,])(-?\d{1,3}\.\d{5})\d+', r"\1", html)
     # IPR's bookkeeping fields and empty values are never shown; Czech letters as text, not á
