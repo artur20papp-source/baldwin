@@ -96,7 +96,7 @@
         <circle cx="12" cy="20.7" r=".9" fill="currentColor" stroke="none"/></svg></span>
       <span class="tx"><b>BALDWIN</b> <span>ACRE</span></span>
     </a>
-    <a class="orb-link" href="../" aria-label="Baldwin Palantir">
+    <a class="orb-link" href="../map.html" aria-label="Baldwin Palantir">
       <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8.2 9.2a4.6 4.6 0 0 1 3.4-2.3"/></svg></span>
       <span class="tx"><b>BALDWIN</b> <span>PALANTIR</span></span>
     </a>
@@ -130,7 +130,7 @@
   document.querySelector("#chips button").textContent =
     t("Které vstupy jsou jen předpoklady?", "Which inputs are just assumptions?", "Ktoré vstupy sú len predpoklady?");
   // back to the map without its start screen
-  document.querySelector('.orb-link[href="../"]').addEventListener("click", () => {
+  document.querySelector('.orb-link[href="../map.html"]').addEventListener("click", () => {
     try { sessionStorage.setItem("baldwin-skip-intro", "1"); } catch (e) {}
   });
   // the language switcher: a choice reloads the page (the map follows it too)

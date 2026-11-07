@@ -19,7 +19,7 @@ WORKSPACE = ROOT.parent                          # beside it: Baldwin Alexandria
 SRC = ROOT / "src"                               # the map's browser scripts
 DOCS = ROOT / "docs"                             # the website, exactly as GitHub Pages serves it (from /docs)
 DATA = DOCS / "data"                             # the files the pages load
-OUT = DOCS / "index.html"
+OUT = DOCS / "map.html"  # the map itself; docs/index.html is the small front page that leads to it
 DEAL_JS = SRC / "deal_popup.js"
 FILTER_JS = SRC / "price_filter.js"
 SEARCH_JS = SRC / "search.js"
@@ -1304,6 +1304,22 @@ def build_map():
     html = re.sub(r'"(SHAPE__Area|SHAPE__Length|globalid|objectid)":("[^"]*"|[\d.]+),|"\w+":null,', "", html)
     html = re.sub(r"\\u([0-9a-f]{4})", lambda u: chr(int(u[1], 16)) if 0xA0 <= int(u[1], 16) < 0x2000 else u[0], html)
     OUT.write_text(html, encoding="utf-8")
+    # the front page: the address people share. The map is over 5 MB (its data is inside it), more than link
+    # previews (LinkedIn) will read, so the front page is a few lines: the preview tags, then straight on to
+    # the map, keeping any ?query or #anchor
+    (DOCS / "index.html").write_text(f"""<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Baldwin Palantir</title>
+{LINK_PREVIEW}
+    <style>html, body {{ margin: 0; height: 100%; background: {BACKGROUND}; }}</style>
+    <script>location.replace("map.html" + location.search + location.hash);</script>
+</head>
+<body><noscript><a href="map.html" style="color:#ececec">Baldwin Palantir</a></noscript></body>
+</html>
+""", encoding="utf-8")
     return OUT
 
 
